@@ -1,11 +1,11 @@
 {
-  "version": "1.2.1",
-  "notes": "\ud83d\udee0\ufe0f ZZZ Mod Hub v1.2.1: Mod toggle state persistence with ZZMI namespace support, GameBanana multi-mod query chunking, batch actions polish, and safe storage hardening.",
-  "pub_date": "2026-09-05T22:46:16Z",
+  "version": "1.2.2",
+  "notes": "ZZZ Mod Hub v1.2.2: Added 5 new languages (8 total), instant cancellation for long tasks, mod fixer stride auto-sync, and tool listings in Discover.",
+  "pub_date": "2026-09-10T21:57:15Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQlp6R1Z0ZHhmT01tQkNLdytlT1Y3T21nS09jRW9GbU9xZFNVQnFCQytBYUtUMjVVMGZlNmhZZ3VDZDZkd0NESFdQWEJrNm5wcUNPS1cwQ1JZQU9WRmdBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NjQ4Mzc1CWZpbGU6WlpaIE1vZCBIdWJfMS4yLjFfeDY0LXNldHVwLmV4ZQpNc3JVbTBCU1Z2U2wvc3R6RmVqVEdsMWhCQlNSclpLQ3ViaXhrRXNaQXIzd2ZSakVIVVplZlRuWFROcU14bUNBM2Y1ejJiaVZaR1k0SjhqOThGbjdEdz09Cg==",
-      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub-Releases/releases/download/v1.2.1/ZZZ.Mod.Hub_1.2.1_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQmFvNlZJYmNIYTYrWTEvQTZMZHc3WEhUeTlBMmdpSG8wMkZHOGs3OGdvUHhsSFg4WnlXWG16ak51ZW93SkhSQnNBQUE1YTV1SXNHUURlMjZyUFQ1SndZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5MDc3NDM0CWZpbGU6WlpaIE1vZCBIdWJfMS4yLjJfeDY0LXNldHVwLmV4ZQpqaXJBRGV4Wi9zMjlONDF3d3VLYUZna2NGa1U4SFo0dTJMaEx1a0dOVzVzMVc1UnozcEQ3cEhiUnhKbVd6QzBCYTNqZ1YzWEtzYjVVYWZtRkRUd1hEQT09Cg==",
+      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub-Releases/releases/download/v1.2.2/ZZZ.Mod.Hub_1.2.2_x64-setup.exe"
     }
   }
 }
