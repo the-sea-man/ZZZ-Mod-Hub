@@ -486,7 +486,7 @@ pub async fn download_gb_mod(
                     let start = i * chunk_size;
                     let end = if i == num_chunks - 1 { total_size - 1 } else { (i + 1) * chunk_size - 1 };
                     
-                    let chunk_file_path = temp_dir.join(format!("{}.part{}", &file_name, i));
+                    let chunk_file_path = temp_dir.join(format!("{file_name}.part{i}"));
                     chunk_files.push(chunk_file_path.clone());
                     
                     let c_client = client.clone();

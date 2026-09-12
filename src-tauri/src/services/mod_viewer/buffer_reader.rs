@@ -269,7 +269,7 @@ pub fn compact_vertices(
     // Process indices in triangle triplets to filter out DirectX primitive restarts
     // (0xFFFF / 0xFFFFFFFF) and out-of-bounds indices without dropping the entire mesh.
     let mut valid_adjusted: Vec<usize> = Vec::with_capacity(raw_indices.len());
-    for chunk in raw_indices.chunks_exact(3) {
+    for chunk in raw_indices.as_chunks::<3>().0 {
         let (r0, r1, r2) = (chunk[0], chunk[1], chunk[2]);
         // Check for primitive restart / strip cut markers
         if r0 == 0xFFFF || r1 == 0xFFFF || r2 == 0xFFFF

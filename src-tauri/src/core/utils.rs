@@ -388,12 +388,12 @@ pub fn read_ini_to_string(path: &Path) -> Result<String, AppError> {
     let bytes = fs::read(path)?;
     
     if bytes.len() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE {
-        let u16_slice: Vec<u16> = bytes[2..].chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+        let u16_slice: Vec<u16> = bytes[2..].as_chunks::<2>().0.iter().map(|&c| u16::from_le_bytes(c)).collect();
         return Ok(String::from_utf16_lossy(&u16_slice));
     }
     
     if bytes.len() >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF {
-        let u16_slice: Vec<u16> = bytes[2..].chunks_exact(2).map(|c| u16::from_be_bytes([c[0], c[1]])).collect();
+        let u16_slice: Vec<u16> = bytes[2..].as_chunks::<2>().0.iter().map(|&c| u16::from_be_bytes(c)).collect();
         return Ok(String::from_utf16_lossy(&u16_slice));
     }
     
@@ -404,7 +404,7 @@ pub fn read_ini_to_string(path: &Path) -> Result<String, AppError> {
     match String::from_utf8(bytes.clone()) {
         Ok(s) => Ok(s),
         Err(_) => {
-            let u16_slice: Vec<u16> = bytes.chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+            let u16_slice: Vec<u16> = bytes.as_chunks::<2>().0.iter().map(|&c| u16::from_le_bytes(c)).collect();
             Ok(String::from_utf16_lossy(&u16_slice))
         }
     }
