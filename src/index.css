@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-background: 10, 10, 15;
+  --bg-surface: 22, 22, 30;
+  --color-primary: 76, 154, 255;
+  --color-accent: 247, 118, 142;
+  --color-text-main: 192, 202, 245;
+  --color-text-muted: 86, 95, 137;
+  --app-opacity: 0.5;
+}
+
+[data-no-motion='true'] *,
+[data-no-motion='true'] *::before,
+[data-no-motion='true'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Low Performance Mode & Frosted Glass Blur Deactivation:
+   Disables backdrop-filter blur shaders when toggled off (blurAmount == 0) or in Low Performance Mode. */
+[data-low-perf='true'] .glass-panel,
+[data-low-perf='true'] .glass-panel-bg,
+[data-low-perf='true'] .glass-sidebar,
+[data-low-perf='true'] .app-blur,
+[data-low-perf='true'] [class*='backdrop-blur'],
+[data-no-blur='true'] .glass-panel,
+[data-no-blur='true'] .glass-panel-bg,
+[data-no-blur='true'] .glass-sidebar,
+[data-no-blur='true'] .app-blur,
+[data-no-blur='true'] [class*='backdrop-blur'] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-low-perf='true'] .glass-panel,
+[data-no-blur='true'] .glass-panel,
+[data-low-perf='true'] .bg-surface\/30,
+[data-low-perf='true'] .bg-surface\/40,
+[data-low-perf='true'] .bg-surface\/50,
+[data-low-perf='true'] .bg-surface\/60,
+[data-low-perf='true'] .bg-surface\/70,
+[data-no-blur='true'] .bg-surface\/30,
+[data-no-blur='true'] .bg-surface\/40,
+[data-no-blur='true'] .bg-surface\/50,
+[data-no-blur='true'] .bg-surface\/60,
+[data-no-blur='true'] .bg-surface\/70 {
+  /* Compensate opacity so panels remain readable without blur */
+  background-color: rgba(var(--bg-surface), 0.94) !important;
+}
+
+[data-low-perf='true'] .glass-sidebar,
+[data-no-blur='true'] .glass-sidebar {
+  background-color: rgba(var(--bg-surface), 0.96) !important;
+}
+
+[data-low-perf='true'] .glass-panel-bg,
+[data-no-blur='true'] .glass-panel-bg,
+[data-low-perf='true'] .bg-background\/50,
+[data-no-blur='true'] .bg-background\/50 {
+  background-color: rgba(var(--bg-background), 0.94) !important;
+}
+/* Suppress infinite Tailwind animations that run even when nothing is happening */
+[data-low-perf='true'] .animate-pulse,
+[data-low-perf='true'] .animate-ping,
+[data-low-perf='true'] .animate-bounce,
+[data-low-perf='true'] .animate-spin {
+  animation: none !important;
+}
+
+.theme-light {
+  --bg-background: 240, 240, 245;
+  --bg-surface: 255, 255, 255;
+  --color-primary: 59, 130, 246;
+  --color-accent: 236, 72, 153;
+  --color-text-main: 31, 41, 55;
+  --color-text-muted: 107, 114, 128;
+}
+
+.theme-glass {
+  --bg-background: 15, 10, 25;
+  --bg-surface: 25, 18, 40;
+  --color-primary: 216, 180, 254;
+  --color-accent: 244, 114, 182;
+  --color-text-main: 255, 255, 255;
+  --color-text-muted: 167, 139, 250;
+}
+
+body {
+  @apply text-textMain font-sans antialiased m-0 overflow-hidden;
+  background-color: rgb(var(--bg-background));
+}
+
+.glass-panel {
+  background-color: rgba(var(--bg-surface), var(--app-opacity, 0.5));
+  backdrop-filter: blur(var(--app-blur, 12px));
+}
+
+.glass-panel-bg {
+  background-color: rgba(var(--bg-background), var(--app-opacity, 0.5));
+  backdrop-filter: blur(var(--app-blur, 12px));
+}
+
+.glass-sidebar {
+  background-color: rgba(var(--bg-surface), var(--sidebar-opacity, 0.8));
+  backdrop-filter: blur(var(--app-blur, 40px));
+}
+
+.app-blur {
+  backdrop-filter: blur(var(--app-blur, 12px));
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-surface rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-textMuted;
+}
+
+@keyframes highlight-pulse-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 3px rgba(var(--color-primary-rgb, 56, 189, 248), 0.9),
+      0 0 25px rgba(var(--color-primary-rgb, 56, 189, 248), 0.6);
+    transform: scale(1.015);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px rgba(var(--color-primary-rgb, 56, 189, 248), 1),
+      0 0 45px rgba(var(--color-primary-rgb, 56, 189, 248), 0.85);
+    transform: scale(1.03);
+  }
+}
+
+.highlight-target {
+  animation: highlight-pulse-glow 1.6s ease-in-out infinite !important;
+  z-index: 40 !important;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* Mod Card Grid & List Performance Containment */
+.mod-card-containment {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 280px;
+}

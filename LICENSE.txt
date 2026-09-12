@@ -1,0 +1,18 @@
+Copyright (c) 2024 ZZZ Mod Hub
+All Rights Reserved.
+
+1. PERMITTED USE
+You are granted a non-exclusive, non-transferable, revocable license to execute and use this software for personal, non-commercial purposes only.
+
+2. RESTRICTIONS
+You may NOT:
+a) Modify, reverse engineer, decompile, or disassemble the software in any way.
+b) Extract, copy, or distribute the source code, graphical assets, or underlying algorithms of this software.
+c) Sublicense, sell, rent, or lease the software or any part of it.
+d) Create derivative works based on this software.
+
+3. OWNERSHIP
+This software (including all code, architecture, and design) remains the exclusive property of the creator. The software is licensed, not sold. 
+
+4. NO WARRANTY
+This software is provided "as is", without warranty of any kind, express or implied. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability arising from, out of, or in connection with the software or the use of the software.

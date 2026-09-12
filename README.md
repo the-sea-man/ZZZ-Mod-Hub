@@ -1,8 +1,12 @@
 # ZZZ Mod Hub
 
+[![CI](https://github.com/the-sea-man/ZZZ-Mod-Hub/actions/workflows/ci.yml/badge.svg)](https://github.com/the-sea-man/ZZZ-Mod-Hub/actions/workflows/ci.yml)
+
 A desktop mod manager for **Zenless Zone Zero** and **3DMigoto / XXMI**.
 
 Organize your mods, preview 3D models before launching the game, download directly from GameBanana, randomize your outfits, split composite packs, and fix broken mod scripts in one place.
+
+> **Developer documentation:** Looking to contribute, inspect the architecture, or build from source? See [DEVELOPMENT.md](./DEVELOPMENT.md) and [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ---
 
@@ -633,4 +637,3 @@ Safeguard your library settings, custom tags, and mod notes.
 - **Mod loader**: ZZZ Mod Hub is a **mod manager**, not a mod loader. You still need **3DMigoto** or the **XXMI Launcher** installed to load mods into Zenless Zone Zero.
 - **Game disclaimer**: This application is an independent freeware utility and is not affiliated with, endorsed by, or connected to miHoYo, HoYoverse, or Zenless Zone Zero. Use mods responsibly.
 - **License**: This software is provided as proprietary freeware for personal, non-commercial use only.
-

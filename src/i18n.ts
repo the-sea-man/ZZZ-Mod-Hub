@@ -1,0 +1,216 @@
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import { useAppStore } from './store/useAppStore';
+import {
+  BaseDirectory,
+  readTextFile,
+  writeTextFile,
+  remove,
+  readDir,
+  exists,
+  mkdir,
+} from '@tauri-apps/plugin-fs';
+
+import en from './locales/en.json';
+import zh from './locales/zh.json';
+import zhTW from './locales/zh_TW.json';
+import ja from './locales/ja.json';
+import ko from './locales/ko.json';
+import es from './locales/es.json';
+import ru from './locales/ru.json';
+import ptBR from './locales/pt_BR.json';
+
+export const defaultNS = 'translation';
+export const resources = {
+  en: { translation: en },
+  zh: { translation: zh },
+  zh_TW: { translation: zhTW },
+  ja: { translation: ja },
+  ko: { translation: ko },
+  es: { translation: es },
+  ru: { translation: ru },
+  pt_BR: { translation: ptBR },
+} as const;
+
+export const BUILTIN_LANGUAGES = [
+  { code: 'en', name: 'English', isBuiltin: true },
+  { code: 'zh', name: '简体中文', isBuiltin: true },
+  { code: 'zh_TW', name: '繁體中文', isBuiltin: true },
+  { code: 'ja', name: '日本語', isBuiltin: true },
+  { code: 'ko', name: '한국어', isBuiltin: true },
+  { code: 'es', name: 'Español', isBuiltin: true },
+  { code: 'ru', name: 'Русский', isBuiltin: true },
+  { code: 'pt_BR', name: 'Português (Brasil)', isBuiltin: true },
+];
+
+export function isBuiltinLanguage(code: string): boolean {
+  return BUILTIN_LANGUAGES.some((b) => b.code === code);
+}
+
+i18n.use(initReactI18next).init({
+  resources,
+  lng: useAppStore.getState().language || 'en',
+  fallbackLng: 'en',
+  interpolation: {
+    escapeValue: false,
+  },
+});
+
+const README_CONTENT = `=======================================================
+ZZZ MOD HUB — CUSTOM LANGUAGES & TRANSLATIONS
+=======================================================
+
+This folder contains language translation files (.json) for ZZZ Mod Hub.
+
+HOW TO ADD OR TRANSLATE:
+1. You can create or edit translations directly inside the app:
+   Settings -> Appearance -> Language Hub & Custom Translations
+
+2. Or manually place any custom .json file in this directory (e.g. "es.json", "ja.json", "fr.json").
+   The file must be valid JSON and should contain:
+   {
+     "language_name": "Español",
+     "key_name": "Translated text..."
+   }
+
+3. To share a translation with the community, simply share your .json file!
+`;
+
+// Syncs base reference files and loads custom language packs from AppData/locales
+export async function loadCustomLanguagePacks() {
+  try {
+    const localesExists = await exists('locales', { baseDir: BaseDirectory.AppData });
+    if (!localesExists) {
+      await mkdir('locales', { baseDir: BaseDirectory.AppData, recursive: true });
+    }
+
+    // Auto-export base reference files so users can see official translations directly in locales/
+    try {
+      const readmeExists = await exists('locales/README.txt', { baseDir: BaseDirectory.AppData });
+      if (!readmeExists) {
+        await writeTextFile('locales/README.txt', README_CONTENT, {
+          baseDir: BaseDirectory.AppData,
+        });
+      }
+
+      for (const lang of BUILTIN_LANGUAGES) {
+        const refExists = await exists(`locales/${lang.code}.json`, {
+          baseDir: BaseDirectory.AppData,
+        });
+        if (!refExists) {
+          const bundle = (resources as any)[lang.code]?.translation || en;
+          const withMeta = { language_name: lang.name, ...bundle };
+          await writeTextFile(`locales/${lang.code}.json`, JSON.stringify(withMeta, null, 2), {
+            baseDir: BaseDirectory.AppData,
+          });
+        }
+      }
+    } catch (refErr) {
+      console.warn('Could not auto-write base locale reference files:', refErr);
+    }
+
+    // Reset to built-in languages before reading custom files
+    useAppStore.setState({
+      availableLanguages: BUILTIN_LANGUAGES.map((l) => ({ code: l.code, name: l.name })),
+    });
+
+    const entries = await readDir('locales', { baseDir: BaseDirectory.AppData });
+    for (const entry of entries) {
+      if (entry.isFile && entry.name.endsWith('.json')) {
+        const langCode = entry.name.replace('.json', '');
+
+        // Skip overwriting built-in bundles with the base reference files unless modified
+        if (isBuiltinLanguage(langCode)) {
+          continue;
+        }
+
+        try {
+          const content = await readTextFile(`locales/${entry.name}`, {
+            baseDir: BaseDirectory.AppData,
+          });
+          const json = JSON.parse(content);
+          i18n.addResourceBundle(langCode, defaultNS, json, true, true);
+
+          const displayName = json.language_name || langCode.toUpperCase();
+          useAppStore.getState().addAvailableLanguage({ code: langCode, name: displayName });
+        } catch (e) {
+          console.error(`Failed to parse custom language pack ${entry.name}:`, e);
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load custom language packs:', e);
+  }
+}
+
+// Saves a custom language pack to AppData/locales and updates i18n
+export async function saveCustomLanguagePack(
+  langCode: string,
+  langName: string,
+  translations: Record<string, string>
+): Promise<boolean> {
+  try {
+    const cleanCode = langCode
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9_-]/g, '_');
+    const payload = {
+      language_name: langName.trim() || cleanCode.toUpperCase(),
+      ...translations,
+    };
+
+    await writeTextFile(`locales/${cleanCode}.json`, JSON.stringify(payload, null, 2), {
+      baseDir: BaseDirectory.AppData,
+    });
+
+    i18n.addResourceBundle(cleanCode, defaultNS, payload, true, true);
+    useAppStore.getState().addAvailableLanguage({ code: cleanCode, name: payload.language_name });
+
+    return true;
+  } catch (err) {
+    console.error('Failed to save custom language pack:', err);
+    return false;
+  }
+}
+
+// Deletes a custom language pack from AppData/locales
+export async function deleteCustomLanguagePack(langCode: string): Promise<boolean> {
+  try {
+    if (isBuiltinLanguage(langCode)) {
+      return false;
+    }
+
+    await remove(`locales/${langCode}.json`, { baseDir: BaseDirectory.AppData });
+
+    // Switch to English if the deleted language was active
+    if (useAppStore.getState().language === langCode) {
+      useAppStore.getState().setLanguage('en');
+    }
+
+    await loadCustomLanguagePacks();
+    return true;
+  } catch (err) {
+    console.error('Failed to delete custom language pack:', err);
+    return false;
+  }
+}
+
+// Get all keys for a language bundle (falling back to English for missing keys)
+export function getLanguageBundle(langCode: string): Record<string, string> {
+  const customBundle = i18n.getResourceBundle(langCode, defaultNS) || {};
+  return { ...en, ...customBundle };
+}
+
+// Call it once on launch
+if ((window as any).__TAURI_INTERNALS__) {
+  loadCustomLanguagePacks();
+}
+
+// Subscribe to store changes to keep language in sync dynamically
+useAppStore.subscribe((state, prevState) => {
+  if (state.language !== prevState.language) {
+    i18n.changeLanguage(state.language);
+  }
+});
+
+export default i18n;
