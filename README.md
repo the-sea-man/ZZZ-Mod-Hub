@@ -35,6 +35,7 @@ Organize your mods, preview 3D models before launching the game, download direct
 20. [Customization, audio settings, and custom languages](#20-customization-audio-settings-and-custom-languages)
 21. [Configuration backup and restore](#21-configuration-backup-and-restore)
 22. [Requirements and disclaimer](#22-requirements-and-disclaimer)
+23. [Acknowledgements and data sources](#23-acknowledgements-and-data-sources)
 
 ---
 
@@ -638,3 +639,11 @@ Safeguard your library settings, custom tags, and mod notes.
 - **Mod loader**: ZZZ Mod Hub is a **mod manager**, not a mod loader. You still need **3DMigoto** or the **XXMI Launcher** installed to load mods into Zenless Zone Zero.
 - **Game disclaimer**: This application is an independent freeware utility and is not affiliated with, endorsed by, or connected to miHoYo, HoYoverse, or Zenless Zone Zero. Use mods responsibly.
 - **License**: This software is provided as proprietary freeware for personal, non-commercial use only.
+
+---
+
+## 23. Acknowledgements and data sources
+
+- **3DMigoto buffer hashes**: Hash mappings (past and present) used for character identification, skin component resolution, and mod fixing are aggregated from community databases, particularly [Leo Torrez's ZZ-Model-Importer-Assets](https://github.com/leotorrez/ZZ-Model-Importer-Assets) and community researchers.
+- **Character metadata & lore**: Official character bios, stats, release dates, factions, and attributes are sourced from the [Zenless Zone Zero Wiki (Fandom)](https://zenless-zone-zero.fandom.com/).
+- **Ecosystem**: Special thanks to the creators and maintainers of **3DMigoto** and the **XXMI Launcher** for making Zenless Zone Zero modding possible.
