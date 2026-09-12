@@ -1,12 +1,13 @@
 # ZZZ Mod Hub
 
 [![CI](https://github.com/the-sea-man/ZZZ-Mod-Hub/actions/workflows/ci.yml/badge.svg)](https://github.com/the-sea-man/ZZZ-Mod-Hub/actions/workflows/ci.yml)
+[![Latest Release](https://img.shields.io/github/v/release/the-sea-man/ZZZ-Mod-Hub?color=blue&label=version)](https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/latest)
+[![Platform](https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white)](https://github.com/the-sea-man/ZZZ-Mod-Hub/releases)
+[![License](https://img.shields.io/badge/license-Freeware-blue.svg)](LICENSE.txt)
 
 A desktop mod manager for **Zenless Zone Zero** and **3DMigoto / XXMI**.
 
 Organize your mods, preview 3D models before launching the game, download directly from GameBanana, randomize your outfits, split composite packs, and fix broken mod scripts in one place.
-
-> **Developer documentation:** Looking to contribute, inspect the architecture, or build from source? See [DEVELOPMENT.md](./DEVELOPMENT.md) and [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ---
 
