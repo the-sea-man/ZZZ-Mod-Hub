@@ -1,10 +1,10 @@
 {
   "version": "1.2.4",
   "notes": "ZZZ Mod Hub v1.2.4: Added auto-translation engine for 50+ world languages, silent archive extraction without flashing windows, hardened path security, and clearer warning badge taxonomy.",
-  "pub_date": "2026-09-13T19:18:53Z",
+  "pub_date": "2026-09-13T19:56:05Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQllwWU51NHNHNHVHTVJrWkc1MDN6SEQwYVhZbnE5RXlVazlYM1grbGMxbDZiV3E0VUV5VXBnRzl2enhVV2FTdWVoVGRLcVliVGgrbTZIQnc0aVA0dndFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4MDU2NzgxCWZpbGU6WlpaIE1vZCBIdWJfMS4xLjBfeDY0LXNldHVwLmV4ZQpoa3IxS2g3QVpNVlBrOGFSZ0dFejFXR1dvamFKb3NCT2ZxRXl4alhOekdsYXJnQXd5YXlURkUzQjlXZkZ6L0xBVnFUZUsyemZmb3o5ZjducU1Fc1NEdz09Cg==",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQmJENUF5UDRRcE5HQTF4UVRvZEEyRUVIcFI0VTc4Y1BwZmp6VnZtYzdMa3ovOHpseUVKTlk4Q1hDNHBGN3ZLM2JBMUlzSE9vVXp4SGhkbFJsRG82NGc0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5MzI5MzY0CWZpbGU6WlpaIE1vZCBIdWJfMS4yLjRfeDY0LXNldHVwLmV4ZQp6ayt2VlZPUWpZeUYwL0dkVFkwd3U1ZTZUNzNmVDZLTnQvYi9YMHJjKzFwWDkvcks2ZzBpNFRsUkZObEx3YUxHZVl5alMzUi9VeGVMcWsyTUJPTFpBZz09Cg==",
       "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v1.2.4/ZZZ.Mod.Hub_1.2.4_x64-setup.exe"
     }
   }
