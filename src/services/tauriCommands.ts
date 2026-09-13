@@ -237,6 +237,9 @@ export const tauriCommands = {
     takeAndCropScreenshot: (x: number, y: number, w: number, h: number) =>
       invoke<string>('take_and_crop_screenshot', { x, y, w, h }),
 
+    translateQuery: (query: string, targetLang: string) =>
+      invoke<string>('translate_query', { query, targetLang }),
+
     syncDatabase: (dbUrl?: string) => invoke<any>('sync_database', { dbUrl }),
 
     getCachedDatabase: () => invoke<any>('get_cached_database'),

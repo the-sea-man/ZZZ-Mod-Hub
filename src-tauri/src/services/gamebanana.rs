@@ -2,6 +2,7 @@ use crate::models::{InstallResult, ModUpdateCheckRequest, UpdateAvailable};
 use crate::error::AppError;
 use crate::install::install_mods;
 use std::fs;
+use std::path::Path;
 use serde_json::{Value, json};
 use tauri::{AppHandle, Emitter};
 use tokio::time::{sleep, Duration};
@@ -377,7 +378,17 @@ pub async fn download_gb_mod(
         let mut download_success = false;
         
         let temp_dir = std::env::temp_dir().join("zzzmodmanager_gb_downloads");
-        let temp_file_path = temp_dir.join(&file_name);
+        let safe_name = Path::new(&file_name)
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
+        let safe_name = if safe_name.is_empty() {
+            "download.zip".to_string()
+        } else {
+            crate::services::install::types::sanitize_path_component(&safe_name)
+        };
+        let temp_file_path = temp_dir.join(&safe_name);
         
         let client = match reqwest::Client::builder()
             .user_agent("ZzzModManager/1.0")
@@ -723,14 +734,17 @@ pub async fn download_gb_mod(
 }
 
 #[tauri::command]
-pub fn open_url(url: String) -> Result<(), AppError> {
-    #[cfg(target_os = "windows")]
-    {
-        let _ = std::process::Command::new("cmd")
-            .args(["/C", "start", "", &url])
-            .spawn()?;
+pub fn open_url(app: tauri::AppHandle, url: String) -> Result<(), AppError> {
+    let trimmed = url.trim();
+    if !trimmed.starts_with("http://") && !trimmed.starts_with("https://") {
+        return Err(AppError::Custom("Refusing to open non-HTTP URL".to_string()));
     }
-    
+
+    use tauri_plugin_opener::OpenerExt;
+    app.opener()
+        .open_url(trimmed, None::<&str>)
+        .map_err(|e| AppError::Custom(format!("Failed to open URL: {e}")))?;
+
     Ok(())
 }
 

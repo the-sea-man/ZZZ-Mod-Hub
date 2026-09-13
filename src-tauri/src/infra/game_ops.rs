@@ -344,7 +344,13 @@ pub fn launch_game(exe_path: &str) -> Result<String, AppError> {
                 ps_args.push("-Verb".to_string());
                 ps_args.push("RunAs".to_string());
                 
-                match Command::new("powershell")
+                let mut ps_cmd = Command::new("powershell");
+                #[cfg(target_os = "windows")]
+                {
+                    const CREATE_NO_WINDOW: u32 = 0x08000000;
+                    ps_cmd.creation_flags(CREATE_NO_WINDOW);
+                }
+                match ps_cmd
                     .args(&ps_args)
                     .current_dir(parent)
                     .spawn()

@@ -11,4 +11,5 @@ pub(crate) mod conflict_scanner;
 pub(crate) mod gamebanana;
 pub(crate) mod mod_splitter;
 pub(crate) mod sync;
+pub(crate) mod translator;
 pub(crate) mod ui_generator;

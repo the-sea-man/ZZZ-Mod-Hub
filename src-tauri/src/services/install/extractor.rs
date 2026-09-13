@@ -104,6 +104,12 @@ pub fn extract_rar_or_7z(
     tool_type: ArchiveToolType,
 ) -> Result<(), AppError> {
     let mut cmd = std::process::Command::new(tool_path);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
     match tool_type {
         ArchiveToolType::WinRar => {
             cmd.arg("x")

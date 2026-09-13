@@ -1,11 +1,11 @@
 {
-  "version": "1.2.3",
-  "notes": "ZZZ Mod Hub v1.2.3: 3-mode mod splitter (body parts, accessories, character packs), monolithic mesh protection, multi-resolution fixer preservation, and self-healing script scanner.",
-  "pub_date": "2026-09-11T13:31:31Z",
+  "version": "1.2.4",
+  "notes": "ZZZ Mod Hub v1.2.4: Added auto-translation engine for 50+ world languages, silent archive extraction without flashing windows, hardened path security, and clearer warning badge taxonomy.",
+  "pub_date": "2026-09-13T19:18:53Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQlVpWGg0djNRcWZ2OWRxU1ZhODUwUXlBenlBRGpJTmhvNXdWMkt4dCttMEZWN0dOLytzbnZ3MnBFb2tzT1hmM2UwQ040NVo1bGNCdXM3Z3VZdlhrZUFFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5MTA1NDQ1CWZpbGU6WlpaIE1vZCBIdWJfMS4yLjNfeDY0LXNldHVwLmV4ZQpxVGZ1eUZOMUE2TzFXU0E3WkRBNmp6WmxlSXhSZHlxdnluOG5FM2orek9MQVZJRTM4TWJUUG52b3I4YThtR1ZUaDZ4ZG5YRHFVRkdpdVRUUGJROUdDUT09Cg==",
-      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v1.2.3/ZZZ.Mod.Hub_1.2.3_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQllwWU51NHNHNHVHTVJrWkc1MDN6SEQwYVhZbnE5RXlVazlYM1grbGMxbDZiV3E0VUV5VXBnRzl2enhVV2FTdWVoVGRLcVliVGgrbTZIQnc0aVA0dndFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4MDU2NzgxCWZpbGU6WlpaIE1vZCBIdWJfMS4xLjBfeDY0LXNldHVwLmV4ZQpoa3IxS2g3QVpNVlBrOGFSZ0dFejFXR1dvamFKb3NCT2ZxRXl4alhOekdsYXJnQXd5YXlURkUzQjlXZkZ6L0xBVnFUZUsyemZmb3o5ZjducU1Fc1NEdz09Cg==",
+      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v1.2.4/ZZZ.Mod.Hub_1.2.4_x64-setup.exe"
     }
   }
 }

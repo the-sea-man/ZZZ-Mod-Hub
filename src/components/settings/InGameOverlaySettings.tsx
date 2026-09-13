@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { invoke } from '@tauri-apps/api/core';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { MonitorPlay, AlertTriangle, Sparkles, MousePointerClick } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -19,6 +19,32 @@ export function InGameOverlaySettings() {
     highlightTargetId,
   } = useAppStore();
   const [isGeneratingUI, setIsGeneratingUI] = useState(false);
+  const [devUnlocked, setDevUnlocked] = useState(
+    () => import.meta.env.DEV || localStorage.getItem('dev_enable_interactive_hud') === 'true'
+  );
+
+  useEffect(() => {
+    if (!devUnlocked && hudMenuMode === 'interactive') {
+      setHudMenuMode('classic');
+    }
+  }, [devUnlocked, hudMenuMode, setHudMenuMode]);
+
+  const handleInteractiveClick = (e: React.MouseEvent) => {
+    if (e.shiftKey || e.altKey) {
+      const nextUnlocked = !devUnlocked;
+      setDevUnlocked(nextUnlocked);
+      localStorage.setItem('dev_enable_interactive_hud', nextUnlocked ? 'true' : 'false');
+      if (nextUnlocked) {
+        setHudMenuMode('interactive');
+      } else {
+        setHudMenuMode('classic');
+      }
+      return;
+    }
+    if (devUnlocked) {
+      setHudMenuMode('interactive');
+    }
+  };
 
   const handleGenerateUI = async () => {
     if (!tutorialsSeen.hud) {
@@ -119,23 +145,46 @@ export function InGameOverlaySettings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() => setHudMenuMode('interactive')}
-              className={`p-4 rounded-2xl border text-left transition-all ${
-                hudMenuMode === 'interactive'
-                  ? 'bg-primary/10 border-primary shadow-lg shadow-primary/10'
-                  : 'bg-background/40 border-textMain/10 hover:border-textMain/20'
+              onClick={handleInteractiveClick}
+              aria-disabled={!devUnlocked}
+              className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden ${
+                !devUnlocked
+                  ? 'bg-background/20 border-textMain/5 opacity-50 cursor-not-allowed select-none'
+                  : hudMenuMode === 'interactive'
+                    ? 'bg-primary/10 border-primary shadow-lg shadow-primary/10'
+                    : 'bg-background/40 border-textMain/10 hover:border-textMain/20'
               }`}
             >
-              <div className="flex items-center gap-2 font-bold text-textMain text-sm mb-1">
-                <Sparkles
-                  size={16}
-                  className={hudMenuMode === 'interactive' ? 'text-primary' : 'text-textMuted'}
-                />
-                {t('settings_hud_mode_interactive')}
+              <div className="flex items-center justify-between gap-2 font-bold text-sm mb-1">
+                <div className="flex items-center gap-2 text-textMain">
+                  <Sparkles
+                    size={16}
+                    className={
+                      hudMenuMode === 'interactive' && devUnlocked
+                        ? 'text-primary'
+                        : 'text-textMuted'
+                    }
+                  />
+                  {t('settings_hud_mode_interactive')}
+                </div>
+                {!devUnlocked ? (
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 shrink-0">
+                    {t('settings_hud_mode_wip_badge')}
+                  </span>
+                ) : (
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 shrink-0">
+                    Dev Mode
+                  </span>
+                )}
               </div>
               <p className="text-xs text-textMuted leading-relaxed">
                 {t('settings_hud_mode_interactive_desc')}
               </p>
+              {!devUnlocked && (
+                <p className="text-[11px] text-yellow-500/80 mt-2 font-medium">
+                  {t('settings_hud_mode_interactive_disabled_hint')}
+                </p>
+              )}
             </button>
             <button
               type="button"
@@ -160,7 +209,7 @@ export function InGameOverlaySettings() {
           </div>
         </div>
 
-        {hudMenuMode === 'interactive' && (
+        {hudMenuMode === 'interactive' && devUnlocked && (
           <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-xs text-textMuted space-y-1">
             <div className="font-bold text-primary flex items-center gap-2 mb-1">
               <MousePointerClick size={15} />

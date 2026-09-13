@@ -25,12 +25,46 @@ pub fn set_category_mapping(category_path: &str, character_id: &str, skin_id: Op
     Ok("Mapping saved".into())
 }
 
+fn validate_safe_mod_deletion_path(path: &Path) -> Result<(), AppError> {
+    if path.to_string_lossy().contains("..") {
+        return Err(AppError::Custom("Invalid path: contains '..'".into()));
+    }
+    if !path.exists() {
+        return Ok(());
+    }
+    let canonical = path.canonicalize().map_err(AppError::Io)?;
+    let components: Vec<_> = canonical.components().collect();
+    if components.len() < 3 {
+        return Err(AppError::Custom("Refusing to delete root or top-level directory".into()));
+    }
+
+    let path_str = canonical.to_string_lossy().to_lowercase();
+    let forbidden_substrings = [
+        "\\windows",
+        "\\system32",
+        "\\program files",
+        "\\program files (x86)",
+        "\\appdata\\local\\microsoft",
+    ];
+    for forbidden in forbidden_substrings {
+        if path_str.contains(forbidden) {
+            return Err(AppError::Custom(format!(
+                "Refusing to delete protected system path: {}",
+                path.display()
+            )));
+        }
+    }
+
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn delete_mod(mod_path: String) -> Result<(), AppError> {
     let mod_path = crate::utils::expand_path(&mod_path);
     tauri::async_runtime::spawn_blocking(move || {
         let path = std::path::Path::new(&mod_path);
         if path.exists() {
+            validate_safe_mod_deletion_path(path)?;
             safe_remove_dir_all(path)?;
         }
         Ok(())
@@ -48,18 +82,32 @@ pub async fn open_folder(path: String) -> Result<(), AppError> {
         if win_path.starts_with("\\\\?\\") {
             win_path = win_path[4..].to_string();
         }
-        std::process::Command::new("explorer")
-            .arg(&win_path)
-            .spawn()
-            .map_err(AppError::Io)?;
+        let p = std::path::Path::new(&win_path);
+        if !p.exists() {
+            return Err(AppError::Custom(format!("Path does not exist: {win_path}")));
+        }
+        if p.is_file() {
+            std::process::Command::new("explorer")
+                .arg(format!("/select,{}", win_path))
+                .spawn()
+                .map_err(AppError::Io)?;
+        } else {
+            std::process::Command::new("explorer")
+                .arg(&win_path)
+                .spawn()
+                .map_err(AppError::Io)?;
+        }
     }
     #[cfg(not(target_os = "windows"))]
     {
-        // Fallback for other OS if ever needed
+        let p = std::path::Path::new(&path);
+        if !p.exists() {
+            return Err(AppError::Custom(format!("Path does not exist: {path}")));
+        }
         std::process::Command::new("xdg-open")
             .arg(&path)
             .spawn()
-            .map_err(|e| AppError::Io(e))?;
+            .map_err(AppError::Io)?;
     }
     Ok(())
 }
@@ -111,6 +159,11 @@ pub fn move_to_unassigned(mod_paths: Vec<String>, root_path: String) -> Result<S
 
 #[tauri::command]
 pub fn rename_mod(mod_path: String, new_name: String) -> Result<String, AppError> {
+    let trimmed_name = new_name.trim();
+    if trimmed_name.is_empty() || trimmed_name.contains('/') || trimmed_name.contains('\\') || trimmed_name.contains("..") {
+        return Err("Invalid mod name: cannot contain path separators or '..'".into());
+    }
+
     let mod_path = crate::utils::expand_path(&mod_path);
     let path = Path::new(&mod_path);
     if !path.exists() || !path.is_dir() {
@@ -123,10 +176,10 @@ pub fn rename_mod(mod_path: String, new_name: String) -> Result<String, AppError
         .to_string_lossy()
         .to_string();
     
-    let final_new_name = if current_name.starts_with("DISABLED ") && !new_name.starts_with("DISABLED ") {
-        format!("DISABLED {}", new_name)
+    let final_new_name = if current_name.starts_with("DISABLED ") && !trimmed_name.starts_with("DISABLED ") {
+        format!("DISABLED {}", trimmed_name)
     } else {
-        new_name
+        trimmed_name.to_string()
     };
     
     let new_path = parent.join(&final_new_name);
@@ -140,6 +193,11 @@ pub fn rename_mod(mod_path: String, new_name: String) -> Result<String, AppError
 
 #[tauri::command]
 pub fn move_mod_to_category(mod_path: String, target_category: String, root_path: String) -> Result<String, AppError> {
+    let trimmed_cat = target_category.trim();
+    if trimmed_cat.is_empty() || trimmed_cat.contains("..") || trimmed_cat.starts_with('/') || trimmed_cat.starts_with('\\') {
+        return Err("Invalid target category: cannot contain '..' or leading path separators".into());
+    }
+
     let mod_path = crate::utils::expand_path(&mod_path);
     let path = Path::new(&mod_path);
     if !path.exists() || !path.is_dir() {
@@ -148,7 +206,7 @@ pub fn move_mod_to_category(mod_path: String, target_category: String, root_path
     
     let root_expanded = crate::utils::expand_path(&root_path);
     let root = Path::new(&root_expanded);
-    let target_dir = root.join(&target_category);
+    let target_dir = root.join(trimmed_cat);
     
     if !target_dir.exists() {
         fs::create_dir_all(&target_dir)?;
@@ -360,4 +418,45 @@ pub fn set_mod_tags(mod_path: String, tags: Vec<String>) -> Result<String, AppEr
     fs::write(&meta_path, new_content)?;
 
     Ok("Tags updated successfully".into())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_safe_deletion_rejects_top_level_and_traversal() {
+        // Relative path with ..
+        let res = validate_safe_mod_deletion_path(Path::new("some/path/../forbidden"));
+        assert!(res.is_err(), "Must reject path with '..'");
+
+        // Windows root & system paths
+        #[cfg(windows)]
+        {
+            let res_root = validate_safe_mod_deletion_path(Path::new("C:\\"));
+            assert!(res_root.is_err(), "Must reject drive root");
+
+            let res_win = validate_safe_mod_deletion_path(Path::new("C:\\Windows"));
+            assert!(res_win.is_err(), "Must reject Windows directory");
+        }
+    }
+
+    #[test]
+    fn test_rename_mod_rejects_path_traversal() {
+        let res1 = rename_mod("C:\\Mods\\mod1".into(), "../escaped".into());
+        assert!(res1.is_err(), "Must reject rename with ..");
+
+        let res2 = rename_mod("C:\\Mods\\mod1".into(), "sub/folder".into());
+        assert!(res2.is_err(), "Must reject rename with /");
+    }
+
+    #[test]
+    fn test_move_mod_to_category_rejects_path_traversal() {
+        let res = move_mod_to_category(
+            "C:\\Mods\\mod1".into(),
+            "../../System32".into(),
+            "C:\\Mods".into(),
+        );
+        assert!(res.is_err(), "Must reject move with ..");
+    }
 }

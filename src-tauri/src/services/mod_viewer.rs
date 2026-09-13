@@ -543,7 +543,17 @@ pub async fn preview_gamebanana_mod(
     let cancel_token = guard.token();
 
     let temp_base = std::env::temp_dir().join("zzz_mod_viewer_gb_previews").join(&preview_id);
-    let archive_path = temp_base.join(&file_name);
+    let safe_name = Path::new(&file_name)
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string();
+    let safe_name = if safe_name.is_empty() {
+        "preview.zip".to_string()
+    } else {
+        crate::services::install::types::sanitize_path_component(&safe_name)
+    };
+    let archive_path = temp_base.join(&safe_name);
     let extracted_dir = temp_base.join("extracted");
 
     fs::create_dir_all(&temp_base)?;
@@ -625,13 +635,21 @@ pub async fn commit_gamebanana_preview(
     source_url: Option<String>,
 ) -> Result<Vec<crate::models::InstallResult>, AppError> {
     let temp_p = PathBuf::from(&temp_path);
-    let archive_path = temp_p.join(&archive_file_name);
+    if !temp_p.starts_with(std::env::temp_dir()) {
+        return Err(AppError::Custom("Refusing to operate on non-temp path".into()));
+    }
+    let safe_archive_name = Path::new(&archive_file_name)
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string();
+    let archive_path = temp_p.join(&safe_archive_name);
     if !archive_path.exists() {
         return Err(AppError::Custom("Archive file not found in preview cache".into()));
     }
 
     let archive_str = archive_path.to_string_lossy().to_string();
-    let archive_file_name_clone = archive_file_name.clone();
+    let archive_file_name_clone = safe_archive_name;
     let res = tokio::task::spawn_blocking(move || {
         crate::install::install_mods(
             app,
@@ -649,7 +667,9 @@ pub async fn commit_gamebanana_preview(
     .await
     .map_err(|e| AppError::Custom(format!("Install task failed: {}", e)))??;
 
-    let _ = fs::remove_dir_all(&temp_p);
+    if temp_p.exists() && temp_p.starts_with(std::env::temp_dir()) {
+        let _ = fs::remove_dir_all(&temp_p);
+    }
     Ok(res)
 }
 

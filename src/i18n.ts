@@ -115,26 +115,28 @@ export async function loadCustomLanguagePacks() {
     });
 
     const entries = await readDir('locales', { baseDir: BaseDirectory.AppData });
-    for (const entry of entries) {
-      if (entry.isFile && entry.name.endsWith('.json')) {
-        const langCode = entry.name.replace('.json', '');
+    if (Array.isArray(entries)) {
+      for (const entry of entries) {
+        if (entry.isFile && entry.name.endsWith('.json')) {
+          const langCode = entry.name.replace('.json', '');
 
-        // Skip overwriting built-in bundles with the base reference files unless modified
-        if (isBuiltinLanguage(langCode)) {
-          continue;
-        }
+          // Skip overwriting built-in bundles with the base reference files unless modified
+          if (isBuiltinLanguage(langCode)) {
+            continue;
+          }
 
-        try {
-          const content = await readTextFile(`locales/${entry.name}`, {
-            baseDir: BaseDirectory.AppData,
-          });
-          const json = JSON.parse(content);
-          i18n.addResourceBundle(langCode, defaultNS, json, true, true);
+          try {
+            const content = await readTextFile(`locales/${entry.name}`, {
+              baseDir: BaseDirectory.AppData,
+            });
+            const json = JSON.parse(content);
+            i18n.addResourceBundle(langCode, defaultNS, json, true, true);
 
-          const displayName = json.language_name || langCode.toUpperCase();
-          useAppStore.getState().addAvailableLanguage({ code: langCode, name: displayName });
-        } catch (e) {
-          console.error(`Failed to parse custom language pack ${entry.name}:`, e);
+            const displayName = json.language_name || langCode.toUpperCase();
+            useAppStore.getState().addAvailableLanguage({ code: langCode, name: displayName });
+          } catch (e) {
+            console.error(`Failed to parse custom language pack ${entry.name}:`, e);
+          }
         }
       }
     }

@@ -230,8 +230,15 @@ export const createStatsAchievementsSlice: StateCreator<
 
   hudKey: safeGetString('hudKey', 'h'),
 
-  hudMenuMode:
-    (safeGetString('hudMenuMode', 'interactive') as 'interactive' | 'classic') || 'interactive',
+  hudMenuMode: (() => {
+    const raw = safeGetString('hudMenuMode', 'classic');
+    if (raw === 'interactive') {
+      const isDevTesting =
+        import.meta.env.DEV || localStorage.getItem('dev_enable_interactive_hud') === 'true';
+      return isDevTesting ? 'interactive' : 'classic';
+    }
+    return 'classic';
+  })(),
 
   incrementStat: (stat, amount = 1) => {
     const currentVal = get().userStats[stat] ?? 0;
@@ -304,8 +311,11 @@ export const createStatsAchievementsSlice: StateCreator<
   },
 
   setHudMenuMode: (mode: 'interactive' | 'classic') => {
-    localStorage.setItem('hudMenuMode', mode);
-    set({ hudMenuMode: mode });
+    const isDevTesting =
+      import.meta.env.DEV || localStorage.getItem('dev_enable_interactive_hud') === 'true';
+    const finalMode = !isDevTesting && mode === 'interactive' ? 'classic' : mode;
+    localStorage.setItem('hudMenuMode', finalMode);
+    set({ hudMenuMode: finalMode });
   },
 
   setQuickSnapperAutoReload: (enabled: boolean) => {

@@ -10,7 +10,7 @@ pub(crate) use infra::{
     thumbnail_cache, watcher,
 };
 pub(crate) use services::{
-    community_tags, conflict_scanner, gamebanana, mod_splitter, sync, ui_generator,
+    community_tags, conflict_scanner, gamebanana, mod_splitter, sync, translator, ui_generator,
 };
 
 use tauri::Manager;
@@ -134,7 +134,9 @@ pub fn run() {
             // task_manager.rs — Universal action & task cancellation engine
             task_manager::cancel_task,
             task_manager::cancel_tasks_by_prefix,
-            task_manager::list_active_tasks
+            task_manager::list_active_tasks,
+            // translator.rs — Native translation request bypassing CORS
+            translator::translate_query
         ])
 
         .run(tauri::generate_context!())

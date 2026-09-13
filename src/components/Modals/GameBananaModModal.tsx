@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { ModViewerModal } from '../ModViewer/ModViewerModal';
 import type { ViewerPayload } from '../../types/ipc';
+import { sanitizeHtml } from '../../utils/safeHtml';
 
 const PLACEHOLDER_NO_IMAGE = 'https://via.placeholder.com/600x400?text=No+Image';
 const PLACEHOLDER_AVATAR = 'https://via.placeholder.com/30';
@@ -443,7 +444,9 @@ export function GameBananaModModal({ mod, onClose }: GameBananaModModalProps) {
                 </h3>
                 <div
                   className="prose prose-invert max-w-none text-sm text-textMuted"
-                  dangerouslySetInnerHTML={{ __html: details._sText || details._sDescription }}
+                  dangerouslySetInnerHTML={{
+                    __html: sanitizeHtml(details._sText || details._sDescription),
+                  }}
                   onClick={handleDescriptionClick}
                 />
               </div>

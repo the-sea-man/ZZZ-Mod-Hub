@@ -157,10 +157,13 @@ pub fn install_mods(
 
     #[cfg(target_os = "windows")]
     {
-        let _ = std::process::Command::new("attrib")
-            .arg("+h")
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        let mut cmd = std::process::Command::new("attrib");
+        cmd.arg("+h")
             .arg(staging_dir.to_string_lossy().to_string())
-            .output();
+            .creation_flags(CREATE_NO_WINDOW);
+        let _ = cmd.output();
     }
 
     for archive_path_str in archive_paths {
