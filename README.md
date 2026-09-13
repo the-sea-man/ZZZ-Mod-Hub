@@ -3,11 +3,21 @@
 [![CI](https://github.com/the-sea-man/ZZZ-Mod-Hub/actions/workflows/ci.yml/badge.svg)](https://github.com/the-sea-man/ZZZ-Mod-Hub/actions/workflows/ci.yml)
 [![Latest Release](https://img.shields.io/github/v/release/the-sea-man/ZZZ-Mod-Hub?color=blue&label=version)](https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/latest)
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white)](https://github.com/the-sea-man/ZZZ-Mod-Hub/releases)
-[![License](https://img.shields.io/badge/license-Freeware-blue.svg)](LICENSE.txt)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE.txt)
 
 A desktop mod manager for **Zenless Zone Zero** and **3DMigoto / XXMI**.
 
 Organize your mods, preview 3D models before launching the game, download directly from GameBanana, randomize your outfits, split composite packs, and fix broken mod scripts in one place.
+
+---
+
+## ⚡ Quick start video guide (under 4 minutes)
+
+[![ZZZ Mod Hub Quick Start Video](https://img.youtube.com/vi/hKp_mztmHS0/hqdefault.jpg)](https://youtu.be/hKp_mztmHS0)
+
+> **New here?** It takes **less than 4 minutes** to download the app, set up your folders, and have all features, mod sorting, and in-game tools running seamlessly in Zenless Zone Zero.
+>
+> ▶️ **[Watch the 4-minute setup walkthrough on YouTube](https://youtu.be/hKp_mztmHS0)**
 
 ---
 
@@ -638,7 +648,7 @@ Safeguard your library settings, custom tags, and mod notes.
 - **Operating system**: Windows 10 or Windows 11 (64-bit).
 - **Mod loader**: ZZZ Mod Hub is a **mod manager**, not a mod loader. You still need **3DMigoto** or the **XXMI Launcher** installed to load mods into Zenless Zone Zero.
 - **Game disclaimer**: This application is an independent freeware utility and is not affiliated with, endorsed by, or connected to miHoYo, HoYoverse, or Zenless Zone Zero. Use mods responsibly.
-- **License**: This software is provided as proprietary freeware for personal, non-commercial use only.
+- **License**: Free and open source software licensed under the **GNU General Public License v3.0 (GPL-3.0)**. See [LICENSE.txt](./LICENSE.txt) for details.
 
 ---
 
