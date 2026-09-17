@@ -2060,11 +2060,7 @@ pub fn resolve_backup_target_info(backup_path: &Path) -> Option<(String, PathBuf
         let clean_orig = name.trim_end_matches(".disabled.bak").to_string();
         let target_path = parent.join(&clean_orig);
         return Some((clean_orig, target_path, None));
-    } else if name.ends_with(".ini.bak") {
-        let clean_orig = name.trim_end_matches(".bak").to_string();
-        let target_path = parent.join(&clean_orig);
-        return Some((clean_orig, target_path, None));
-    } else if name.ends_with(".buf.bak") {
+    } else if name.ends_with(".ini.bak") || name.ends_with(".buf.bak") {
         let clean_orig = name.trim_end_matches(".bak").to_string();
         let target_path = parent.join(&clean_orig);
         return Some((clean_orig, target_path, None));

@@ -122,7 +122,7 @@ fn rotate_file_if_needed(path: &Path) {
     }
     if let Ok(file) = File::open(path) {
         let reader = BufReader::new(file);
-        let lines: Vec<String> = reader.lines().filter_map(Result::ok).collect();
+        let lines: Vec<String> = reader.lines().map_while(Result::ok).collect();
         if lines.len() > MAX_LOG_LINES {
             let keep_from = lines.len().saturating_sub(TRUNCATE_TO_LINES);
             let truncated = lines[keep_from..].join("\n");
@@ -268,7 +268,7 @@ pub fn get_alteration_entries(limit: usize) -> Vec<AlterationEntry> {
     let mut entries = Vec::new();
     if let Ok(file) = File::open(&log_jsonl) {
         let reader = BufReader::new(file);
-        for line in reader.lines().filter_map(Result::ok) {
+        for line in reader.lines().map_while(Result::ok) {
             if let Ok(mut entry) = serde_json::from_str::<AlterationEntry>(&line) {
                 // Dynamically verify if rollback is still possible on disk
                 if entry.can_undo {
@@ -320,7 +320,7 @@ pub fn get_error_entries(limit: usize) -> Vec<ErrorLogEntry> {
     let mut entries = Vec::new();
     if let Ok(file) = File::open(&log_jsonl) {
         let reader = BufReader::new(file);
-        for line in reader.lines().filter_map(Result::ok) {
+        for line in reader.lines().map_while(Result::ok) {
             if let Ok(entry) = serde_json::from_str::<ErrorLogEntry>(&line) {
                 entries.push(entry);
             }
@@ -348,7 +348,7 @@ pub fn clear_log(log_type: &str) -> Result<(), AppError> {
             let _ = fs::remove_file(logs_dir.join("errors.log"));
             let _ = fs::remove_file(logs_dir.join("errors.jsonl"));
         }
-        "all" | _ => {
+        _ => {
             let _ = fs::remove_file(logs_dir.join("alterations.log"));
             let _ = fs::remove_file(logs_dir.join("alterations.jsonl"));
             let _ = fs::remove_file(logs_dir.join("errors.log"));
