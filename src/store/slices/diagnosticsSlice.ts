@@ -11,7 +11,7 @@ import { EntityDBInfo, getActiveModsPath } from '../../types';
 import { invoke } from '@tauri-apps/api/core';
 import { getVersion } from '@tauri-apps/api/app';
 import { check } from '@tauri-apps/plugin-updater';
-import { safeGetJSON, safeSetJSON, safeGetString } from '../../utils/storage';
+import { safeGetJSON, safeSetJSON, safeGetString, safeGetBool } from '../../utils/storage';
 import { playSyncSound } from '../../utils/audio';
 
 let hashAnalysisDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -81,7 +81,7 @@ export const createDiagnosticsSlice: StateCreator<AppState, [], [], DiagnosticsS
 
   appVersion: '1.0.2',
 
-  autoCheckUpdates: JSON.parse(localStorage.getItem('autoCheckUpdates') || 'false'),
+  autoCheckUpdates: safeGetBool('autoCheckUpdates', false),
 
   availableUpdates: [],
 
@@ -377,8 +377,10 @@ export const createDiagnosticsSlice: StateCreator<AppState, [], [], DiagnosticsS
   },
 
   setAutoCheckUpdates: (val) => {
-    localStorage.setItem('autoCheckUpdates', JSON.stringify(val));
-    set({ autoCheckUpdates: val });
+    localStorage.setItem('autoCheckUpdates', val ? 'true' : 'false');
+    localStorage.setItem('performanceProfile', 'custom');
+    localStorage.setItem('lowPerformanceMode', 'false');
+    set({ autoCheckUpdates: val, performanceProfile: 'custom', lowPerformanceMode: false });
   },
 
   setAvailableUpdates: (updates) => set({ availableUpdates: updates }),

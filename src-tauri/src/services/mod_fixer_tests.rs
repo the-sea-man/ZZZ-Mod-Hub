@@ -1843,4 +1843,132 @@ override_byte_stride = 92
         let _ = fs::remove_dir_all(&temp_dir);
     }
 
+    #[test]
+    fn test_find_all_slot_buffers_contract() {
+        let ini = r#"
+[TextureOverrideBelleHairBlend]
+hash = 76a50b18
+vb2 = ResourceBelleHairBlend
 
+[TextureOverrideBelleBodyBlend]
+hash = 3ee01622
+vb2 = ref ResourceBelleBodyBlend
+
+[ResourceBelleHairBlend]
+type = Buffer
+stride = 32
+filename = BelleHairBlend.buf
+
+[ResourceBelleBodyBlend]
+type = Buffer
+stride = 32
+filename = ".\BelleBodyBlend.buf"
+"#;
+        let buffers = find_all_slot_buffers(ini, "vb2");
+        assert_eq!(buffers.len(), 2);
+        let filenames: Vec<&str> = buffers.iter().map(|(f, _)| f.as_str()).collect();
+        assert!(filenames.contains(&"BelleHairBlend.buf"));
+        assert!(filenames.contains(&"BelleBodyBlend.buf"));
+        assert_eq!(buffers[0].1, 32);
+        assert_eq!(buffers[1].1, 32);
+    }
+
+    #[test]
+    fn test_ensure_handling_skip_on_draw_sections_contract() {
+        let ini = r#"
+[TextureOverrideBelleHairIB]
+hash = aa9ffb85
+handling = skip
+
+[TextureOverrideBelleHair]
+hash = aa9ffb85
+match_first_index = 0
+run = CommandListSkinTexture
+ib = ResourceBelleHairIB
+drawindexed = 22587, 26247, 0
+
+[TextureOverrideBelleDiffuse]
+hash = 1ce58567
+this = ResourceBelleDiffuse
+"#;
+        let (fixed_ini, count) = ensure_handling_skip_on_draw_sections(ini);
+        assert_eq!(count, 1);
+        assert!(fixed_ini.contains("[TextureOverrideBelleHair]\r\nhash = aa9ffb85\r\nhandling = skip\r\nmatch_first_index = 0"));
+        assert!(!fixed_ini.contains("[TextureOverrideBelleDiffuse]\r\nhandling = skip"));
+
+        // Running again must be idempotent (0 modifications)
+        let (fixed_ini_2, count_2) = ensure_handling_skip_on_draw_sections(&fixed_ini);
+        assert_eq!(count_2, 0);
+        assert_eq!(fixed_ini, fixed_ini_2);
+    }
+
+    #[test]
+    fn test_ensure_character_suppressions_belle_contract() {
+        let ini = r#"
+[TextureOverrideBelleHair]
+hash = aa9ffb85
+handling = skip
+
+[TextureOverrideBelleBody]
+hash = c2b4ce3a
+match_first_index = 0
+handling = skip
+"#;
+        let (suppressed, count) = ensure_character_suppressions(ini, "Belle");
+        // Legs (e6afd8d1), Earrings (07920753), Hairpin (3acf9aea), BodyB (c2b4ce3a with match_first_index = 31275)
+        assert_eq!(count, 4);
+        assert!(suppressed.contains("[TextureOverrideBelleLegs]"));
+        assert!(suppressed.contains("hash = e6afd8d1"));
+        assert!(suppressed.contains("[TextureOverrideBelleEarrings]"));
+        assert!(suppressed.contains("[TextureOverrideBelleHairpin]"));
+        assert!(suppressed.contains("[TextureOverrideBelleBodyB]"));
+        assert!(suppressed.contains("match_first_index = 31275"));
+
+        // Running again on already suppressed content must not duplicate
+        let (suppressed_2, count_2) = ensure_character_suppressions(&suppressed, "Belle");
+        assert_eq!(count_2, 0);
+        assert_eq!(suppressed, suppressed_2);
+    }
+
+    #[test]
+    fn test_prevent_infinite_upgrade_prompts_when_section_exists() {
+        let temp_dir = std::env::temp_dir().join(format!("zzz_test_inf_prompts_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        let mod_dir = temp_dir.join("Playable Characters").join("Belle - Vibrant Store Manager").join("TestMod");
+        fs::create_dir_all(&mod_dir).unwrap();
+
+        // INI already has Belle.Hair.IB and terminal hash aa9ffb85
+        let ini_content = r#"
+[TextureOverrideBelleHair]
+hash = aa9ffb85
+handling = skip
+
+[TextureOverrideBelle.Hair.IB]
+hash = aa9ffb85
+match_priority = 0
+"#;
+        fs::write(mod_dir.join("Belle.ini"), ini_content).unwrap();
+
+        let mut db = FixerDatabase::default();
+        // A rule that would otherwise propose adding Belle.Hair.IB
+        db.rules.insert(
+            "1ce58567".to_string(),
+            FixerRule {
+                hash: "1ce58567".to_string(),
+                character: "Belle".to_string(),
+                description: "Belle Hair Diffuse".to_string(),
+                actions: vec![FixerRuleAction {
+                    action_type: "add_section_if_missing".to_string(),
+                    equiv_hashes: Some(vec!["bea4a483".to_string()]),
+                    section_title: Some("Belle.Hair.IB".to_string()),
+                    section_content: Some("match_priority = 0\n".to_string()),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            },
+        );
+
+        let analysis = analyze_mod_for_fixes(&mod_dir, &db);
+        assert!(!analysis.is_fixable, "Must not propose adding section that is already present in INI");
+
+        let _ = fs::remove_dir_all(&temp_dir);
+    }

@@ -9,10 +9,12 @@ import {
   Sparkles,
   RotateCcw,
   ShieldCheck,
+  ShieldAlert,
   Tag,
   Sliders,
   Maximize2,
   Lock,
+  Unlock,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -36,6 +38,7 @@ export function CardCustomizerSettings() {
   const [hoveredComponent, setHoveredComponent] = useState<ModCardComponentId | null>(null);
   const [previewActive, setPreviewActive] = useState<boolean>(true);
   const [isFavorite, setIsFavorite] = useState<boolean>(true);
+  const [isLocked, setIsLocked] = useState<boolean>(false);
 
   // Helper for applying partial config to cardCustomization
   const updateFrame = (patch: Partial<typeof cardCustomization.frame>) => {
@@ -349,15 +352,14 @@ export function CardCustomizerSettings() {
                 }`}
               >
                 {/* Mock Mod Artwork Graphic */}
-                <div
-                  className={`w-full h-full flex flex-col items-center justify-center relative transition-transform duration-200 ${
-                    cardCustomization.imageOverlay.imageHoverZoom ? 'group-hover:scale-105' : ''
-                  }`}
-                >
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-cyan-500/20 to-primary/30 flex items-center justify-center border border-primary/20 shadow-inner">
-                    <span className="text-4xl select-none">🦈</span>
-                  </div>
-                  <span className="text-xs font-bold text-textMuted mt-3">Ellen Joe Mockup</span>
+                <div className="absolute inset-0 overflow-hidden">
+                  <img
+                    src="/app_background.jpg"
+                    alt="Mockup Preview"
+                    className={`h-full w-full object-cover opacity-90 transition-transform duration-200 ${
+                      cardCustomization.imageOverlay.imageHoverZoom ? 'group-hover:scale-105' : ''
+                    }`}
+                  />
                 </div>
 
                 {/* Darkening Gradient Overlay */}
@@ -383,7 +385,7 @@ export function CardCustomizerSettings() {
                     setHoveredComponent('badges');
                   }}
                   onMouseLeave={() => setHoveredComponent(null)}
-                  className={`absolute top-2.5 left-2.5 right-2.5 flex justify-between items-start pointer-events-auto transition-all p-1 rounded-xl ${
+                  className={`absolute top-2.5 left-2.5 right-2.5 flex justify-between items-start pointer-events-auto transition-all p-1 rounded-xl z-20 ${
                     selectedComponent === 'badges'
                       ? 'ring-2 ring-primary bg-primary/10'
                       : hoveredComponent === 'badges'
@@ -391,31 +393,58 @@ export function CardCustomizerSettings() {
                         : ''
                   }`}
                 >
-                  {/* Top-Left: Favorite Heart */}
-                  {cardCustomization.badges.showFavoriteHeart ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsFavorite(!isFavorite);
-                      }}
-                      className={`p-2 rounded-full transition-all shadow-lg flex items-center justify-center cursor-pointer ${
-                        isFavorite
-                          ? 'bg-rose-500/80 border border-rose-500 text-white shadow-rose-500/30'
-                          : getBadgeStyleClass()
-                      }`}
-                      title="Toggle favorite preview"
-                    >
-                      <Heart size={13} className={isFavorite ? 'fill-current' : ''} />
-                    </button>
-                  ) : (
-                    <div />
-                  )}
+                  {/* Top-Left: Favorite Heart & Randomizer Lock */}
+                  <div className="flex gap-1.5 items-center">
+                    {cardCustomization.badges.showFavoriteHeart && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsFavorite(!isFavorite);
+                        }}
+                        className={`p-2 rounded-full transition-all shadow-lg flex items-center justify-center cursor-pointer ${
+                          isFavorite
+                            ? 'bg-rose-500/80 border border-rose-500 text-white shadow-rose-500/30'
+                            : getBadgeStyleClass()
+                        }`}
+                        title="Toggle favorite preview"
+                      >
+                        <Heart size={13} className={isFavorite ? 'fill-current' : ''} />
+                      </button>
+                    )}
 
-                  {/* Top-Right: Size & Update Badges */}
-                  <div className="flex flex-col items-end gap-1.5">
+                    {cardCustomization.badges.showLockBadge !== false && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsLocked(!isLocked);
+                        }}
+                        className={`p-2 rounded-full transition-all shadow-lg flex items-center justify-center cursor-pointer ${
+                          isLocked
+                            ? 'bg-primary/80 border border-primary text-white shadow-primary/30'
+                            : getBadgeStyleClass()
+                        }`}
+                        title="Toggle lock preview (Randomizer lock)"
+                      >
+                        {isLocked ? <Lock size={13} /> : <Unlock size={13} />}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Top-Right: Full Badges Set (Update, Rollback, Upgrade, Size, Conflict) */}
+                  <div className="flex flex-col items-end gap-1.5 pointer-events-auto">
                     {cardCustomization.badges.showUpdateBadge && (
-                      <span className="bg-amber-500/90 text-black text-[10px] px-2 py-0.5 rounded-full border border-amber-300 font-bold flex items-center gap-1 shadow-md">
-                        <Sparkles size={10} /> Update
+                      <span className="bg-amber-500/90 text-black text-[10px] px-2 py-0.5 rounded-full border border-amber-300 font-bold flex items-center gap-1 shadow-md animate-pulse">
+                        <Sparkles size={10} /> Page Updated
+                      </span>
+                    )}
+                    {cardCustomization.badges.showWarningBadges !== false && (
+                      <span className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full border border-indigo-300 font-bold flex items-center gap-1 shadow-md">
+                        <RotateCcw size={10} /> Rollback
+                      </span>
+                    )}
+                    {cardCustomization.badges.showWarningBadges !== false && (
+                      <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-black text-[10px] px-2 py-0.5 rounded-full border border-amber-300 font-bold flex items-center gap-1 shadow-md">
+                        <Sparkles size={10} /> Upgrade
                       </span>
                     )}
                     {cardCustomization.badges.showSizeBadge && (
@@ -423,6 +452,11 @@ export function CardCustomizerSettings() {
                         className={`text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wide shadow-md ${getBadgeStyleClass()}`}
                       >
                         42.8 MB
+                      </span>
+                    )}
+                    {cardCustomization.badges.showWarningBadges !== false && (
+                      <span className="p-1 bg-red-500/90 text-white rounded-full border border-red-300 shadow-md flex items-center justify-center">
+                        <ShieldAlert size={11} />
                       </span>
                     )}
                   </div>
@@ -439,7 +473,7 @@ export function CardCustomizerSettings() {
                     setHoveredComponent('action_buttons');
                   }}
                   onMouseLeave={() => setHoveredComponent(null)}
-                  className={`absolute bottom-2.5 left-2.5 right-2.5 flex justify-between items-center pointer-events-auto transition-all p-1 rounded-xl ${
+                  className={`absolute bottom-2.5 left-2.5 right-2.5 flex justify-between items-center pointer-events-auto transition-all p-1 rounded-xl z-20 ${
                     selectedComponent === 'action_buttons'
                       ? 'ring-2 ring-primary bg-primary/10'
                       : hoveredComponent === 'action_buttons'
@@ -469,7 +503,7 @@ export function CardCustomizerSettings() {
 
                 {/* Disabled Overlay Simulation */}
                 {!previewActive && (
-                  <div className="absolute inset-0 bg-black/70 flex items-center justify-center backdrop-blur-xs z-30 pointer-events-none">
+                  <div className="absolute inset-0 bg-black/75 flex items-center justify-center z-30 pointer-events-none">
                     <span className="text-red-400 font-black tracking-widest uppercase rotate-[-15deg] border-4 border-red-400/50 px-5 py-1.5 rounded-xl text-lg shadow-[0_0_30px_rgba(255,0,0,0.2)]">
                       Disabled
                     </span>
@@ -1107,6 +1141,47 @@ export function CardCustomizerSettings() {
                   </button>
                 </div>
 
+                {/* Show Randomizer Lock Badge */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-surface text-primary">
+                      <Lock size={16} />
+                    </div>
+                    <div>
+                      <span className="font-bold text-textMain text-sm block">
+                        {t('card_show_lock_badge', 'Randomizer Lock Button')}
+                      </span>
+                      <span className="text-xs text-textMuted">
+                        {t(
+                          'card_show_lock_badge_desc',
+                          'Toggle on the upper left to include or lock out mod from Randomizer.'
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateBadges({
+                        showLockBadge: cardCustomization.badges.showLockBadge === false,
+                      })
+                    }
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                      cardCustomization.badges.showLockBadge !== false
+                        ? 'bg-primary'
+                        : 'bg-white/10'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        cardCustomization.badges.showLockBadge !== false
+                          ? 'translate-x-6'
+                          : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
                 {/* Show Size Badge */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -1172,6 +1247,47 @@ export function CardCustomizerSettings() {
                     <span
                       className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                         cardCustomization.badges.showUpdateBadge ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Show Warning & Rollback Badges */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-surface text-indigo-400">
+                      <ShieldCheck size={16} />
+                    </div>
+                    <div>
+                      <span className="font-bold text-textMain text-sm block">
+                        {t('card_show_warning_badges', 'Warning & Rollback Badges')}
+                      </span>
+                      <span className="text-xs text-textMuted">
+                        {t(
+                          'card_show_warning_badges_desc',
+                          'Displays rollback, upgrade, and conflict status pills on the upper right.'
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateBadges({
+                        showWarningBadges: cardCustomization.badges.showWarningBadges === false,
+                      })
+                    }
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                      cardCustomization.badges.showWarningBadges !== false
+                        ? 'bg-primary'
+                        : 'bg-white/10'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        cardCustomization.badges.showWarningBadges !== false
+                          ? 'translate-x-6'
+                          : 'translate-x-1'
                       }`}
                     />
                   </button>

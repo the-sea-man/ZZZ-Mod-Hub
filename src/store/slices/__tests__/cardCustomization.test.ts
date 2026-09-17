@@ -19,6 +19,8 @@ describe('cardCustomization slice', () => {
     expect(config.frame.blurAmount).toBe(DEFAULT_MOD_CARD_CUSTOMIZATION.frame.blurAmount);
     expect(config.actionButtons.showFolderButton).toBe(true);
     expect(config.badges.showFavoriteHeart).toBe(true);
+    expect(config.badges.showLockBadge).toBe(true);
+    expect(config.badges.showWarningBadges).toBe(true);
     expect(config.infoPanel.showCategorySubtitle).toBe(true);
     expect(config.toggleButton.glowEffect).toBe(true);
   });
@@ -74,6 +76,8 @@ describe('cardCustomization slice', () => {
     let config = useAppStore.getState().cardCustomization;
     expect(config.frame.borderRadius).toBe(CARD_PRESETS.minimal.config.frame.borderRadius);
     expect(config.actionButtons.showFolderButton).toBe(false);
+    expect(config.badges.showLockBadge).toBe(false);
+    expect(config.badges.showWarningBadges).toBe(false);
     expect(config.infoPanel.showTags).toBe(false);
 
     // Apply Cyber Glow preset

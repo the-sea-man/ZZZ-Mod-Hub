@@ -449,7 +449,13 @@ export const createPreferencesSlice: StateCreator<AppState, [], [], PreferencesS
 
   setAnimationsEnabled: (enabled: boolean) => {
     localStorage.setItem('animationsEnabled', enabled.toString());
-    set({ animationsEnabled: enabled });
+    localStorage.setItem('performanceProfile', 'custom');
+    localStorage.setItem('lowPerformanceMode', 'false');
+    set({
+      animationsEnabled: enabled,
+      performanceProfile: 'custom',
+      lowPerformanceMode: false,
+    });
   },
 
   setAppOpacity: (opacity: number) => {
@@ -489,7 +495,13 @@ export const createPreferencesSlice: StateCreator<AppState, [], [], PreferencesS
 
   setBlurAmount: (amount: number) => {
     localStorage.setItem('blurAmount', amount.toString());
-    set({ blurAmount: amount });
+    localStorage.setItem('performanceProfile', 'custom');
+    localStorage.setItem('lowPerformanceMode', 'false');
+    set({
+      blurAmount: amount,
+      performanceProfile: 'custom',
+      lowPerformanceMode: false,
+    });
   },
 
   setBlurNsfw: (enabled: boolean) => {
@@ -726,7 +738,13 @@ export const createPreferencesSlice: StateCreator<AppState, [], [], PreferencesS
 
   setWatcherEnabled: (val: boolean) => {
     localStorage.setItem('watcherEnabled', val ? 'true' : 'false');
-    set({ watcherEnabled: val });
+    localStorage.setItem('performanceProfile', 'custom');
+    localStorage.setItem('lowPerformanceMode', 'false');
+    set({
+      watcherEnabled: val,
+      performanceProfile: 'custom',
+      lowPerformanceMode: false,
+    });
   },
 
   setWinrarPath: (path: string) => {
@@ -847,31 +865,49 @@ export const createPreferencesSlice: StateCreator<AppState, [], [], PreferencesS
         animationsEnabled: true,
         blurAmount: 16,
       });
+    } else if (profile === 'custom') {
+      localStorage.setItem('lowPerformanceMode', 'false');
+      set({
+        performanceProfile: profile,
+        lowPerformanceMode: false,
+      });
     }
   },
   startupScanEnabled: safeGetBool('startupScanEnabled', true),
   setStartupScanEnabled: (val: boolean) => {
     localStorage.setItem('startupScanEnabled', val.toString());
     localStorage.setItem('performanceProfile', 'custom');
-    set({ startupScanEnabled: val, performanceProfile: 'custom' });
+    localStorage.setItem('lowPerformanceMode', 'false');
+    set({ startupScanEnabled: val, performanceProfile: 'custom', lowPerformanceMode: false });
   },
   autoScriptAnalysisEnabled: safeGetBool('autoScriptAnalysisEnabled', true),
   setAutoScriptAnalysisEnabled: (val: boolean) => {
     localStorage.setItem('autoScriptAnalysisEnabled', val.toString());
     localStorage.setItem('performanceProfile', 'custom');
-    set({ autoScriptAnalysisEnabled: val, performanceProfile: 'custom' });
+    localStorage.setItem('lowPerformanceMode', 'false');
+    set({
+      autoScriptAnalysisEnabled: val,
+      performanceProfile: 'custom',
+      lowPerformanceMode: false,
+    });
   },
   autoConflictDetectionEnabled: safeGetBool('autoConflictDetectionEnabled', true),
   setAutoConflictDetectionEnabled: (val: boolean) => {
     localStorage.setItem('autoConflictDetectionEnabled', val.toString());
     localStorage.setItem('performanceProfile', 'custom');
-    set({ autoConflictDetectionEnabled: val, performanceProfile: 'custom' });
+    localStorage.setItem('lowPerformanceMode', 'false');
+    set({
+      autoConflictDetectionEnabled: val,
+      performanceProfile: 'custom',
+      lowPerformanceMode: false,
+    });
   },
   fastGamePolling: safeGetBool('fastGamePolling', false),
   setFastGamePolling: (val: boolean) => {
     localStorage.setItem('fastGamePolling', val.toString());
     localStorage.setItem('performanceProfile', 'custom');
-    set({ fastGamePolling: val, performanceProfile: 'custom' });
+    localStorage.setItem('lowPerformanceMode', 'false');
+    set({ fastGamePolling: val, performanceProfile: 'custom', lowPerformanceMode: false });
   },
   isAnalyzingMods: false,
   runManualAnalysis: async () => {

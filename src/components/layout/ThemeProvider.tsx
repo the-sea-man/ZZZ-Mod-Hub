@@ -11,11 +11,10 @@ export function ThemeProvider() {
     blurAmount,
     uiScale,
     animationsEnabled,
-    lowPerformanceMode,
     performanceProfile,
   } = useAppStore();
 
-  const isLowPerf = lowPerformanceMode || performanceProfile === 'low';
+  const isLowPerf = performanceProfile === 'low';
 
   useEffect(() => {
     document.documentElement.className = theme === 'dark' ? '' : `theme-${theme}`;

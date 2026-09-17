@@ -1784,5 +1784,17 @@
   "radius_match": "Match Frame",
   "card_toggle_glow": "Active Glow Accent",
   "card_toggle_glow_desc": "Soft colored drop-shadow when the mod is enabled.",
-  "settings_card_appearance": "Card Style"
+  "settings_card_appearance": "Card Style",
+  "library_tools_btn": "Tools",
+  "library_tools_maintenance": "Maintenance & Diagnostics",
+  "library_tools_folders": "Folder Setup",
+  "library_tools_engine": "Engine Performance",
+  "library_tools_desc": "Quick access to folder setup, updates, health analysis, and engine settings.",
+  "reset_filters": "Reset Filters",
+  "active_preset_label": "Preset",
+  "clear_search": "Clear search",
+  "card_show_lock_badge": "Randomizer Lock Button",
+  "card_show_lock_badge_desc": "Toggle on the upper left to include or lock out mod from Randomizer.",
+  "card_show_warning_badges": "Warning & Rollback Badges",
+  "card_show_warning_badges_desc": "Displays rollback, upgrade, and conflict status pills on the upper right."
 }

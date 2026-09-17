@@ -16,7 +16,6 @@ export function BackgroundEngine() {
     bgImageBrightness,
     bgImageFit,
     blurAmount,
-    lowPerformanceMode,
     performanceProfile,
   } = useAppStore();
 
@@ -69,7 +68,7 @@ export function BackgroundEngine() {
 
   if (theme !== 'glass') return null;
 
-  const isLowPerf = lowPerformanceMode || performanceProfile === 'low';
+  const isLowPerf = performanceProfile === 'low';
   const effectiveBgBlur = blurAmount === 0 || isLowPerf ? 0 : bgImageBlur;
 
   return createPortal(

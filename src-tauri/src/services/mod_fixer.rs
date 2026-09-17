@@ -954,6 +954,16 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
                                     if !has_any && !equivs.is_empty() {
                                         let (target_eq, _) = resolve_terminal_hash(&equivs[0], fixer_db);
                                         let title = action.section_title.clone().unwrap_or_default();
+
+                                        let sec_tag = format!("[TextureOverride{}]", title);
+                                        let sec_tag_no_dots = format!("[TextureOverride{}]", title.replace('.', ""));
+                                        let content_lower = content.to_lowercase();
+                                        if content_lower.contains(&sec_tag.to_lowercase())
+                                            || content_lower.contains(&sec_tag_no_dots.to_lowercase())
+                                            || mod_hash_set.contains(&target_eq.to_lowercase()) {
+                                            continue;
+                                        }
+
                                         let item = MultiResFixDetail {
                                             source_hash: hash.clone(),
                                             target_hash: target_eq,
@@ -1258,6 +1268,195 @@ fn find_referenced_buffers(ini_content: &str, target_hash: &str, target_slot: &s
     }
 
     results
+}
+
+/// Find all buffer filenames referenced in any section using target_slot (e.g. "vb2")
+pub fn find_all_slot_buffers(ini_content: &str, target_slot: &str) -> Vec<(String, usize)> {
+    let sections = parse_ini_sections(ini_content);
+    let target_slot_lower = target_slot.to_lowercase();
+    let mut resource_names = HashSet::new();
+
+    for sec in &sections {
+        for l in &sec.lines {
+            let l_trimmed = l.trim();
+            if l_trimmed.starts_with(';') || l_trimmed.starts_with('#') {
+                continue;
+            }
+            let l_clean = l.split(';').next().unwrap_or("").split('#').next().unwrap_or("").trim();
+            if let Some((k, v)) = l_clean.split_once('=') {
+                let k_t = k.trim();
+                let mut v_t = v.trim();
+                if k_t.eq_ignore_ascii_case(&target_slot_lower) {
+                    if v_t.to_lowercase().starts_with("ref ") {
+                        v_t = v_t[4..].trim();
+                    }
+                    resource_names.insert(v_t.to_string());
+                }
+            }
+        }
+    }
+
+    let mut results = Vec::new();
+    for sec in &sections {
+        let header_name = &sec.header;
+        let is_target_resource = resource_names.iter().any(|r| {
+            header_name.eq_ignore_ascii_case(r)
+                || (header_name.starts_with("Resource") && header_name[8..].eq_ignore_ascii_case(r))
+                || (r.starts_with("Resource") && r[8..].eq_ignore_ascii_case(header_name))
+        });
+
+        if is_target_resource {
+            let mut filename = None;
+            let mut stride = 0;
+
+            for l in &sec.lines {
+                let l_trimmed = l.trim();
+                if l_trimmed.starts_with(';') || l_trimmed.starts_with('#') {
+                    continue;
+                }
+                let l_clean = l.split(';').next().unwrap_or("").split('#').next().unwrap_or("").trim();
+                if let Some((k, v)) = l_clean.split_once('=') {
+                    let k_l = k.trim().to_lowercase();
+                    let mut v_t = v.trim();
+                    if v_t.starts_with('"') && v_t.ends_with('"') && v_t.len() >= 2 {
+                        v_t = v_t[1..v_t.len() - 1].trim();
+                    }
+                    let clean_path = v_t.trim_start_matches(".\\").trim_start_matches("./");
+                    if k_l == "filename" {
+                        filename = Some(clean_path.to_string());
+                    } else if k_l == "stride" {
+                        stride = v_t.parse::<usize>().unwrap_or(0);
+                    }
+                }
+            }
+
+            if let Some(f) = filename {
+                results.push((f, stride));
+            }
+        }
+    }
+
+    results
+}
+
+/// Ensures that any TextureOverride section containing an `ib = ` or `drawindexed` call has `handling = skip`.
+/// Missing `handling = skip` causes 3DMigoto to pass through the original draw call to DirectX,
+/// rendering the vanilla character and modded character simultaneously (double-render).
+pub fn ensure_handling_skip_on_draw_sections(ini_content: &str) -> (String, usize) {
+    let mut lines: Vec<String> = ini_content.lines().map(|l| l.to_string()).collect();
+    let mut section_ranges: Vec<(usize, usize, String)> = Vec::new();
+    let mut cur_header = None;
+    let mut cur_start = 0;
+
+    for (i, line) in lines.iter().enumerate() {
+        let trimmed = line.trim();
+        if trimmed.starts_with('[') && trimmed.ends_with(']') {
+            if let Some(h) = cur_header {
+                section_ranges.push((cur_start, i, h));
+            }
+            cur_header = Some(trimmed[1..trimmed.len() - 1].trim().to_string());
+            cur_start = i;
+        }
+    }
+    if let Some(h) = cur_header {
+        section_ranges.push((cur_start, lines.len(), h));
+    }
+
+    let mut inserts: Vec<(usize, String)> = Vec::new();
+    let mut count = 0;
+
+    for (start, end, header) in section_ranges {
+        if !header.to_lowercase().starts_with("textureoverride") {
+            continue;
+        }
+
+        let sec_slice = &lines[start..end];
+        let has_draw_or_ib = sec_slice.iter().any(|l| {
+            let clean = l.split(';').next().unwrap_or("").split('#').next().unwrap_or("").trim();
+            if let Some((k, _)) = clean.split_once('=') {
+                let kt = k.trim().to_lowercase();
+                kt == "ib" || kt == "drawindexed" || kt == "draw"
+            } else {
+                let cl = clean.to_lowercase();
+                cl.starts_with("drawindexed") || cl.starts_with("draw")
+            }
+        });
+
+        let has_handling_skip = sec_slice.iter().any(|l| {
+            let clean = l.split(';').next().unwrap_or("").split('#').next().unwrap_or("").trim();
+            if let Some((k, v)) = clean.split_once('=') {
+                k.trim().eq_ignore_ascii_case("handling") && v.trim().eq_ignore_ascii_case("skip")
+            } else {
+                false
+            }
+        });
+
+        if has_draw_or_ib && !has_handling_skip {
+            let mut insert_idx = None;
+            for (idx, l) in sec_slice.iter().enumerate() {
+                let clean = l.split(';').next().unwrap_or("").split('#').next().unwrap_or("").trim();
+                if let Some((k, _)) = clean.split_once('=') {
+                    if k.trim().eq_ignore_ascii_case("hash") {
+                        insert_idx = Some(start + idx + 1);
+                        break;
+                    }
+                }
+            }
+            let target_line = insert_idx.unwrap_or(start + 1);
+            inserts.push((target_line, "handling = skip".to_string()));
+            count += 1;
+        }
+    }
+
+    if inserts.is_empty() {
+        return (ini_content.to_string(), 0);
+    }
+
+    inserts.sort_by(|a, b| b.0.cmp(&a.0));
+    for (idx, text) in inserts {
+        lines.insert(idx, text);
+    }
+
+    (lines.join("\r\n"), count)
+}
+
+/// Injects modern submesh suppression blocks for characters where newer game versions
+/// split secondary components (e.g. Belle's Legs, Earrings, Hairpin, and BodyB draw calls).
+pub fn ensure_character_suppressions(ini_content: &str, character: &str) -> (String, usize) {
+    if !is_character_match(character, "Belle") {
+        return (ini_content.to_string(), 0);
+    }
+
+    let mut out = ini_content.to_string();
+    let content_lower = out.to_lowercase();
+    let mut added = 0;
+
+    let suppressions: &[(&str, &str, Option<&str>)] = &[
+        ("BelleLegs", "e6afd8d1", None),
+        ("BelleEarrings", "07920753", None),
+        ("BelleHairpin", "3acf9aea", None),
+        ("BelleBodyB", "c2b4ce3a", Some("match_first_index = 31275")),
+    ];
+
+    for (name, hash, extra) in suppressions {
+        let hash_present = content_lower.contains(hash);
+        let should_inject = match extra {
+            Some(ex) => !content_lower.contains(&ex.to_lowercase()),
+            None => !hash_present,
+        };
+
+        if should_inject {
+            let extra_line = extra.map(|e| format!("{}\r\n", e)).unwrap_or_default();
+            let block = format!(
+                "\r\n\r\n; [ZZZMODMANAGER AUTO-GENERATED VANILLA COMPONENT SUPPRESSION]\r\n[TextureOverride{}]\r\nhash = {}\r\n{}handling = skip",
+                name, hash, extra_line
+            );
+            out.push_str(&block);
+            added += 1;
+        }
+    }
+
+    (out, added)
 }
 
 /// Calculate format chunk byte size
@@ -1713,6 +1912,16 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                                     let target_eq = &terminal_target_eq;
                                     let title = action.section_title.clone().unwrap_or_else(|| format!("{}.Duplicate", rule.character));
 
+                                    let sec_tag = format!("[TextureOverride{}]", title);
+                                    let sec_tag_no_dots = format!("[TextureOverride{}]", title.replace('.', ""));
+                                    let nc_lower = new_content.to_lowercase();
+                                    if nc_lower.contains(&sec_tag.to_lowercase())
+                                        || nc_lower.contains(&sec_tag_no_dots.to_lowercase())
+                                        || nc_lower.contains(&format!("hash = {}", target_eq.to_lowercase()))
+                                        || nc_lower.contains(&format!("hash={}", target_eq.to_lowercase())) {
+                                        continue;
+                                    }
+
                                     // Extract lines from the source section matching `hash = <hash>` to preserve its body (e.g. `this = Resource...`)
                                     let mut body_lines = Vec::new();
                                     let lines: Vec<&str> = new_content.lines().collect();
@@ -1794,9 +2003,14 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                                     let target_eq = &terminal_target_eq;
                                     let title = action.section_title.clone().unwrap_or_default();
 
-                                    // Guard: if INI already has an override section for this title, do not overwrite/conflict
+                                    // Guard: if INI already has an override section for this title or hash, do not overwrite/conflict
                                     let sec_tag = format!("[TextureOverride{}]", title);
-                                    if new_content.to_lowercase().contains(&sec_tag.to_lowercase()) {
+                                    let sec_tag_no_dots = format!("[TextureOverride{}]", title.replace('.', ""));
+                                    let nc_lower = new_content.to_lowercase();
+                                    if nc_lower.contains(&sec_tag.to_lowercase())
+                                        || nc_lower.contains(&sec_tag_no_dots.to_lowercase())
+                                        || nc_lower.contains(&format!("hash = {}", target_eq.to_lowercase()))
+                                        || nc_lower.contains(&format!("hash={}", target_eq.to_lowercase())) {
                                         continue;
                                     }
 
@@ -1848,7 +2062,10 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                             } else {
                                 hash
                             };
-                            let buffers = find_referenced_buffers(&content, target_h, "vb2");
+                            let mut buffers = find_referenced_buffers(&content, target_h, "vb2");
+                            if buffers.is_empty() {
+                                buffers = find_all_slot_buffers(&content, "vb2");
+                            }
                             for (buf_file, stride) in buffers {
                                 buf_tasks.push((
                                     buf_file,
@@ -1944,6 +2161,25 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                             }
                         }
                 }
+            }
+        }
+
+        // Ensure handling = skip on any TextureOverride section that specifies ib = or drawindexed
+        let (content_after_skip, skip_count) = ensure_handling_skip_on_draw_sections(&new_content);
+        if skip_count > 0 {
+            new_content = content_after_skip;
+            ini_changed = true;
+            actions_summary.push(format!("Injected 'handling = skip' into {} draw sections to prevent double-render", skip_count));
+        }
+
+        // Suppress split sub-meshes from modern game versions (e.g. Belle Legs, Earrings, Hairpin, BodyB)
+        if let Some(ref dc) = detected_character {
+            let (content_after_supp, supp_count) = ensure_character_suppressions(&new_content, dc);
+            if supp_count > 0 {
+                new_content = content_after_supp;
+                ini_changed = true;
+                sections_added += supp_count;
+                actions_summary.push(format!("Injected {} modern vanilla component suppression blocks", supp_count));
             }
         }
 

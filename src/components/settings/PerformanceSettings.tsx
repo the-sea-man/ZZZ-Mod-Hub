@@ -208,12 +208,7 @@ export const PerformanceSettings = memo(function PerformanceSettings() {
           badgeColor: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
           icon: <Palette size={18} className="text-purple-400" />,
           enabled: animationsEnabled,
-          toggle: () => {
-            const next = !animationsEnabled;
-            setAnimationsEnabled(next);
-            localStorage.setItem('performanceProfile', 'custom');
-            useAppStore.setState({ performanceProfile: 'custom' });
-          },
+          toggle: () => setAnimationsEnabled(!animationsEnabled),
         },
         {
           key: 'glassBlur',
@@ -226,12 +221,7 @@ export const PerformanceSettings = memo(function PerformanceSettings() {
           badgeColor: 'text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/20',
           icon: <Eye size={18} className="text-fuchsia-400" />,
           enabled: blurAmount > 0,
-          toggle: () => {
-            const next = blurAmount > 0 ? 0 : 12;
-            setBlurAmount(next);
-            localStorage.setItem('performanceProfile', 'custom');
-            useAppStore.setState({ performanceProfile: 'custom' });
-          },
+          toggle: () => setBlurAmount(blurAmount > 0 ? 0 : 12),
         },
       ],
     },

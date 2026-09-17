@@ -103,12 +103,12 @@ export const ModCard = memo(function ModCard({
   const cardCustomization =
     useAppStore((s) => s.cardCustomization) || DEFAULT_MOD_CARD_CUSTOMIZATION;
 
-  const actionButtonBaseClass = `p-2.5 rounded-full border app-blur transition-all shadow-lg flex items-center justify-center cursor-pointer ${
+  const actionButtonBaseClass = `p-2.5 rounded-full border transition-all shadow-lg flex items-center justify-center cursor-pointer ${
     cardCustomization.actionButtons.buttonStyle === 'solid'
       ? 'bg-surface border-textMain/20'
       : cardCustomization.actionButtons.buttonStyle === 'transparent'
         ? 'bg-black/30 border-white/10 hover:bg-black/50'
-        : 'bg-background/80 border-textMain/10 hover:bg-surface'
+        : 'bg-background/80 border-textMain/10 backdrop-blur-md hover:bg-surface'
   } ${
     cardCustomization.actionButtons.iconColor === 'primary'
       ? 'text-primary'
@@ -297,7 +297,7 @@ export const ModCard = memo(function ModCard({
         backdropFilter: `blur(${cardCustomization.frame.blurAmount}px)`,
         WebkitBackdropFilter: `blur(${cardCustomization.frame.blurAmount}px)`,
       }}
-      className={`glass-panel overflow-hidden transition-colors duration-75 group flex flex-col relative mod-card-containment ${getBorderRadiusClass(
+      className={`mod-card-frame overflow-hidden transition-colors duration-75 group flex flex-col relative mod-card-containment ${getBorderRadiusClass(
         cardCustomization.frame.borderRadius
       )} ${frameBorderWidthClass} ${frameBorderColorClass} ${frameShadowClass} ${
         isBatchMode ? 'cursor-pointer' : ''
@@ -477,7 +477,7 @@ export const ModCard = memo(function ModCard({
         )}
 
         {!mod.is_enabled && (
-          <div className="absolute inset-0 bg-black/70 flex items-center justify-center app-blur z-10 pointer-events-none">
+          <div className="absolute inset-0 bg-black/75 flex items-center justify-center z-10 pointer-events-none">
             <span className="text-red-400 font-black tracking-widest uppercase rotate-[-15deg] border-4 border-red-400/50 px-6 py-2 rounded-xl text-xl shadow-[0_0_30px_rgba(255,0,0,0.2)]">
               Disabled
             </span>
@@ -491,7 +491,7 @@ export const ModCard = memo(function ModCard({
           backdropFilter: `blur(${cardCustomization.infoPanel.blurAmount}px)`,
           WebkitBackdropFilter: `blur(${cardCustomization.infoPanel.blurAmount}px)`,
         }}
-        className="p-5 flex flex-col gap-4 relative z-20 app-blur border-t border-textMain/10 flex-1 justify-between"
+        className="p-5 flex flex-col gap-4 relative z-20 border-t border-textMain/10 flex-1 justify-between"
       >
         <div>
           <h3

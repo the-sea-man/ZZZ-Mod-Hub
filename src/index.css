@@ -26,11 +26,13 @@
 [data-low-perf='true'] .glass-panel-bg,
 [data-low-perf='true'] .glass-sidebar,
 [data-low-perf='true'] .app-blur,
+[data-low-perf='true'] .mod-card-frame,
 [data-low-perf='true'] [class*='backdrop-blur'],
 [data-no-blur='true'] .glass-panel,
 [data-no-blur='true'] .glass-panel-bg,
 [data-no-blur='true'] .glass-sidebar,
 [data-no-blur='true'] .app-blur,
+[data-no-blur='true'] .mod-card-frame,
 [data-no-blur='true'] [class*='backdrop-blur'] {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -111,6 +113,10 @@ body {
 
 .app-blur {
   backdrop-filter: blur(var(--app-blur, 12px));
+}
+
+.mod-card-frame {
+  isolation: isolate;
 }
 
 /* Custom Scrollbar */

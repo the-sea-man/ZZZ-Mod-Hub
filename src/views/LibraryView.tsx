@@ -459,6 +459,7 @@ export function LibraryView() {
         setSelectedHeight={setSelectedHeight}
         selectedModel={selectedModel}
         setSelectedModel={setSelectedModel}
+        onClearFilters={handleClearFilters}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         isGlobalSearch={isGlobalSearch}

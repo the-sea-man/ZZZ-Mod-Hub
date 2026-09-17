@@ -28,7 +28,7 @@ const selectCategoryIcons = (s: AppStore) => s.categoryIcons;
 const selectCategoryFilterMode = (s: AppStore) => s.categoryFilterMode;
 const selectSetCategoryFilterMode = (s: AppStore) => s.setCategoryFilterMode;
 const selectAnimationsEnabled = (s: AppStore) => s.animationsEnabled;
-const selectLowPerformanceMode = (s: AppStore) => s.lowPerformanceMode;
+const selectPerformanceProfile = (s: AppStore) => s.performanceProfile;
 const selectAvailableUpdates = (s: AppStore) => s.availableUpdates;
 const selectIsLoadingLibrary = (s: AppStore) => s.isLoadingLibrary;
 
@@ -46,11 +46,11 @@ export const CategorySidebar = memo(function CategorySidebar({
   const categoryFilterMode = useAppStore(selectCategoryFilterMode);
   const setCategoryFilterMode = useAppStore(selectSetCategoryFilterMode);
   const animationsEnabled = useAppStore(selectAnimationsEnabled);
-  const lowPerformanceMode = useAppStore(selectLowPerformanceMode);
+  const performanceProfile = useAppStore(selectPerformanceProfile);
   const availableUpdates = useAppStore(selectAvailableUpdates);
   const isLoadingLibrary = useAppStore(selectIsLoadingLibrary);
 
-  const enableMotion = animationsEnabled && !lowPerformanceMode;
+  const enableMotion = animationsEnabled && performanceProfile !== 'low';
 
   const updatedModPaths = useMemo(() => {
     const set = new Set<string>();

@@ -81,7 +81,11 @@ export const ModCardBadges = memo(function ModCardBadges({
   const badgeStyleClass =
     badgesConfig.badgeStyle === 'solid'
       ? 'bg-zinc-900 border border-zinc-700'
-      : 'bg-black/70 app-blur border border-white/10';
+      : 'bg-black/70 backdrop-blur-md border border-white/10';
+
+  const actionIconBaseClass = `p-2.5 rounded-full border transition-all shadow-lg flex items-center justify-center cursor-pointer ${
+    badgesConfig.badgeStyle === 'solid' ? '' : 'backdrop-blur-md'
+  }`;
 
   return (
     <>
@@ -90,7 +94,7 @@ export const ModCardBadges = memo(function ModCardBadges({
         {badgesConfig.showFavoriteHeart && (
           <button
             onClick={onToggleFavorite}
-            className={`p-2.5 rounded-full border app-blur transition-all shadow-lg flex items-center justify-center cursor-pointer ${
+            className={`${actionIconBaseClass} ${
               isFavorite
                 ? 'bg-rose-500/80 border-rose-500 shadow-rose-500/30 text-white'
                 : badgesConfig.badgeStyle === 'solid'
@@ -106,7 +110,7 @@ export const ModCardBadges = memo(function ModCardBadges({
         {isBatchMode ? (
           <button
             onClick={onToggleSelect}
-            className={`w-9 h-9 rounded-full border app-blur transition-all shadow-lg flex items-center justify-center cursor-pointer ${
+            className={`w-9 h-9 rounded-full border backdrop-blur-md transition-all shadow-lg flex items-center justify-center cursor-pointer ${
               isSelected
                 ? 'bg-primary border-primary shadow-primary/30 text-white scale-110'
                 : 'bg-background/80 border-textMain/20 text-transparent hover:border-primary/50'
@@ -116,23 +120,25 @@ export const ModCardBadges = memo(function ModCardBadges({
             <Check size={16} strokeWidth={3} className={isSelected ? 'text-white' : 'hidden'} />
           </button>
         ) : (
-          <button
-            onClick={onToggleIgnore}
-            className={`p-2.5 rounded-full border app-blur transition-all shadow-lg flex items-center justify-center cursor-pointer ${
-              isIgnored
-                ? 'bg-primary/80 border-primary shadow-primary/30 text-white'
-                : badgesConfig.badgeStyle === 'solid'
-                  ? 'bg-surface border-textMain/20 text-textMuted hover:text-textMain'
-                  : 'bg-background/80 border-textMain/10 text-textMuted hover:bg-surface hover:text-textMain'
-            }`}
-            title={
-              isIgnored
-                ? 'Locked: Mod will NOT be changed by Randomizer'
-                : 'Unlocked: Mod will be included in Randomizer'
-            }
-          >
-            {isIgnored ? <Lock size={14} /> : <Unlock size={14} />}
-          </button>
+          badgesConfig.showLockBadge !== false && (
+            <button
+              onClick={onToggleIgnore}
+              className={`${actionIconBaseClass} ${
+                isIgnored
+                  ? 'bg-primary/80 border-primary shadow-primary/30 text-white'
+                  : badgesConfig.badgeStyle === 'solid'
+                    ? 'bg-surface border-textMain/20 text-textMuted hover:text-textMain'
+                    : 'bg-background/80 border-textMain/10 text-textMuted hover:bg-surface hover:text-textMain'
+              }`}
+              title={
+                isIgnored
+                  ? 'Locked: Mod will NOT be changed by Randomizer'
+                  : 'Unlocked: Mod will be included in Randomizer'
+              }
+            >
+              {isIgnored ? <Lock size={14} /> : <Unlock size={14} />}
+            </button>
+          )
         )}
       </div>
 
@@ -151,7 +157,7 @@ export const ModCardBadges = memo(function ModCardBadges({
           </button>
         )}
 
-        {outdatedWarnings.length > 0 && (
+        {badgesConfig.showWarningBadges !== false && outdatedWarnings.length > 0 && (
           <button
             onClick={onOpenFixMod}
             className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 text-xs px-2.5 py-1 rounded-full border border-amber-300 font-bold flex items-center gap-1 shadow-[0_0_15px_rgba(245,158,11,0.4)] cursor-pointer hover:scale-105 transition-all"
@@ -164,7 +170,7 @@ export const ModCardBadges = memo(function ModCardBadges({
           </button>
         )}
 
-        {hasBackup && onOpenRestoreBackup && (
+        {badgesConfig.showWarningBadges !== false && hasBackup && onOpenRestoreBackup && (
           <button
             onClick={onOpenRestoreBackup}
             className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white text-xs px-2.5 py-1 rounded-full border border-indigo-300 font-bold flex items-center gap-1 shadow-[0_0_15px_rgba(99,102,241,0.4)] cursor-pointer hover:scale-105 transition-all"
@@ -185,7 +191,7 @@ export const ModCardBadges = memo(function ModCardBadges({
           </span>
         )}
 
-        {isStale && (
+        {badgesConfig.showWarningBadges !== false && isStale && (
           <span
             className="bg-yellow-500/90 text-black text-xs px-2.5 py-1 rounded-full border border-yellow-300 font-bold flex items-center gap-1 shadow-lg cursor-help"
             title={`Unrecognized Hash (${invalidHashes.length}): ${invalidHashes.join(', ')}. This mod may be outdated.`}
@@ -194,7 +200,7 @@ export const ModCardBadges = memo(function ModCardBadges({
           </span>
         )}
 
-        {hasHashConflict && (
+        {badgesConfig.showWarningBadges !== false && hasHashConflict && (
           <button
             onClick={onOpenHashConflicts}
             className="p-2 bg-red-500/90 hover:bg-red-500 text-white rounded-full border border-red-300 shadow-lg cursor-pointer hover:scale-105 transition-all flex items-center justify-center"
@@ -204,7 +210,7 @@ export const ModCardBadges = memo(function ModCardBadges({
           </button>
         )}
 
-        {multiCharWarnings.length > 0 && (
+        {badgesConfig.showWarningBadges !== false && multiCharWarnings.length > 0 && (
           <button
             onClick={onOpenMultiCharWarnings}
             className="p-2 bg-yellow-500/90 hover:bg-yellow-400 text-black rounded-full border border-yellow-300 shadow-lg cursor-pointer hover:scale-105 transition-all flex items-center justify-center"
@@ -220,7 +226,7 @@ export const ModCardBadges = memo(function ModCardBadges({
           </button>
         )}
 
-        {iniWarnings.length > 0 && (
+        {badgesConfig.showWarningBadges !== false && iniWarnings.length > 0 && (
           <button
             onClick={onOpenIniWarnings}
             className="p-2 bg-sky-500/90 hover:bg-sky-400 text-white rounded-full border border-sky-300 shadow-lg shadow-sky-500/20 cursor-pointer hover:scale-105 transition-all flex items-center justify-center"

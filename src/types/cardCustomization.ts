@@ -25,8 +25,10 @@ export interface CardActionButtonsConfig {
 
 export interface CardBadgesConfig {
   showFavoriteHeart: boolean;
+  showLockBadge: boolean;
   showSizeBadge: boolean;
   showUpdateBadge: boolean;
+  showWarningBadges: boolean;
   badgeStyle: 'glass' | 'solid';
 }
 
@@ -77,8 +79,10 @@ export const DEFAULT_MOD_CARD_CUSTOMIZATION: ModCardCustomization = {
   },
   badges: {
     showFavoriteHeart: true,
+    showLockBadge: true,
     showSizeBadge: true,
     showUpdateBadge: true,
+    showWarningBadges: true,
     badgeStyle: 'glass',
   },
   infoPanel: {
@@ -137,8 +141,10 @@ export const CARD_PRESETS: Record<string, CardPresetDefinition> = {
       },
       badges: {
         showFavoriteHeart: true,
+        showLockBadge: false,
         showSizeBadge: false,
         showUpdateBadge: true,
+        showWarningBadges: false,
         badgeStyle: 'glass',
       },
       infoPanel: {
@@ -182,8 +188,10 @@ export const CARD_PRESETS: Record<string, CardPresetDefinition> = {
       },
       badges: {
         showFavoriteHeart: true,
+        showLockBadge: true,
         showSizeBadge: true,
         showUpdateBadge: true,
+        showWarningBadges: true,
         badgeStyle: 'solid',
       },
       infoPanel: {
@@ -228,8 +236,10 @@ export const CARD_PRESETS: Record<string, CardPresetDefinition> = {
       },
       badges: {
         showFavoriteHeart: true,
+        showLockBadge: true,
         showSizeBadge: true,
         showUpdateBadge: true,
+        showWarningBadges: true,
         badgeStyle: 'solid',
       },
       infoPanel: {

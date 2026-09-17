@@ -1,6 +1,6 @@
 {
-  "version": "1.2.5",
-  "notes": "ZZZ Mod Hub v1.2.5: Interactive mod backup rollback, card appearance customizer with style presets, custom folder manager, hardened profile switching, submesh patch remapping, and Thai language support.",
+  "version": "1.2.6",
+  "notes": "ZZZ Mod Hub v1.2.6: Quick hotfix addressing automated build environment stubs and backend Clippy lints.",
   "pub_date": "2026-09-17T08:10:05Z",
   "platforms": {
     "windows-x86_64": {
