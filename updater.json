@@ -1,10 +1,10 @@
 {
   "version": "1.2.5",
   "notes": "ZZZ Mod Hub v1.2.5: Interactive mod backup rollback, card appearance customizer with style presets, custom folder manager, hardened profile switching, submesh patch remapping, and Thai language support.",
-  "pub_date": "2026-09-17T07:47:55Z",
+  "pub_date": "2026-09-17T08:10:05Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQllwWU51NHNHNHVHTVJrWkc1MDN6SEQwYVhZbnE5RXlVazlYM1grbGMxbDZiV3E0VUV5VXBnRzl2enhVV2FTdWVoVGRLcVliVGgrbTZIQnc0aVA0dndFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4MDU2NzgxCWZpbGU6WlpaIE1vZCBIdWJfMS4xLjBfeDY0LXNldHVwLmV4ZQpoa3IxS2g3QVpNVlBrOGFSZ0dFejFXR1dvamFKb3NCT2ZxRXl4alhOekdsYXJnQXd5YXlURkUzQjlXZkZ6L0xBVnFUZUsyemZmb3o5ZjducU1Fc1NEdz09Cg==",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQmZqMmMvam8vSUxxaFN2VnpIMVlwY21uQTJtYUg5VW12UHdNR0FVQ0ZwTjB3QTY4cE13U0dhQ3loanVMcFRaS1YvK0JnN056N2xVejlSZ1Z2eGNWMGd3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5NjMyNjAzCWZpbGU6WlpaIE1vZCBIdWJfMS4yLjVfeDY0LXNldHVwLmV4ZQoybGlJMVc1SWdvMExWSmpCb01tVFRtWkdvOFZNZ2lQc3hiMHhGUW5QeXREbmNCQUJabnlXczE1eHJuWGp5YytJZ3g4OXNXUmtybmorQnJrZnVoRkpDQT09Cg==",
       "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v1.2.5/ZZZ.Mod.Hub_1.2.5_x64-setup.exe"
     }
   }
