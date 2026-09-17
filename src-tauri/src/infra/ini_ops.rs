@@ -74,6 +74,25 @@ pub fn set_mod_keybind(mod_path: &str, ini_file: &str, section: &str, key_type: 
 
     if replaced {
         fs::write(&path, new_content)?;
+        let folder_name = Path::new(&mod_path_expanded)
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
+        let backup_str = if create_backup {
+            let backup_name = format!("DISABLE_{}", path.file_name().unwrap_or_default().to_string_lossy());
+            Some(path.with_file_name(backup_name).to_string_lossy().to_string())
+        } else {
+            None
+        };
+        crate::infra::logger::log_alteration(
+            "keybind_change",
+            &folder_name,
+            &path.to_string_lossy(),
+            &format!("Changed [{}] {} from '{}' to '{}'", section, key_type, old_key, new_key),
+            backup_str.as_deref(),
+            create_backup,
+        );
         Ok("Keybind updated".into())
     } else {
         Err("Could not find the exact keybind to replace in that section.".into())

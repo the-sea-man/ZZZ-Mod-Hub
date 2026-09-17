@@ -5,6 +5,7 @@ pub(crate) mod game_ops;
 pub(crate) mod hotreload;
 pub(crate) mod hunting;
 pub(crate) mod ini_ops;
+pub(crate) mod logger;
 pub(crate) mod screenshot;
 pub(crate) mod state_tracker;
 pub(crate) mod task_manager;

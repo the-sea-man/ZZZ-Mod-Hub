@@ -6,7 +6,7 @@ pub(crate) mod infra;
 pub use core::{error, models, utils};
 pub use services::{install, mod_fixer, mod_viewer, mods, warnings_scanner};
 pub(crate) use infra::{
-    fs_ops, game_ops, hotreload, hunting, ini_ops, screenshot, state_tracker, task_manager,
+    fs_ops, game_ops, hotreload, hunting, ini_ops, logger, screenshot, state_tracker, task_manager,
     thumbnail_cache, watcher,
 };
 pub(crate) use services::{
@@ -19,6 +19,9 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
+            if let Ok(app_dir) = app.path().app_data_dir() {
+                logger::init_logger(app_dir);
+            }
             app.manage(watcher::WatcherState::default());
             app.manage(hotreload::HotreloadState::default());
             std::thread::spawn(|| {
@@ -70,6 +73,11 @@ pub fn run() {
             fs_ops::delete_mod,
             fs_ops::open_folder,
             fs_ops::open_logs_folder,
+            fs_ops::open_log_file,
+            fs_ops::get_alteration_history,
+            fs_ops::get_error_logs,
+            fs_ops::clear_logs,
+            fs_ops::rollback_alteration,
             utils::expand_env_path,
             fs_ops::move_to_unassigned,
             fs_ops::rename_mod,
@@ -79,6 +87,10 @@ pub fn run() {
             fs_ops::save_mod_preview_base64,
             fs_ops::set_mod_note,
             fs_ops::set_mod_tags,
+            fs_ops::create_category_folder,
+            fs_ops::rename_category_folder,
+            fs_ops::delete_category_folder,
+            fs_ops::generate_essential_folders,
             // ini_ops.rs — INI parsing & metadata
             ini_ops::get_mod_keybinds,
             ini_ops::set_mod_keybind,
@@ -128,6 +140,8 @@ pub fn run() {
             mod_fixer::batch_scan_fixable_mods,
             mod_fixer::batch_fix_mods,
             mod_fixer::restore_mod_backup_command,
+            mod_fixer::list_mod_backups_command,
+            mod_fixer::restore_selected_mod_backups_command,
             // thumbnail_cache.rs — High-performance non-destructive thumbnail cache
             thumbnail_cache::get_cached_thumbnail,
             thumbnail_cache::prewarm_thumbnails,

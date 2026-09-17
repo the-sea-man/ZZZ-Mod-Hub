@@ -1,7 +1,27 @@
 import { StateCreator } from 'zustand';
 import type { AppState, PerformanceProfile } from './types';
 import { invoke } from '@tauri-apps/api/core';
-import { safeGetInt, safeGetBool, safeGetString } from '../../utils/storage';
+import {
+  safeGetInt,
+  safeGetBool,
+  safeGetString,
+  safeGetJSON,
+  safeSetJSON,
+} from '../../utils/storage';
+import {
+  ModCardCustomization,
+  DEFAULT_MOD_CARD_CUSTOMIZATION,
+  CARD_PRESETS,
+} from '../../types/cardCustomization';
+
+export type SettingsCategory =
+  | 'general'
+  | 'mod_management'
+  | 'downloads'
+  | 'appearance'
+  | 'card_appearance'
+  | 'advanced'
+  | 'about';
 
 export interface PreferencesSlice {
   activeTab: 'library' | 'settings' | 'gamebanana' | 'achievements';
@@ -40,7 +60,7 @@ export interface PreferencesSlice {
   modsPath: string;
   navigateToAchievementTarget: (target: {
     tab: 'library' | 'settings' | 'gamebanana' | 'achievements';
-    settingsTab?: 'general' | 'mod_management' | 'downloads' | 'appearance' | 'advanced' | 'about';
+    settingsTab?: SettingsCategory;
     highlightId?: string;
   }) => void;
   nsfwFilterEnabled: boolean;
@@ -91,9 +111,7 @@ export interface PreferencesSlice {
   setSelectedModel: (val: string) => void;
   setSelectedRole: (val: string) => void;
   setSelectedSpecies: (val: string) => void;
-  setSettingsActiveTab: (
-    tab: 'general' | 'mod_management' | 'downloads' | 'appearance' | 'advanced' | 'about'
-  ) => void;
+  setSettingsActiveTab: (tab: SettingsCategory) => void;
   setSetupComplete: (val: boolean) => void;
   setShowApiDebugUrl: (val: boolean) => void;
   setShowElementFilter: (val: boolean) => void;
@@ -111,8 +129,11 @@ export interface PreferencesSlice {
   setUiScale: (scale: number) => void;
   setWatcherEnabled: (val: boolean) => void;
   setWinrarPath: (path: string) => void;
-  settingsActiveTab:
-    'general' | 'mod_management' | 'downloads' | 'appearance' | 'advanced' | 'about';
+  settingsActiveTab: SettingsCategory;
+  cardCustomization: ModCardCustomization;
+  setCardCustomization: (customization: Partial<ModCardCustomization>) => void;
+  resetCardCustomization: (componentId?: string) => void;
+  applyCardPreset: (presetId: string) => void;
   setupComplete: boolean;
   showApiDebugUrl: boolean;
   showElementFilter: boolean;
@@ -146,11 +167,98 @@ export interface PreferencesSlice {
   runManualAnalysis: () => Promise<void>;
 }
 
+const getInitialCardCustomization = (): ModCardCustomization => {
+  const saved = safeGetJSON<Partial<ModCardCustomization>>('mod_card_customization', {});
+  return {
+    version: saved.version ?? DEFAULT_MOD_CARD_CUSTOMIZATION.version,
+    frame: { ...DEFAULT_MOD_CARD_CUSTOMIZATION.frame, ...(saved.frame || {}) },
+    imageOverlay: { ...DEFAULT_MOD_CARD_CUSTOMIZATION.imageOverlay, ...(saved.imageOverlay || {}) },
+    actionButtons: {
+      ...DEFAULT_MOD_CARD_CUSTOMIZATION.actionButtons,
+      ...(saved.actionButtons || {}),
+    },
+    badges: { ...DEFAULT_MOD_CARD_CUSTOMIZATION.badges, ...(saved.badges || {}) },
+    infoPanel: { ...DEFAULT_MOD_CARD_CUSTOMIZATION.infoPanel, ...(saved.infoPanel || {}) },
+    toggleButton: { ...DEFAULT_MOD_CARD_CUSTOMIZATION.toggleButton, ...(saved.toggleButton || {}) },
+  };
+};
+
 export const createPreferencesSlice: StateCreator<AppState, [], [], PreferencesSlice> = (
   set,
   get
 ) => ({
   activeTab: 'library',
+  cardCustomization: getInitialCardCustomization(),
+
+  setCardCustomization: (customization: Partial<ModCardCustomization>) => {
+    const current = get().cardCustomization;
+    const updated: ModCardCustomization = {
+      version: customization.version ?? current.version ?? DEFAULT_MOD_CARD_CUSTOMIZATION.version,
+      frame: { ...current.frame, ...(customization.frame || {}) },
+      imageOverlay: { ...current.imageOverlay, ...(customization.imageOverlay || {}) },
+      actionButtons: { ...current.actionButtons, ...(customization.actionButtons || {}) },
+      badges: { ...current.badges, ...(customization.badges || {}) },
+      infoPanel: { ...current.infoPanel, ...(customization.infoPanel || {}) },
+      toggleButton: { ...current.toggleButton, ...(customization.toggleButton || {}) },
+    };
+    safeSetJSON('mod_card_customization', updated);
+    set({ cardCustomization: updated });
+  },
+
+  resetCardCustomization: (componentId?: string) => {
+    const current = get().cardCustomization;
+    if (!componentId) {
+      safeSetJSON('mod_card_customization', DEFAULT_MOD_CARD_CUSTOMIZATION);
+      set({ cardCustomization: DEFAULT_MOD_CARD_CUSTOMIZATION });
+      return;
+    }
+    const updated: ModCardCustomization = {
+      version: current.version ?? DEFAULT_MOD_CARD_CUSTOMIZATION.version,
+      frame:
+        componentId === 'card_frame'
+          ? { ...DEFAULT_MOD_CARD_CUSTOMIZATION.frame }
+          : { ...current.frame },
+      imageOverlay:
+        componentId === 'image_overlay'
+          ? { ...DEFAULT_MOD_CARD_CUSTOMIZATION.imageOverlay }
+          : { ...current.imageOverlay },
+      actionButtons:
+        componentId === 'action_buttons'
+          ? { ...DEFAULT_MOD_CARD_CUSTOMIZATION.actionButtons }
+          : { ...current.actionButtons },
+      badges:
+        componentId === 'badges'
+          ? { ...DEFAULT_MOD_CARD_CUSTOMIZATION.badges }
+          : { ...current.badges },
+      infoPanel:
+        componentId === 'info_panel'
+          ? { ...DEFAULT_MOD_CARD_CUSTOMIZATION.infoPanel }
+          : { ...current.infoPanel },
+      toggleButton:
+        componentId === 'toggle_button'
+          ? { ...DEFAULT_MOD_CARD_CUSTOMIZATION.toggleButton }
+          : { ...current.toggleButton },
+    };
+    safeSetJSON('mod_card_customization', updated);
+    set({ cardCustomization: updated });
+  },
+
+  applyCardPreset: (presetId: string) => {
+    const preset = CARD_PRESETS[presetId];
+    if (!preset) return;
+    const current = get().cardCustomization;
+    const updated: ModCardCustomization = {
+      version: 1,
+      frame: { ...current.frame, ...(preset.config.frame || {}) },
+      imageOverlay: { ...current.imageOverlay, ...(preset.config.imageOverlay || {}) },
+      actionButtons: { ...current.actionButtons, ...(preset.config.actionButtons || {}) },
+      badges: { ...current.badges, ...(preset.config.badges || {}) },
+      infoPanel: { ...current.infoPanel, ...(preset.config.infoPanel || {}) },
+      toggleButton: { ...current.toggleButton, ...(preset.config.toggleButton || {}) },
+    };
+    safeSetJSON('mod_card_customization', updated);
+    set({ cardCustomization: updated });
+  },
 
   addAvailableLanguage: (lang: { code: string; name: string }) => {
     set((state: AppState) => {
@@ -179,6 +287,7 @@ export const createPreferencesSlice: StateCreator<AppState, [], [], PreferencesS
     { code: 'es', name: 'Español' },
     { code: 'ru', name: 'Русский' },
     { code: 'pt_BR', name: 'Português (Brasil)' },
+    { code: 'th', name: 'ไทย' },
   ],
 
   bgImageBlur: safeGetInt('bgImageBlur', 10, 0, 40),

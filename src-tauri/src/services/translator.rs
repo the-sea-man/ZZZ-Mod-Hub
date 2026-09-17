@@ -68,10 +68,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_translate_query_live() {
-        let query = "<<<INDEX_0>>> Hello world\n<<<INDEX_1>>> Welcome";
-        let res = translate_query(query.to_string(), "fr".to_string()).await;
+        let query = "[[[0]]] Hello world\n[[[1]]] Welcome";
+        let res = translate_query(query.to_string(), "sr".to_string()).await;
         assert!(res.is_ok(), "Live translation request should succeed: {:?}", res.err());
         let text = res.unwrap();
-        assert!(text.contains("INDEX_0"), "Response should retain index token: {}", text);
+        assert!(text.contains("[[[0]]]"), "Response should retain bracket delimiter token: {}", text);
     }
 }

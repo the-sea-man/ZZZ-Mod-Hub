@@ -13,11 +13,13 @@ import {
   Sparkles,
   Check,
   Crosshair,
+  History,
 } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useAppStore } from '../../store/useAppStore';
 import { BrokenModEntry } from '../../types/ipc';
 import { HuntingModeModal } from '../Modals/HuntingModeModal';
+import { OperationHistoryModal } from '../Modals/OperationHistoryModal';
 
 export function HealthSettings() {
   const { t } = useTranslation();
@@ -26,6 +28,7 @@ export function HealthSettings() {
   const [results, setResults] = useState<BrokenModEntry[] | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showHuntingModal, setShowHuntingModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [expandedMods, setExpandedMods] = useState<Record<string, boolean>>({});
   const [isAutoTagging, setIsAutoTagging] = useState(false);
   const [autoTagCount, setAutoTagCount] = useState<number | null>(null);
@@ -195,7 +198,36 @@ export function HealthSettings() {
         </button>
       </div>
 
+      {/* Operation History & Rollbacks Card */}
+      <div className="flex items-center justify-between pt-4 border-t border-textMain/5 rounded-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
+            <History size={20} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-textMain">
+              {t('operation_history_card_title', 'Operation History & Rollbacks')}
+            </h2>
+            <p className="text-sm text-textMuted">
+              {t(
+                'operation_history_card_desc',
+                'Review past mod fixes, splits, and edits with one-click restoration of original files from backup.'
+              )}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setShowHistoryModal(true)}
+          className="px-5 py-2.5 rounded-xl bg-surface hover:bg-background border border-textMain/10 hover:border-purple-500/50 text-textMain hover:text-purple-400 font-bold transition-all flex items-center gap-2 shadow-lg cursor-pointer"
+        >
+          <History size={18} className="text-purple-400" />
+          <span>{t('view_history_backups_btn', 'View History & Backups')}</span>
+        </button>
+      </div>
+
       {showHuntingModal && <HuntingModeModal onClose={() => setShowHuntingModal(false)} />}
+      {showHistoryModal && <OperationHistoryModal onClose={() => setShowHistoryModal(false)} />}
 
       {showModal &&
         results &&

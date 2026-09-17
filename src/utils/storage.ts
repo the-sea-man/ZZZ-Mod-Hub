@@ -163,7 +163,18 @@ export function runStorageMigrations(): void {
 
     // 4. Normalize language
     const lang = safeGetString('language', 'en');
-    const validLanguages = ['en', 'zh', 'zh_TW', 'ja', 'ko', 'es', 'ru', 'pt_BR'];
+    const validLanguages = [
+      'en',
+      'zh',
+      'zh_TW',
+      'ja',
+      'ko',
+      'es',
+      'ru',
+      'pt_BR',
+      'th',
+      'th_custom',
+    ];
     if (!validLanguages.includes(lang)) {
       localStorage.setItem('language', 'en');
     }

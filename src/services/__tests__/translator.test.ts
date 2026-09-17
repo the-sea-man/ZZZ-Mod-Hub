@@ -76,11 +76,11 @@ describe('translator service', () => {
       const texts = ['Hello {{name}}, you have {{count}} mods ready!'];
       const { maskedTexts, varMaps } = maskVariables(texts);
 
-      expect(maskedTexts[0]).toContain('___V0___');
-      expect(maskedTexts[0]).toContain('___V1___');
+      expect(maskedTexts[0]).toContain('___0___');
+      expect(maskedTexts[0]).toContain('___1___');
 
       // Simulate a translation that shifts words around
-      const fakeTranslated = 'Bonjour ___V0___, vos ___V1___ mods sont prêts !';
+      const fakeTranslated = 'Bonjour ___0___, vos ___1___ mods sont prêts !';
       const restored = unmaskVariables(fakeTranslated, varMaps[0]);
 
       expect(restored).toBe('Bonjour {{name}}, vos {{count}} mods sont prêts !');
@@ -90,21 +90,31 @@ describe('translator service', () => {
       const texts = ['Select {char} to continue'];
       const { maskedTexts, varMaps } = maskVariables(texts);
 
-      expect(maskedTexts[0]).toContain('___V0___');
-      const fakeTranslated = 'Wählen Sie ___V0___ zum Fortfahren';
+      expect(maskedTexts[0]).toContain('___0___');
+      const fakeTranslated = 'Wählen Sie ___0___ zum Fortfahren';
       const restored = unmaskVariables(fakeTranslated, varMaps[0]);
 
       expect(restored).toBe('Wählen Sie {char} zum Fortfahren');
     });
+
+    it('handles legacy and Cyrillic variable transliteration like ___В0___', () => {
+      const texts = ['Total: {{count}}'];
+      const { varMaps } = maskVariables(texts);
+
+      const cyrillicTranslated = 'Укупно: ___В0___';
+      const restored = unmaskVariables(cyrillicTranslated, varMaps[0]);
+
+      expect(restored).toBe('Укупно: {{count}}');
+    });
   });
 
   describe('parseIndexedResponse', () => {
-    it('parses indexed delimiter blocks accurately regardless of newlines', () => {
+    it('parses bracketed [[[n]]] delimiter blocks accurately regardless of newlines', () => {
       const raw = `
-<<<INDEX_0>>> First message line 1
+[[[0]]] First message line 1
 line 2
-<<<INDEX_1>>> Second message
-<<<INDEX_2>>> Third message
+[[[1]]] Second message
+[[[2]]] Third message
 `;
       const { results, matchedCount } = parseIndexedResponse(raw, 3);
       expect(matchedCount).toBe(3);
@@ -113,8 +123,19 @@ line 2
       expect(results[2]).toBe('Third message');
     });
 
+    it('parses legacy and Cyrillic <<<ИНДЕКС_n>>> delimiters accurately', () => {
+      const raw = `
+<<<ИНДЕКС_0>>> Аутоматско додељивање
+<<<ИНДЕКС_1>>> Подешавања
+`;
+      const { results, matchedCount } = parseIndexedResponse(raw, 2);
+      expect(matchedCount).toBe(2);
+      expect(results[0]).toBe('Аутоматско додељивање');
+      expect(results[1]).toBe('Подешавања');
+    });
+
     it('safely handles missing indices', () => {
-      const raw = `<<<INDEX_0>>> Only one message`;
+      const raw = `[[[0]]] Only one message`;
       const { results, matchedCount } = parseIndexedResponse(raw, 2);
       expect(matchedCount).toBe(1);
       expect(results[0]).toBe('Only one message');
@@ -128,10 +149,25 @@ line 2
       expect(res).toEqual([]);
     });
 
-    it('sends encoded query and unmasks returned translation', async () => {
+    it('sends encoded query and unmasks returned translation with gtx format', async () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => [[['<<<INDEX_0>>> Bonjour ___V0___ !\n<<<INDEX_1>>> Enregistrer']]],
+        json: async () => [[['[[[0]]] Bonjour ___0___ !\n[[[1]]] Enregistrer']]],
+      });
+      globalThis.fetch = mockFetch;
+
+      const input = ['Hello {{user}}!', 'Save'];
+      const res = await translateBatch(input, 'fr');
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(res[0]).toBe('Bonjour {{user}} !');
+      expect(res[1]).toBe('Enregistrer');
+    });
+
+    it('sends encoded query and unmasks returned translation with dict-chrome-ex format', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ['[[[0]]] Bonjour ___0___ !\n[[[1]]] Enregistrer'],
       });
       globalThis.fetch = mockFetch;
 

@@ -19,6 +19,7 @@ import ko from './locales/ko.json';
 import es from './locales/es.json';
 import ru from './locales/ru.json';
 import ptBR from './locales/pt_BR.json';
+import th from './locales/th.json';
 
 export const defaultNS = 'translation';
 export const resources = {
@@ -30,6 +31,7 @@ export const resources = {
   es: { translation: es },
   ru: { translation: ru },
   pt_BR: { translation: ptBR },
+  th: { translation: th },
 } as const;
 
 export const BUILTIN_LANGUAGES = [
@@ -41,6 +43,7 @@ export const BUILTIN_LANGUAGES = [
   { code: 'es', name: 'Español', isBuiltin: true },
   { code: 'ru', name: 'Русский', isBuiltin: true },
   { code: 'pt_BR', name: 'Português (Brasil)', isBuiltin: true },
+  { code: 'th', name: 'ไทย', isBuiltin: true },
 ];
 
 export function isBuiltinLanguage(code: string): boolean {
@@ -119,6 +122,46 @@ export async function loadCustomLanguagePacks() {
       for (const entry of entries) {
         if (entry.isFile && entry.name.endsWith('.json')) {
           const langCode = entry.name.replace('.json', '');
+
+          // If the user previously generated an auto-translated Thai pack at AppData/locales/th.json,
+          // migrate it to locales/th_custom.json so their previous pack coexists side-by-side with our official Thai!
+          if (langCode === 'th') {
+            try {
+              const customExists = await exists('locales/th_custom.json', {
+                baseDir: BaseDirectory.AppData,
+              });
+              if (!customExists) {
+                const legacyContent = await readTextFile('locales/th.json', {
+                  baseDir: BaseDirectory.AppData,
+                });
+                const legacyJson = JSON.parse(legacyContent);
+                if (legacyJson && legacyJson.library !== th.library) {
+                  legacyJson.language_name = 'ไทย (กำหนดเอง / อัตโนมัติ)';
+                  await writeTextFile(
+                    'locales/th_custom.json',
+                    JSON.stringify(legacyJson, null, 2),
+                    {
+                      baseDir: BaseDirectory.AppData,
+                    }
+                  );
+                  const officialWithMeta = { ...th, language_name: 'ไทย' };
+                  await writeTextFile(
+                    'locales/th.json',
+                    JSON.stringify(officialWithMeta, null, 2),
+                    {
+                      baseDir: BaseDirectory.AppData,
+                    }
+                  );
+                  i18n.addResourceBundle('th_custom', defaultNS, legacyJson, true, true);
+                  useAppStore
+                    .getState()
+                    .addAvailableLanguage({ code: 'th_custom', name: legacyJson.language_name });
+                }
+              }
+            } catch (migErr) {
+              console.warn('Could not migrate legacy custom Thai pack:', migErr);
+            }
+          }
 
           // Skip overwriting built-in bundles with the base reference files unless modified
           if (isBuiltinLanguage(langCode)) {

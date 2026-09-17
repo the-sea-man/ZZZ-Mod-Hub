@@ -93,6 +93,8 @@ const selectPerformanceProfile = (s: AppStore) => s.performanceProfile;
 const selectSetPerformanceProfile = (s: AppStore) => s.setPerformanceProfile;
 const selectAvailableUpdates = (s: AppStore) => s.availableUpdates;
 const selectIsLoadingLibrary = (s: AppStore) => s.isLoadingLibrary;
+const selectProfiles = (s: AppStore) => s.profiles;
+const selectActiveProfileId = (s: AppStore) => s.activeProfileId;
 
 export function LibraryView() {
   const { t } = useTranslation();
@@ -152,6 +154,9 @@ export function LibraryView() {
   const incrementStat = useAppStore(selectIncrementStat);
   const highlightTargetId = useAppStore(selectHighlightTargetId);
   const checkOrPromptExperimental = useAppStore(selectCheckOrPromptExperimental);
+  const profiles = useAppStore(selectProfiles);
+  const activeProfileId = useAppStore(selectActiveProfileId);
+  const activeProfile = profiles.find((p) => p.id === activeProfileId);
 
   // Local action state
   const [isScanningDisk, setIsScanningDisk] = useState(false);
@@ -428,6 +433,10 @@ export function LibraryView() {
         highlightTargetId={highlightTargetId}
         isGeneratingFolders={isGeneratingFolders}
         onGenerateMissingFolders={handleGenerateMissingFolders}
+        onOpenFolderManagement={() => modals.setShowFolderManagement(true)}
+        onOpenProfiles={() => modals.setShowProfilesModal(true)}
+        hasActiveProfile={!!activeProfile}
+        activeProfileName={activeProfile?.name ?? null}
         isCheckingUpdates={isCheckingUpdates}
         availableUpdatesCount={availableUpdates.length}
         onCheckUpdates={handleCheckUpdates}

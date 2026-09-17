@@ -13,6 +13,7 @@ import {
   Tag,
   Box,
   Trash2,
+  RotateCcw,
 } from 'lucide-react';
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { ModInfo, ModWarning } from '../../types';
@@ -36,6 +37,7 @@ export interface ModCardActionsMenuProps {
   onOpenHashConflictsModal?: () => void;
   onOpenWarningsModal?: (warnings: ModWarning[]) => void;
   onOpenFixMod: () => void;
+  onOpenRestoreBackup?: () => void;
   onOpenEditTags: () => void;
   onOpenEditNote: () => void;
   onOpenAdvanced: (tab: '3d' | 'crop' | 'split') => void;
@@ -59,6 +61,7 @@ export function ModCardActionsMenu({
   onOpenHashConflictsModal,
   onOpenWarningsModal,
   onOpenFixMod,
+  onOpenRestoreBackup,
   onOpenEditTags,
   onOpenEditNote,
   onOpenAdvanced,
@@ -283,6 +286,19 @@ export function ModCardActionsMenu({
                     </button>
                   )}
 
+                  {mod.has_backup && onOpenRestoreBackup && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsMenuOpen(false);
+                        onOpenRestoreBackup();
+                      }}
+                      className="w-full text-left px-4 py-3 text-sm font-bold text-indigo-400 hover:bg-indigo-500/10 transition-colors flex items-center gap-2 border-b border-textMain/5 cursor-pointer"
+                    >
+                      <RotateCcw size={16} /> {t('restore_backup_menu', 'Restore from Backup')}
+                    </button>
+                  )}
+
                   {iniWarnings.length > 0 && onOpenWarningsModal && (
                     <button
                       onClick={(e) => {
@@ -338,7 +354,7 @@ export function ModCardActionsMenu({
                     }}
                     className="w-full text-left px-4 py-3 text-sm font-bold text-purple-400 hover:bg-purple-500/10 transition-colors flex items-center gap-2 border-b border-textMain/5 cursor-pointer"
                   >
-                    <Box size={16} /> {t('mod_viewer_open', 'Preview 3D')}
+                    <Box size={16} /> {t('mod_advanced_btn', 'Advanced')}
                   </button>
 
                   {hasInstallConflict && onOpenResolveConflictModal && (

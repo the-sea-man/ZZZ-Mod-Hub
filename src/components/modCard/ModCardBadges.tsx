@@ -9,9 +9,12 @@ import {
   Users,
   FileCode,
   Check,
+  RotateCcw,
 } from 'lucide-react';
 import { ModInfo, ModWarning } from '../../types';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useAppStore } from '../../store/useAppStore';
+import { DEFAULT_MOD_CARD_CUSTOMIZATION } from '../../types/cardCustomization';
 
 export interface ModCardBadgesProps {
   mod: ModInfo;
@@ -22,6 +25,7 @@ export interface ModCardBadgesProps {
   sizeBytes: number | null;
   hasUpdateAvailable: boolean;
   outdatedWarnings: ModWarning[];
+  hasBackup?: boolean;
   isStale: boolean;
   invalidHashes: string[];
   hasHashConflict: boolean;
@@ -32,6 +36,7 @@ export interface ModCardBadgesProps {
   onToggleSelect: (e: React.MouseEvent) => void;
   onOpenUpdater: (e: React.MouseEvent) => void;
   onOpenFixMod: (e: React.MouseEvent) => void;
+  onOpenRestoreBackup?: (e: React.MouseEvent) => void;
   onOpenHashConflicts: (e: React.MouseEvent) => void;
   onOpenMultiCharWarnings: (e: React.MouseEvent) => void;
   onOpenIniWarnings: (e: React.MouseEvent) => void;
@@ -45,6 +50,7 @@ export const ModCardBadges = memo(function ModCardBadges({
   sizeBytes,
   hasUpdateAvailable,
   outdatedWarnings,
+  hasBackup,
   isStale,
   invalidHashes,
   hasHashConflict,
@@ -55,11 +61,14 @@ export const ModCardBadges = memo(function ModCardBadges({
   onToggleSelect,
   onOpenUpdater,
   onOpenFixMod,
+  onOpenRestoreBackup,
   onOpenHashConflicts,
   onOpenMultiCharWarnings,
   onOpenIniWarnings,
 }: ModCardBadgesProps) {
   const { t } = useTranslation();
+  const badgesConfig =
+    useAppStore((s) => s.cardCustomization?.badges) || DEFAULT_MOD_CARD_CUSTOMIZATION.badges;
 
   const formatSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -69,21 +78,30 @@ export const ModCardBadges = memo(function ModCardBadges({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
+  const badgeStyleClass =
+    badgesConfig.badgeStyle === 'solid'
+      ? 'bg-zinc-900 border border-zinc-700'
+      : 'bg-black/70 app-blur border border-white/10';
+
   return (
     <>
       {/* Top-Left Action Icons (Favorite, Lock/Unlock, or Batch Checkbox) */}
       <div className="absolute top-3 left-3 flex gap-2 z-20">
-        <button
-          onClick={onToggleFavorite}
-          className={`p-2.5 rounded-full border app-blur transition-all shadow-lg flex items-center justify-center cursor-pointer ${
-            isFavorite
-              ? 'bg-rose-500/80 border-rose-500 shadow-rose-500/30 text-white'
-              : 'bg-background/80 border-textMain/10 text-textMuted hover:bg-surface hover:text-textMain'
-          }`}
-          title={isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
-        >
-          <Heart size={14} className={isFavorite ? 'fill-current' : ''} />
-        </button>
+        {badgesConfig.showFavoriteHeart && (
+          <button
+            onClick={onToggleFavorite}
+            className={`p-2.5 rounded-full border app-blur transition-all shadow-lg flex items-center justify-center cursor-pointer ${
+              isFavorite
+                ? 'bg-rose-500/80 border-rose-500 shadow-rose-500/30 text-white'
+                : badgesConfig.badgeStyle === 'solid'
+                  ? 'bg-surface border-textMain/20 text-textMuted hover:text-textMain'
+                  : 'bg-background/80 border-textMain/10 text-textMuted hover:bg-surface hover:text-textMain'
+            }`}
+            title={isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+          >
+            <Heart size={14} className={isFavorite ? 'fill-current' : ''} />
+          </button>
+        )}
 
         {isBatchMode ? (
           <button
@@ -103,7 +121,9 @@ export const ModCardBadges = memo(function ModCardBadges({
             className={`p-2.5 rounded-full border app-blur transition-all shadow-lg flex items-center justify-center cursor-pointer ${
               isIgnored
                 ? 'bg-primary/80 border-primary shadow-primary/30 text-white'
-                : 'bg-background/80 border-textMain/10 text-textMuted hover:bg-surface hover:text-textMain'
+                : badgesConfig.badgeStyle === 'solid'
+                  ? 'bg-surface border-textMain/20 text-textMuted hover:text-textMain'
+                  : 'bg-background/80 border-textMain/10 text-textMuted hover:bg-surface hover:text-textMain'
             }`}
             title={
               isIgnored
@@ -118,7 +138,7 @@ export const ModCardBadges = memo(function ModCardBadges({
 
       {/* Top-Right Badges & Warning Icons */}
       <div className="absolute top-3 right-3 flex gap-2 z-20 flex-col items-end pointer-events-auto">
-        {hasUpdateAvailable && (
+        {hasUpdateAvailable && badgesConfig.showUpdateBadge && (
           <button
             onClick={onOpenUpdater}
             className="bg-amber-500/90 hover:bg-amber-500 text-black text-xs px-2.5 py-1 rounded-full border border-amber-300 font-bold flex items-center gap-1 shadow-[0_0_15px_rgba(245,158,11,0.5)] cursor-pointer hover:scale-105 transition-all animate-pulse"
@@ -144,8 +164,23 @@ export const ModCardBadges = memo(function ModCardBadges({
           </button>
         )}
 
-        {sizeBytes !== null && (
-          <span className="bg-black/70 app-blur text-white text-xs px-3 py-1 rounded-full border border-white/10 font-bold tracking-wide shadow-lg">
+        {hasBackup && onOpenRestoreBackup && (
+          <button
+            onClick={onOpenRestoreBackup}
+            className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white text-xs px-2.5 py-1 rounded-full border border-indigo-300 font-bold flex items-center gap-1 shadow-[0_0_15px_rgba(99,102,241,0.4)] cursor-pointer hover:scale-105 transition-all"
+            title={t(
+              'backup_available_tooltip',
+              'Backup available: Click to review and restore previous files'
+            )}
+          >
+            <RotateCcw size={12} /> {t('backup_badge', 'Rollback')}
+          </button>
+        )}
+
+        {sizeBytes !== null && badgesConfig.showSizeBadge && (
+          <span
+            className={`${badgeStyleClass} text-white text-xs px-3 py-1 rounded-full font-bold tracking-wide shadow-lg`}
+          >
             {formatSize(sizeBytes)}
           </span>
         )}

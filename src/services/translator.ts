@@ -26,7 +26,6 @@ export const WORLD_LANGUAGES: WorldLanguage[] = [
   { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
   { code: 'it', name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹' },
   { code: 'pl', name: 'Polish', nativeName: 'Polski', flag: '🇵🇱' },
-  { code: 'th', name: 'Thai', nativeName: 'ไทย', flag: '🇹🇭' },
   { code: 'vi', name: 'Vietnamese', nativeName: 'Tiếng Việt', flag: '🇻🇳' },
   { code: 'id', name: 'Indonesian', nativeName: 'Bahasa Indonesia', flag: '🇮🇩' },
   { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷' },
@@ -279,7 +278,7 @@ export function detectSystemLanguage(): DetectedLanguageInfo {
 }
 
 /**
- * Masks i18next interpolations ({{name}}, {0}) with placeholders like ___V0___
+ * Masks i18next interpolations ({{name}}, {count}) with placeholders like ___0___
  * to prevent Google Translate from altering variable names.
  */
 export function maskVariables(texts: string[]): {
@@ -293,7 +292,7 @@ export function maskVariables(texts: string[]): {
     let counter = 0;
 
     const masked = text.replace(/\{\{[^}]+\}\}|\{[a-zA-Z0-9_]+\}/g, (match) => {
-      const token = `___V${counter}___`;
+      const token = `___${counter}___`;
       mapForText.push({ token, original: match });
       counter++;
       return token;
@@ -308,6 +307,7 @@ export function maskVariables(texts: string[]): {
 
 /**
  * Unmasks tokens back to their original {{var}} placeholders.
+ * Resilient against both numeric tokens (___0___) and legacy/transliterated alphabetic tokens (___V0___ / ___В0___).
  */
 export function unmaskVariables(
   text: string,
@@ -315,26 +315,37 @@ export function unmaskVariables(
 ): string {
   let result = text;
   for (const { token, original } of varMap) {
-    result = result.replace(new RegExp(token, 'gi'), original);
+    const numMatch = token.match(/\d+/);
+    if (numMatch) {
+      const num = numMatch[0];
+      // Match ___0___, ___V0___, and Cyrillic transliteration ___В0___
+      const tokenRegex = new RegExp(`___(?:V|В|в)?${num}___`, 'gi');
+      result = result.replace(tokenRegex, original);
+    } else {
+      result = result.replace(new RegExp(token, 'gi'), original);
+    }
   }
   return result;
 }
 
 /**
- * Parses Google Translate response containing <<<INDEX_n>>> tokens.
+ * Parses Google Translate response containing indexed delimiter tokens.
+ * Accepts modern language-neutral [[[n]]] delimiters, as well as legacy/Cyrillic <<<INDEX_n>>> / <<<ИНДЕКС_n>>>.
  */
 export function parseIndexedResponse(
   fullText: string,
   expectedCount: number
 ): { results: string[]; matchedCount: number } {
   const results = new Array<string>(expectedCount).fill('');
-  const regex = /<<<INDEX_(\d+)>>>\s*([\s\S]*?)(?=(?:<<<INDEX_\d+>>>|$))/g;
+  const regex =
+    /(?:\[\[\[(\d+)\]\]\]|<<<(?:\s*INDEX|\s*ИНДЕКС)_(\d+)>>>)\s*([\s\S]*?)(?=(?:\[\[\[\d+\]\]\]|<<<(?:INDEX|ИНДЕКС)_\d+>>>|$))/gi;
   let match: RegExpExecArray | null;
   let matchedCount = 0;
 
   while ((match = regex.exec(fullText)) !== null) {
-    const idx = parseInt(match[1], 10);
-    const content = match[2].trim();
+    const idxStr = match[1] || match[2];
+    const idx = parseInt(idxStr, 10);
+    const content = match[3].trim();
     if (idx >= 0 && idx < expectedCount) {
       results[idx] = content;
       matchedCount++;
@@ -358,8 +369,8 @@ export async function translateBatch(
   // Protect variables
   const { maskedTexts, varMaps } = maskVariables(texts);
 
-  // Prefix each item with its index
-  const indexed = maskedTexts.map((text, i) => `<<<INDEX_${i}>>> ${text}`);
+  // Prefix each item with its index using language-neutral brackets
+  const indexed = maskedTexts.map((text, i) => `[[[${i}]]] ${text}`);
   const query = indexed.join('\n');
 
   let rawTranslated: string | null = null;
@@ -371,32 +382,51 @@ export async function translateBatch(
       if (typeof res === 'string' && res.trim().length > 0) {
         rawTranslated = res;
       }
-    } catch {
-      // IPC failed or unhandled in test mock, fall through to fetch
+    } catch (ipcErr) {
+      console.warn('Rust translateQuery IPC error, falling back to fetch:', ipcErr);
     }
   }
 
   if (!rawTranslated) {
-    // Fallback for tests / non-Tauri browser environments
-    const endpoint = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${encodeURIComponent(
-      targetLang
-    )}&dt=t&q=${encodeURIComponent(query)}`;
+    // Multi-endpoint fallback matching Rust
+    const encodedLang = encodeURIComponent(targetLang);
+    const encodedQuery = encodeURIComponent(query);
+    const endpoints = [
+      `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=en&tl=${encodedLang}&q=${encodedQuery}`,
+      `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${encodedLang}&dt=t&q=${encodedQuery}`,
+      `https://translate.google.com/translate_a/single?client=at&sl=en&tl=${encodedLang}&dt=t&q=${encodedQuery}`,
+    ];
 
-    const response = await fetch(endpoint, {
-      method: 'GET',
-      signal,
-    });
+    let lastError: any = null;
+    for (const url of endpoints) {
+      if (signal?.aborted) throw new Error('Translation aborted');
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          signal,
+        });
 
-    if (!response.ok) {
-      throw new Error(`Translation request failed with status: ${response.status}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data) && typeof data[0] === 'string') {
+            rawTranslated = data[0];
+            break;
+          }
+          if (Array.isArray(data) && Array.isArray(data[0])) {
+            rawTranslated = (data[0] as Array<[string, string]>).map((chunk) => chunk[0]).join('');
+            break;
+          }
+        } else {
+          lastError = new Error(`Endpoint returned status ${response.status}`);
+        }
+      } catch (err) {
+        lastError = err;
+      }
     }
 
-    const data = await response.json();
-    if (!Array.isArray(data) || !Array.isArray(data[0])) {
-      throw new Error('Unexpected translation response structure');
+    if (!rawTranslated) {
+      throw lastError || new Error('All translation endpoints failed');
     }
-
-    rawTranslated = (data[0] as Array<[string, string]>).map((chunk) => chunk[0]).join('');
   }
 
   const { results } = parseIndexedResponse(rawTranslated || '', texts.length);
@@ -451,15 +481,15 @@ export async function generateLanguagePack(
     let chunkResults: string[] | null = null;
     let lastError: any = null;
 
-    // Retry loop (up to 2 attempts per batch)
-    for (let attempt = 0; attempt < 2; attempt++) {
+    // Retry loop (up to 3 attempts with exponential backoff)
+    for (let attempt = 0; attempt < 3; attempt++) {
       try {
         chunkResults = await translateBatch(chunkTexts, targetLang, signal);
         break;
       } catch (err) {
         lastError = err;
         if (signal?.aborted) throw err;
-        await new Promise((resolve) => setTimeout(resolve, 250));
+        await new Promise((resolve) => setTimeout(resolve, 500 * Math.pow(2, attempt)));
       }
     }
 
@@ -478,12 +508,12 @@ export async function generateLanguagePack(
     onProgress?.(pct, processedCount, totalCount);
 
     if (i + BATCH_SIZE < keys.length) {
-      await new Promise((resolve) => setTimeout(resolve, 30));
+      await new Promise((resolve) => setTimeout(resolve, 80));
     }
   }
 
-  // If the majority of batches failed, it's a network outage
-  if (failedBatches > 0 && failedBatches >= Math.floor(totalBatches * 0.75)) {
+  // Fail if more than 20% of batches failed
+  if (failedBatches > 0 && failedBatches >= Math.max(1, Math.floor(totalBatches * 0.2))) {
     throw new Error('Translation failed. Please check your internet connection and try again.');
   }
 

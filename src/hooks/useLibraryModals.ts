@@ -16,6 +16,8 @@ export function useLibraryModals() {
   const [hashConflictsModalMod, setHashConflictsModalMod] = useState<ModInfo | null>(null);
   const [showBatchFixModal, setShowBatchFixModal] = useState(false);
   const [activeUpdateModal, setActiveUpdateModal] = useState<UpdateAvailable | null>(null);
+  const [showFolderManagement, setShowFolderManagement] = useState(false);
+  const [showProfilesModal, setShowProfilesModal] = useState(false);
 
   return {
     editingKeybinds,
@@ -40,6 +42,10 @@ export function useLibraryModals() {
     setShowBatchFixModal,
     activeUpdateModal,
     setActiveUpdateModal,
+    showFolderManagement,
+    setShowFolderManagement,
+    showProfilesModal,
+    setShowProfilesModal,
   };
 }
 

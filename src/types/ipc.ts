@@ -17,8 +17,8 @@ export interface ModMeta {
   gb_last_updated?: number;
   author?: string;
   original_file_name?: string;
-  notes?: string;
-  tags?: string[];
+  notes?: string | null;
+  tags?: string[] | null;
 }
 
 export interface ModInfo {
@@ -30,6 +30,8 @@ export interface ModInfo {
   meta?: ModMeta;
   /** Total disk size of the mod folder in bytes, populated by scan_mods_folder. */
   total_size_bytes?: number;
+  /** Whether any backup files (.bak / .disabled.bak) exist in this mod folder. */
+  has_backup?: boolean;
 }
 
 export interface CategoryInfo {
@@ -204,6 +206,17 @@ export interface BufferFixDetail {
   new_format: string;
 }
 
+export interface IndexFixDetail {
+  hash: string;
+  section: string;
+  old_index: number;
+  new_index: number;
+  old_count?: number;
+  new_count?: number;
+  character: string;
+  description: string;
+}
+
 export interface ModFixAnalysis {
   mod_path: string;
   mod_name: string;
@@ -216,6 +229,7 @@ export interface ModFixAnalysis {
   hash_fixes: HashFixDetail[];
   multi_res_fixes: MultiResFixDetail[];
   buffer_fixes: BufferFixDetail[];
+  index_fixes: IndexFixDetail[];
   total_fixes: number;
   has_backup: boolean;
 }
@@ -229,6 +243,7 @@ export interface ModFixResult {
   hashes_updated: number;
   sections_added: number;
   buffers_remapped: number;
+  indices_remapped: number;
   actions_summary: string[];
   error: string | null;
 }
@@ -326,4 +341,88 @@ export interface TaskInfo {
   task_id: string;
   task_type: string;
   started_at: number;
+}
+
+// ── Dual-Track Logging & Operation Rollback Engine (from logger.rs) ───────────────────
+
+export interface AlterationEntry {
+  id: string;
+  timestamp: string;
+  action_type:
+    | 'mod_fix'
+    | 'mod_split'
+    | 'keybind_change'
+    | 'script_fix'
+    | 'toggle'
+    | 'restore'
+    | 'install'
+    | 'delete'
+    | 'move'
+    | 'rename'
+    | string;
+  target_name: string;
+  target_path: string;
+  details: string;
+  backup_path?: string | null;
+  can_undo: boolean;
+}
+
+export interface ErrorLogEntry {
+  id: string;
+  timestamp: string;
+  subsystem: string;
+  error_message: string;
+  context?: string | null;
+}
+
+export interface RollbackResult {
+  success: boolean;
+  restored_count: number;
+  message: string;
+}
+
+// ── Custom Folder Management & Essential System Folders ─────────────────────────────
+
+export interface CreateFolderPayload {
+  rootPath: string;
+  folderName: string;
+  characterId?: string | null;
+  skinId?: string | null;
+}
+
+export interface RenameFolderPayload {
+  rootPath: string;
+  oldName: string;
+  newName: string;
+}
+
+export interface DeleteFolderPayload {
+  rootPath: string;
+  folderName: string;
+  force: boolean;
+}
+
+export interface GenerateEssentialFoldersPayload {
+  rootPath: string;
+  folders?: string[] | null;
+}
+
+// ── Mod Backup Inspection & Selective Rollback ──────────────────────────────────────
+
+export interface ModBackupInfo {
+  backup_path: string;
+  backup_file_name: string;
+  target_file_name: string;
+  target_path: string;
+  created_at?: number | null;
+  backup_size_bytes: number;
+  target_size_bytes?: number | null;
+  target_exists: boolean;
+}
+
+export interface RestoreBackupResult {
+  success: boolean;
+  restored_files: string[];
+  remaining_backups_count: number;
+  error?: string | null;
 }

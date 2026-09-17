@@ -1332,6 +1332,16 @@ pub fn auto_fix_mod_script(mod_path: String) -> Result<Vec<String>, crate::error
 
     if actions.is_empty() {
         actions.push("No auto-fixable script issues were found in this mod.".to_string());
+    } else {
+        let details = actions.join("; ");
+        crate::infra::logger::log_alteration(
+            "script_fix",
+            &mod_folder_name,
+            &mod_path_expanded,
+            &details,
+            None,
+            true,
+        );
     }
 
     Ok(actions)

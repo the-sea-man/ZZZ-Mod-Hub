@@ -39,4 +39,6 @@ keys/
 *.key
 *.key.pub
 .public_staging/
+.cargo/
+**/.cargo/
 

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Info,
   Code2,
@@ -7,11 +7,13 @@ import {
   RefreshCw,
   CheckCircle2,
   Sparkles,
+  History,
 } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { invoke } from '@tauri-apps/api/core';
 import { useAppStore } from '../../store/useAppStore';
 import { FeatureShowcase } from './FeatureShowcase';
+import { OperationHistoryModal } from '../Modals/OperationHistoryModal';
 
 export function AboutSettings() {
   const { t } = useTranslation();
@@ -23,6 +25,8 @@ export function AboutSettings() {
     checkAppUpdates,
     fetchAppVersion,
   } = useAppStore();
+
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   useEffect(() => {
     fetchAppVersion();
@@ -133,6 +137,24 @@ export function AboutSettings() {
               />
             </a>
             <button
+              onClick={() => setShowHistoryModal(true)}
+              className="flex items-center justify-between px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors group text-left w-full cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <History
+                  size={18}
+                  className="text-textMuted group-hover:text-primary transition-colors"
+                />
+                <span className="font-semibold text-textMain">
+                  {t('view_history_backups_btn', 'Operation History & Backups')}
+                </span>
+              </div>
+              <ExternalLink
+                size={16}
+                className="text-textMuted group-hover:text-primary transition-colors"
+              />
+            </button>
+            <button
               onClick={async () => {
                 await invoke('open_logs_folder');
               }}
@@ -144,7 +166,7 @@ export function AboutSettings() {
                   className="text-textMuted group-hover:text-textMain transition-colors"
                 />
                 <span className="font-semibold text-textMain">
-                  {t('show_log_file', 'Show Log File')}
+                  {t('open_logs_folder_btn', 'Open Logs Folder')}
                 </span>
               </div>
               <ExternalLink
@@ -175,6 +197,8 @@ export function AboutSettings() {
       </div>
 
       {import.meta.env.DEV && <FeatureShowcase />}
+
+      {showHistoryModal && <OperationHistoryModal onClose={() => setShowHistoryModal(false)} />}
     </div>
   );
 }

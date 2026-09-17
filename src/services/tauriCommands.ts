@@ -11,6 +11,11 @@ import type {
   CapturedHashEntry,
   TaskInfo,
   ViewerPayload,
+  AlterationEntry,
+  ErrorLogEntry,
+  RollbackResult,
+  ModBackupInfo,
+  RestoreBackupResult,
 } from '../types/ipc';
 
 /**
@@ -36,8 +41,11 @@ export const tauriCommands = {
     moveToCategory: (modPath: string, targetCategory: string, rootPath: string) =>
       invoke<void>('move_mod_to_category', { modPath, targetCategory, rootPath }),
 
-    moveToUnassigned: (modPath: string, rootPath: string) =>
-      invoke<void>('move_to_unassigned', { modPath, rootPath }),
+    moveToUnassigned: (modPaths: string[] | string, rootPath: string) =>
+      invoke<void>('move_to_unassigned', {
+        modPaths: Array.isArray(modPaths) ? modPaths : [modPaths],
+        rootPath,
+      }),
 
     setCategoryMapping: (
       categoryName: string,
@@ -109,7 +117,7 @@ export const tauriCommands = {
       invoke<ToggledModResult>('toggle_mod', { modPath, enable }),
 
     bulkToggle: (modPaths: string[], enable: boolean) =>
-      invoke<void>('bulk_toggle_mods', { modPaths, enable }),
+      invoke<ToggledModResult[]>('bulk_toggle_mods', { modPaths, enable }),
 
     randomize: (
       categoryMods: Record<string, string[]>,
@@ -126,8 +134,18 @@ export const tauriCommands = {
 
     isRunning: (gamePath: string) => invoke<boolean>('is_game_running', { gamePath }),
 
-    generateInGameUi: (rootPath: string, hudKey: string, menuMode?: string) =>
-      invoke<void>('generate_in_game_ui', { rootPath, hudKey, menuMode }),
+    generateInGameUi: (
+      rootPath: string,
+      hudKey?: string | null,
+      menuMode?: string | null,
+      activeModPaths?: string[] | null
+    ) =>
+      invoke<string>('generate_in_game_ui', {
+        rootPath,
+        hudKey: hudKey ?? null,
+        menuMode: menuMode ?? null,
+        activeModPaths: activeModPaths ?? null,
+      }),
 
     disableInGameUi: (rootPath: string) => invoke<void>('disable_in_game_ui', { rootPath }),
   },
@@ -154,6 +172,41 @@ export const tauriCommands = {
     autoAssign: (rootPath: string) => invoke<string[]>('auto_assign_mods', { rootPath }),
   },
 
+  folders: {
+    create: (
+      rootPath: string,
+      folderName: string,
+      characterId?: string | null,
+      skinId?: string | null
+    ) =>
+      invoke<string>('create_category_folder', {
+        rootPath,
+        folderName,
+        characterId: characterId ?? null,
+        skinId: skinId ?? null,
+      }),
+
+    rename: (rootPath: string, oldName: string, newName: string) =>
+      invoke<string>('rename_category_folder', {
+        rootPath,
+        oldName,
+        newName,
+      }),
+
+    delete: (rootPath: string, folderName: string, force: boolean) =>
+      invoke<void>('delete_category_folder', {
+        rootPath,
+        folderName,
+        force,
+      }),
+
+    generateEssential: (rootPath: string, folders?: string[]) =>
+      invoke<string[]>('generate_essential_folders', {
+        rootPath,
+        folders: folders ?? null,
+      }),
+  },
+
   diagnostics: {
     analyzeHashes: (modsPath: string, activeOnly: boolean) =>
       invoke<HashAnalysisResult>('analyze_mod_hashes', { modsPath, activeOnly }),
@@ -173,8 +226,22 @@ export const tauriCommands = {
     batchFixMods: (modPaths: string[], taskId?: string) =>
       invoke<any>('batch_fix_mods', { modPaths, taskId: taskId ?? null }),
 
-    restoreModBackup: (backupPath: string) =>
-      invoke<void>('restore_mod_backup_command', { backupPath }),
+    restoreModBackup: (modPath: string) =>
+      invoke<boolean>('restore_mod_backup_command', { modPath }),
+
+    listModBackups: (modPath: string) =>
+      invoke<ModBackupInfo[]>('list_mod_backups_command', { modPath }),
+
+    restoreSelectedModBackups: (
+      modPath: string,
+      backupPaths: string[],
+      keepBackups: boolean = false
+    ) =>
+      invoke<RestoreBackupResult>('restore_selected_mod_backups_command', {
+        modPath,
+        backupPaths,
+        keepBackups,
+      }),
 
     resolveConflict: (
       modPath: string,
@@ -301,5 +368,24 @@ export const tauriCommands = {
     cancelByPrefix: (prefix: string) => invoke<number>('cancel_tasks_by_prefix', { prefix }),
 
     listActive: () => invoke<TaskInfo[]>('list_active_tasks'),
+  },
+
+  logs: {
+    getAlterationHistory: (limit?: number) =>
+      invoke<AlterationEntry[]>('get_alteration_history', { limit: limit ?? null }),
+
+    getErrorLogs: (limit?: number) =>
+      invoke<ErrorLogEntry[]>('get_error_logs', { limit: limit ?? null }),
+
+    openLogsFolder: () => invoke<void>('open_logs_folder'),
+
+    openLogFile: (logType: 'alterations' | 'errors' | string) =>
+      invoke<void>('open_log_file', { logType }),
+
+    clearLogs: (logType: 'alterations' | 'errors' | 'all') =>
+      invoke<void>('clear_logs', { logType }),
+
+    rollbackAlteration: (entryId: string) =>
+      invoke<RollbackResult>('rollback_alteration', { entryId }),
   },
 };

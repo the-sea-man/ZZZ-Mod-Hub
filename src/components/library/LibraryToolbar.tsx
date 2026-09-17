@@ -1,5 +1,13 @@
 import { memo } from 'react';
-import { FolderPlus, RefreshCw, Wrench, ShieldAlert, Globe } from 'lucide-react';
+import {
+  FolderPlus,
+  RefreshCw,
+  Wrench,
+  ShieldAlert,
+  Globe,
+  FolderCog,
+  Bookmark,
+} from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { CharacterFilters } from '../characters/CharacterFilters';
 import { EntityCategory } from '../../types';
@@ -12,6 +20,10 @@ export interface LibraryToolbarProps {
   // Folder generation
   isGeneratingFolders: boolean;
   onGenerateMissingFolders: () => void;
+  onOpenFolderManagement?: () => void;
+  onOpenProfiles?: () => void;
+  hasActiveProfile?: boolean;
+  activeProfileName?: string | null;
   // Update checker
   isCheckingUpdates: boolean;
   availableUpdatesCount: number;
@@ -65,6 +77,10 @@ export const LibraryToolbar = memo(function LibraryToolbar({
   highlightTargetId,
   isGeneratingFolders,
   onGenerateMissingFolders,
+  onOpenFolderManagement,
+  onOpenProfiles,
+  hasActiveProfile,
+  activeProfileName,
   isCheckingUpdates,
   availableUpdatesCount,
   onCheckUpdates,
@@ -285,6 +301,41 @@ export const LibraryToolbar = memo(function LibraryToolbar({
           {isScanningDisk ? t('scanning', 'Scanning...') : t('scan_folders_btn', 'Scan Disk')}
         </span>
       </button>
+
+      {onOpenFolderManagement && (
+        <button
+          type="button"
+          onClick={onOpenFolderManagement}
+          className="ml-2 px-3 py-2.5 rounded-xl font-bold text-xs shrink-0 transition-all border border-white/10 bg-surface-light hover:bg-white/10 text-textMain shadow-sm flex items-center gap-1.5 cursor-pointer"
+          title={t('manage_folders', 'Manage Folders')}
+        >
+          <FolderCog size={14} className="text-primary" />
+          <span>{t('manage_folders', 'Manage Folders')}</span>
+        </button>
+      )}
+
+      {onOpenProfiles && (
+        <button
+          type="button"
+          onClick={onOpenProfiles}
+          className={`ml-2 px-3 py-2.5 rounded-xl font-bold text-xs shrink-0 transition-all border flex items-center gap-1.5 cursor-pointer ${
+            hasActiveProfile
+              ? 'border-primary/40 bg-primary/15 text-primary hover:bg-primary/25 shadow-sm'
+              : 'border-white/10 bg-surface-light hover:bg-white/10 text-textMain shadow-sm'
+          }`}
+          title={
+            activeProfileName
+              ? `${t('presets_tooltip')}: ${activeProfileName}`
+              : t('presets_tooltip')
+          }
+        >
+          <Bookmark
+            size={14}
+            className={hasActiveProfile ? 'text-primary fill-primary/30' : 'text-primary'}
+          />
+          <span>{t('presets_btn')}</span>
+        </button>
+      )}
 
       <button
         type="button"

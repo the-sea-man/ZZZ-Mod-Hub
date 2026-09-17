@@ -20,6 +20,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { ModFixAnalysis, ModFixResult, HashFixDetail } from '../../types/ipc';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useAppStore } from '../../store/useAppStore';
+import { RestoreBackupModal } from './RestoreBackupModal';
 
 interface FixModModalProps {
   modPath: string;
@@ -34,10 +35,10 @@ export function FixModModal({ modPath, modName, onClose, onFixApplied }: FixModM
   const [analysis, setAnalysis] = useState<ModFixAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFixing, setIsFixing] = useState(false);
-  const [isRestoring, setIsRestoring] = useState(false);
   const [fixResult, setFixResult] = useState<ModFixResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showAllHashes, setShowAllHashes] = useState(false);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
 
   // Keyboard: Escape to close
   useEffect(() => {
@@ -95,31 +96,6 @@ export function FixModModal({ modPath, modName, onClose, onFixApplied }: FixModM
       setError(String(err));
     } finally {
       setIsFixing(false);
-    }
-  };
-
-  const handleRestoreBackup = async () => {
-    setIsRestoring(true);
-    setError(null);
-    try {
-      const restored = await invoke<boolean>('restore_mod_backup_command', { modPath });
-      if (restored) {
-        // Reload analysis
-        const res = await invoke<ModFixAnalysis>('check_mod_fixable', { modPath });
-        setAnalysis(res);
-        setFixResult(null);
-
-        useAppStore.getState().scanModsFolder();
-        if (onFixApplied) {
-          onFixApplied();
-        }
-      } else {
-        setError(t('restore_no_backup_found', 'No backup files were found to restore.'));
-      }
-    } catch (err: unknown) {
-      setError(String(err));
-    } finally {
-      setIsRestoring(false);
     }
   };
 
@@ -446,11 +422,11 @@ export function FixModModal({ modPath, modName, onClose, onFixApplied }: FixModM
           <div>
             {analysis?.has_backup && !fixResult && (
               <button
-                onClick={handleRestoreBackup}
-                disabled={isRestoring || isFixing}
-                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-700/60 transition-colors flex items-center gap-1.5"
+                onClick={() => setShowRestoreModal(true)}
+                disabled={isFixing}
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-700/60 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                <RotateCcw className={`w-3.5 h-3.5 ${isRestoring ? 'animate-spin' : ''}`} />
+                <RotateCcw className="w-3.5 h-3.5" />
                 {t('restore_backup', 'Restore Original')}
               </button>
             )}
@@ -459,7 +435,7 @@ export function FixModModal({ modPath, modName, onClose, onFixApplied }: FixModM
           <div className="flex items-center gap-2.5">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer"
             >
               {fixResult ? t('close', 'Done') : t('cancel', 'Cancel')}
             </button>
@@ -467,8 +443,8 @@ export function FixModModal({ modPath, modName, onClose, onFixApplied }: FixModM
             {analysis?.is_fixable && !fixResult && (
               <button
                 onClick={handleApplyFix}
-                disabled={isFixing || isRestoring}
-                className="px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2"
+                disabled={isFixing}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 cursor-pointer"
               >
                 {isFixing ? (
                   <>
@@ -486,6 +462,25 @@ export function FixModModal({ modPath, modName, onClose, onFixApplied }: FixModM
           </div>
         </div>
       </motion.div>
+
+      {showRestoreModal && (
+        <RestoreBackupModal
+          modPath={modPath}
+          modName={modName}
+          onClose={() => setShowRestoreModal(false)}
+          onRestored={async () => {
+            setShowRestoreModal(false);
+            try {
+              const res = await invoke<ModFixAnalysis>('check_mod_fixable', { modPath });
+              setAnalysis(res);
+              setFixResult(null);
+            } catch (e) {
+              console.error(e);
+            }
+            onFixApplied?.();
+          }}
+        />
+      )}
     </div>,
     document.body
   );

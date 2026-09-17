@@ -18,10 +18,9 @@ import { HealthSettings } from '../components/settings/HealthSettings';
 import { BackupSettings } from '../components/settings/BackupSettings';
 import { DangerZoneSettings } from '../components/settings/DangerZoneSettings';
 import { ExperimentalSettings } from '../components/settings/ExperimentalSettings';
-
-type SettingsCategory =
-  'general' | 'mod_management' | 'downloads' | 'appearance' | 'advanced' | 'about';
-import { Settings, Folder, Download, Palette, Beaker, Info } from 'lucide-react';
+import { CardCustomizerSettings } from '../components/settings/CardCustomizerSettings';
+import type { SettingsCategory } from '../store/slices/preferencesSlice';
+import { Settings, Folder, Download, Palette, LayoutTemplate, Beaker, Info } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 
 export function SettingsView() {
@@ -55,6 +54,11 @@ export function SettingsView() {
       id: 'appearance',
       label: t('settings_appearance', 'Appearance'),
       icon: <Palette size={20} />,
+    },
+    {
+      id: 'card_appearance',
+      label: t('settings_card_appearance', 'Card Style'),
+      icon: <LayoutTemplate size={20} />,
     },
     { id: 'advanced', label: t('settings_advanced', 'Advanced'), icon: <Beaker size={20} /> },
     { id: 'about', label: t('settings_about', 'About'), icon: <Info size={20} /> },
@@ -116,6 +120,18 @@ export function SettingsView() {
           >
             <ThemeSettings />
             <CharacterFilterSettings />
+          </motion.div>
+        );
+      case 'card_appearance':
+        return (
+          <motion.div
+            key="card_appearance"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-8 pb-20"
+          >
+            <CardCustomizerSettings />
           </motion.div>
         );
       case 'advanced':

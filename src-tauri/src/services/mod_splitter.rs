@@ -1903,11 +1903,27 @@ pub fn split_mod_impl(
                 created_mod_paths.push(target_dir.to_string_lossy().to_string());
             }
 
-            if !created_mod_paths.is_empty() && !original_folder_name.starts_with("DISABLED ") {
-                let disabled_folder_name = format!("DISABLED {}", original_folder_name);
-                let disabled_path = parent_dir.join(&disabled_folder_name);
-                if !disabled_path.exists() {
-                    let _ = crate::utils::safe_rename(source_dir, &disabled_path);
+            if !created_mod_paths.is_empty() {
+                let part_names = created_mod_paths
+                    .iter()
+                    .map(|p| Path::new(p).file_name().unwrap_or_default().to_string_lossy().to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                crate::infra::logger::log_alteration(
+                    "mod_split",
+                    &clean_mod_name,
+                    &mod_path,
+                    &format!("Split into {} submesh parts ({})", created_mod_paths.len(), part_names),
+                    None,
+                    true,
+                );
+
+                if !original_folder_name.starts_with("DISABLED ") {
+                    let disabled_folder_name = format!("DISABLED {}", original_folder_name);
+                    let disabled_path = parent_dir.join(&disabled_folder_name);
+                    if !disabled_path.exists() {
+                        let _ = crate::utils::safe_rename(source_dir, &disabled_path);
+                    }
                 }
             }
 
@@ -2014,11 +2030,27 @@ pub fn split_mod_impl(
         created_mod_paths.push(target_dir.to_string_lossy().to_string());
     }
 
-    if !created_mod_paths.is_empty() && !original_folder_name.starts_with("DISABLED ") {
-        let disabled_folder_name = format!("DISABLED {}", original_folder_name);
-        let disabled_path = parent_dir.join(&disabled_folder_name);
-        if !disabled_path.exists() {
-            let _ = crate::utils::safe_rename(source_dir, &disabled_path);
+    if !created_mod_paths.is_empty() {
+        let part_names = created_mod_paths
+            .iter()
+            .map(|p| Path::new(p).file_name().unwrap_or_default().to_string_lossy().to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        crate::infra::logger::log_alteration(
+            "mod_split",
+            &clean_mod_name,
+            &mod_path,
+            &format!("Split into {} {} parts ({})", created_mod_paths.len(), mode, part_names),
+            None,
+            true,
+        );
+
+        if !original_folder_name.starts_with("DISABLED ") {
+            let disabled_folder_name = format!("DISABLED {}", original_folder_name);
+            let disabled_path = parent_dir.join(&disabled_folder_name);
+            if !disabled_path.exists() {
+                let _ = crate::utils::safe_rename(source_dir, &disabled_path);
+            }
         }
     }
 
@@ -2036,7 +2068,13 @@ pub fn split_mod(
     let mod_path = crate::utils::expand_path(&mod_path);
     let app_dir = app.path().app_data_dir().unwrap_or_default();
     let db_path = app_dir.join("playable_characters.json");
-    split_mod_impl(&db_path, mod_path, mode, selected_targets)
+    match split_mod_impl(&db_path, mod_path.clone(), mode, selected_targets) {
+        Ok(res) => Ok(res),
+        Err(e) => {
+            crate::infra::logger::log_error("mod_splitter", &e.to_string(), Some(&mod_path));
+            Err(e)
+        }
+    }
 }
 
 fn find_file_recursive(dir: &Path, target_filename: &str) -> Option<std::path::PathBuf> {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../store/useAppStore';
-import { Globe, Check, Plus, ShieldCheck, Search, X, ArrowRight } from 'lucide-react';
+import { Globe, Check, Plus, ShieldCheck, Search, X, ArrowRight, RefreshCw } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import {
   detectSystemLanguage,
@@ -68,13 +68,17 @@ export function LanguageSelectView() {
   };
 
   // Start auto-translating a language
-  const startTranslation = async (code: string, name: string) => {
-    // Check if already installed
-    const alreadyInstalled = availableLanguages.some((l) => l.code === code);
-    if (alreadyInstalled) {
-      await i18n.changeLanguage(code);
-      setLanguage(code);
-      return;
+  const startTranslation = async (code: string, name: string, force = false) => {
+    // Check if already installed (skip only if not forcing re-translation)
+    if (!force) {
+      const alreadyInstalled = availableLanguages.some(
+        (l) => l.code.toLowerCase() === code.toLowerCase()
+      );
+      if (alreadyInstalled) {
+        await i18n.changeLanguage(code);
+        setLanguage(code);
+        return;
+      }
     }
 
     setTranslatingTarget({ code, name });
@@ -132,7 +136,7 @@ export function LanguageSelectView() {
 
   const handleRetryTranslation = () => {
     if (translatingTarget) {
-      startTranslation(translatingTarget.code, translatingTarget.name);
+      startTranslation(translatingTarget.code, translatingTarget.name, true);
     }
   };
 
@@ -454,11 +458,31 @@ export function LanguageSelectView() {
                           : 'glass-panel border-textMain/10 text-textMain hover:bg-white/5 hover:border-primary/50'
                     }`}
                   >
-                    {/* Status Badge */}
+                    {/* Status Badge & Retranslate Action */}
                     {lang.isInstalled ? (
-                      <span className="absolute top-2 right-2 text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center gap-0.5">
-                        <Check size={10} />
-                      </span>
+                      <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startTranslation(lang.code, lang.nativeName, true);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.stopPropagation();
+                              startTranslation(lang.code, lang.nativeName, true);
+                            }
+                          }}
+                          className="p-1 rounded-md bg-white/10 hover:bg-primary/20 text-textMuted hover:text-primary transition-colors cursor-pointer"
+                          title={t('retranslate_tooltip')}
+                        >
+                          <RefreshCw size={10} />
+                        </span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center gap-0.5">
+                          <Check size={10} />
+                        </span>
+                      </div>
                     ) : (
                       <span className="absolute top-2 right-2 text-[10px] text-primary/70 group-hover:text-primary group-hover:scale-110 transition-transform">
                         ➔

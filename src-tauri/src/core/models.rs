@@ -13,6 +13,9 @@ pub struct ModInfo {
     /// Eliminates the need for a per-card `get_mod_metadata` IPC call.
     #[serde(default)]
     pub total_size_bytes: Option<u64>,
+    /// Whether any backup files (.bak / .disabled.bak) exist in this mod folder.
+    #[serde(default)]
+    pub has_backup: bool,
 }
 
 #[derive(Serialize, Deserialize)]

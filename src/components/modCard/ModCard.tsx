@@ -10,11 +10,16 @@ import { ModUpdaterModal } from '../Modals/ModUpdaterModal';
 import { TagEditorModal } from '../Modals/TagEditorModal';
 import { ModAdvancedPanel, type AdvancedTab } from '../Modals/ModAdvancedPanel';
 import { FixModModal } from '../Modals/FixModModal';
+import { RestoreBackupModal } from '../Modals/RestoreBackupModal';
 import { ModCardBadges } from './ModCardBadges';
 import { ModCardActionsMenu } from './ModCardActionsMenu';
 import { ModCardNotes } from './ModCardNotes';
 import { tauriCommands } from '../../services/tauriCommands';
 import { isModMatchingIdentifier } from '../../utils/modPath';
+import {
+  DEFAULT_MOD_CARD_CUSTOMIZATION,
+  getBorderRadiusClass,
+} from '../../types/cardCustomization';
 
 const getImageUrl = (url?: string) => {
   if (!url) return undefined;
@@ -95,10 +100,73 @@ export const ModCard = memo(function ModCard({
   const getFilteredWarnings = useAppStore(selectGetFilteredWarnings);
   const toggleFilterTag = useAppStore(selectToggleFilterTag);
   const checkOrPromptExperimental = useAppStore(selectCheckOrPromptExperimental);
+  const cardCustomization =
+    useAppStore((s) => s.cardCustomization) || DEFAULT_MOD_CARD_CUSTOMIZATION;
+
+  const actionButtonBaseClass = `p-2.5 rounded-full border app-blur transition-all shadow-lg flex items-center justify-center cursor-pointer ${
+    cardCustomization.actionButtons.buttonStyle === 'solid'
+      ? 'bg-surface border-textMain/20'
+      : cardCustomization.actionButtons.buttonStyle === 'transparent'
+        ? 'bg-black/30 border-white/10 hover:bg-black/50'
+        : 'bg-background/80 border-textMain/10 hover:bg-surface'
+  } ${
+    cardCustomization.actionButtons.iconColor === 'primary'
+      ? 'text-primary'
+      : cardCustomization.actionButtons.iconColor === 'white'
+        ? 'text-white'
+        : 'text-textMuted hover:text-textMain'
+  }`;
+
+  const togglePaddingClass =
+    cardCustomization.toggleButton.buttonPadding === 'compact'
+      ? 'py-2 text-xs'
+      : cardCustomization.toggleButton.buttonPadding === 'large'
+        ? 'py-3.5 text-base'
+        : 'py-3 text-sm';
+
+  const toggleRadiusClass =
+    cardCustomization.toggleButton.borderRadius === 'match'
+      ? getBorderRadiusClass(cardCustomization.frame.borderRadius)
+      : cardCustomization.toggleButton.borderRadius === 'md'
+        ? 'rounded-md'
+        : cardCustomization.toggleButton.borderRadius === 'lg'
+          ? 'rounded-lg'
+          : cardCustomization.toggleButton.borderRadius === 'full'
+            ? 'rounded-full'
+            : 'rounded-xl';
+
+  const frameBorderWidthClass =
+    cardCustomization.frame.borderWidth === 0
+      ? 'border-0'
+      : cardCustomization.frame.borderWidth === 2
+        ? 'border-2'
+        : cardCustomization.frame.borderWidth === 3
+          ? 'border-[3px]'
+          : 'border';
+
+  const frameBorderColorClass = isSelected
+    ? 'border-primary ring-2 ring-primary/50'
+    : cardCustomization.frame.borderColor === 'primary'
+      ? 'border-primary'
+      : cardCustomization.frame.borderColor === 'white'
+        ? 'border-white/30'
+        : cardCustomization.frame.borderColor === 'none'
+          ? 'border-transparent'
+          : 'border-textMain/10';
+
+  const frameShadowClass =
+    cardCustomization.frame.shadowIntensity === 'none'
+      ? 'shadow-none'
+      : cardCustomization.frame.shadowIntensity === 'subtle'
+        ? 'shadow-md'
+        : cardCustomization.frame.shadowIntensity === 'intense'
+          ? 'shadow-2xl shadow-primary/20'
+          : 'shadow-xl';
 
   const sizeBytes: number | null = mod.total_size_bytes ?? null;
   const [showUpdaterModal, setShowUpdaterModal] = useState(false);
   const [showFixModModal, setShowFixModModal] = useState(false);
+  const [showRestoreBackupModal, setShowRestoreBackupModal] = useState(false);
   const [isEditingTags, setIsEditingTags] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [advancedTab, setAdvancedTab] = useState<AdvancedTab>('3d');
@@ -224,11 +292,16 @@ export const ModCard = memo(function ModCard({
       whileHover={{ scale: 1.03, y: -4 }}
       transition={{ duration: 0.05 }}
       data-highlight-id={isFirstCard ? 'first_mod_card' : undefined}
-      className={`rounded-2xl glass-panel border overflow-hidden shadow-2xl transition-colors duration-75 group flex flex-col relative mod-card-containment ${
+      style={{
+        backgroundColor: `rgba(var(--bg-surface), ${cardCustomization.frame.bgOpacity / 100})`,
+        backdropFilter: `blur(${cardCustomization.frame.blurAmount}px)`,
+        WebkitBackdropFilter: `blur(${cardCustomization.frame.blurAmount}px)`,
+      }}
+      className={`glass-panel overflow-hidden transition-colors duration-75 group flex flex-col relative mod-card-containment ${getBorderRadiusClass(
+        cardCustomization.frame.borderRadius
+      )} ${frameBorderWidthClass} ${frameBorderColorClass} ${frameShadowClass} ${
         isBatchMode ? 'cursor-pointer' : ''
-      } ${isSelected ? 'border-primary ring-2 ring-primary/50' : 'border-textMain/10'} ${
-        isFirstCard && highlightTargetId === 'first_mod_card' ? 'highlight-target' : ''
-      }`}
+      } ${isFirstCard && highlightTargetId === 'first_mod_card' ? 'highlight-target' : ''}`}
     >
       <AnimatePresence>
         {isDraggingCard && (
@@ -254,9 +327,20 @@ export const ModCard = memo(function ModCard({
               alt={skin?.name || character?.name || mod.name}
               loading="lazy"
               decoding="async"
-              className="absolute h-full w-auto max-w-none left-1/2 -translate-x-1/2 object-cover opacity-90 group-hover:scale-105 transition-transform duration-75"
+              className={`absolute h-full w-auto max-w-none left-1/2 -translate-x-1/2 object-cover opacity-90 ${
+                cardCustomization.imageOverlay.imageHoverZoom ? 'group-hover:scale-105' : ''
+              } transition-transform duration-75`}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent" />
+            <div
+              className="absolute inset-0 pointer-events-none transition-all"
+              style={{
+                background: `linear-gradient(to top, rgba(0,0,0,${
+                  cardCustomization.imageOverlay.darkeningGradient / 100
+                }) 0%, rgba(0,0,0,${
+                  (cardCustomization.imageOverlay.darkeningGradient * 0.4) / 100
+                }) 55%, transparent 100%)`,
+              }}
+            />
           </>
         ) : (
           <Package size={64} className="opacity-10 text-white" />
@@ -272,6 +356,7 @@ export const ModCard = memo(function ModCard({
           sizeBytes={sizeBytes}
           hasUpdateAvailable={!!updateAvailable}
           outdatedWarnings={outdatedWarnings}
+          hasBackup={!!mod.has_backup}
           isStale={isStale}
           invalidHashes={invalidHashes}
           hasHashConflict={hasHashConflict}
@@ -298,6 +383,10 @@ export const ModCard = memo(function ModCard({
             if (!checkOrPromptExperimental(t('experimental_feat_fixer', 'Mod Fixer'))) return;
             setShowFixModModal(true);
           }}
+          onOpenRestoreBackup={(e) => {
+            e.stopPropagation();
+            setShowRestoreBackupModal(true);
+          }}
           onOpenHashConflicts={(e) => {
             e.stopPropagation();
             if (openHashConflictsModal) openHashConflictsModal(mod);
@@ -319,66 +408,73 @@ export const ModCard = memo(function ModCard({
 
         {/* Bottom-Left Quick Open Folder & 3D Preview */}
         <div className="absolute bottom-3 left-3 flex gap-1.5 items-center z-20">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              tauriCommands.system.openFolder(mod.full_path).catch(console.error);
-            }}
-            className="p-2.5 rounded-full border app-blur transition-all shadow-lg flex items-center justify-center bg-background/80 border-textMain/10 text-textMuted hover:bg-surface hover:text-textMain cursor-pointer"
-            title="Open Mod Folder"
-          >
-            <FolderOpen size={14} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setAdvancedTab('3d');
-              setIsAdvancedOpen(true);
-            }}
-            className="p-2.5 rounded-full border app-blur transition-all shadow-lg flex items-center justify-center bg-background/80 border-textMain/10 text-purple-400 hover:bg-surface hover:text-purple-300 cursor-pointer"
-            title={t('mod_viewer_open', 'Preview 3D')}
-          >
-            <Box size={14} />
-          </button>
+          {cardCustomization.actionButtons.showFolderButton && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                tauriCommands.system.openFolder(mod.full_path).catch(console.error);
+              }}
+              className={actionButtonBaseClass}
+              title="Open Mod Folder"
+            >
+              <FolderOpen size={14} />
+            </button>
+          )}
+          {cardCustomization.actionButtons.show3dPreviewButton && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setAdvancedTab('3d');
+                setIsAdvancedOpen(true);
+              }}
+              className={`${actionButtonBaseClass} text-purple-400 hover:text-purple-300`}
+              title={t('mod_advanced_btn', 'Advanced')}
+            >
+              <Box size={14} />
+            </button>
+          )}
         </div>
 
         {/* Bottom-Right Options Menu */}
-        <ModCardActionsMenu
-          mod={mod}
-          isFirstCard={isFirstCard}
-          highlightTargetId={highlightTargetId}
-          hasHashConflict={hasHashConflict}
-          hasInstallConflict={hasInstallConflict}
-          multiCharWarnings={multiCharWarnings}
-          outdatedWarnings={outdatedWarnings}
-          iniWarnings={iniWarnings}
-          conflictWarnings={conflictWarnings}
-          filteredWarnings={filteredWarnings}
-          onOpenMoveModal={() => openMoveModal(mod)}
-          onOpenRenameModal={() => openRenameModal(mod)}
-          onOpenResolveConflictModal={
-            openResolveConflictModal || openResolveModal
-              ? () => (openResolveConflictModal || openResolveModal)?.(mod)
-              : undefined
-          }
-          onOpenHashConflictsModal={
-            openHashConflictsModal ? () => openHashConflictsModal(mod) : undefined
-          }
-          onOpenWarningsModal={
-            openWarningsModal ? (warnings) => openWarningsModal(mod, warnings) : undefined
-          }
-          onOpenFixMod={() => {
-            if (!checkOrPromptExperimental(t('experimental_feat_fixer', 'Mod Fixer'))) return;
-            setShowFixModModal(true);
-          }}
-          onOpenEditTags={() => setIsEditingTags(true)}
-          onOpenEditNote={() => setIsEditingNote(true)}
-          onOpenAdvanced={(tab) => {
-            setAdvancedTab(tab);
-            setIsAdvancedOpen(true);
-          }}
-          onDeleteMod={() => deleteMod(mod.full_path, mod.name)}
-        />
+        {cardCustomization.actionButtons.showOptionsMenuButton && (
+          <ModCardActionsMenu
+            mod={mod}
+            isFirstCard={isFirstCard}
+            highlightTargetId={highlightTargetId}
+            hasHashConflict={hasHashConflict}
+            hasInstallConflict={hasInstallConflict}
+            multiCharWarnings={multiCharWarnings}
+            outdatedWarnings={outdatedWarnings}
+            iniWarnings={iniWarnings}
+            conflictWarnings={conflictWarnings}
+            filteredWarnings={filteredWarnings}
+            onOpenMoveModal={() => openMoveModal(mod)}
+            onOpenRenameModal={() => openRenameModal(mod)}
+            onOpenResolveConflictModal={
+              openResolveConflictModal || openResolveModal
+                ? () => (openResolveConflictModal || openResolveModal)?.(mod)
+                : undefined
+            }
+            onOpenHashConflictsModal={
+              openHashConflictsModal ? () => openHashConflictsModal(mod) : undefined
+            }
+            onOpenWarningsModal={
+              openWarningsModal ? (warnings) => openWarningsModal(mod, warnings) : undefined
+            }
+            onOpenFixMod={() => {
+              if (!checkOrPromptExperimental(t('experimental_feat_fixer', 'Mod Fixer'))) return;
+              setShowFixModModal(true);
+            }}
+            onOpenRestoreBackup={() => setShowRestoreBackupModal(true)}
+            onOpenEditTags={() => setIsEditingTags(true)}
+            onOpenEditNote={() => setIsEditingNote(true)}
+            onOpenAdvanced={(tab) => {
+              setAdvancedTab(tab);
+              setIsAdvancedOpen(true);
+            }}
+            onDeleteMod={() => deleteMod(mod.full_path, mod.name)}
+          />
+        )}
 
         {!mod.is_enabled && (
           <div className="absolute inset-0 bg-black/70 flex items-center justify-center app-blur z-10 pointer-events-none">
@@ -389,15 +485,28 @@ export const ModCard = memo(function ModCard({
         )}
       </div>
 
-      <div className="p-5 flex flex-col gap-4 relative z-20 bg-surface/90 app-blur border-t border-textMain/10 flex-1 justify-between">
+      <div
+        style={{
+          backgroundColor: `rgba(var(--bg-surface), ${cardCustomization.infoPanel.bgOpacity / 100})`,
+          backdropFilter: `blur(${cardCustomization.infoPanel.blurAmount}px)`,
+          WebkitBackdropFilter: `blur(${cardCustomization.infoPanel.blurAmount}px)`,
+        }}
+        className="p-5 flex flex-col gap-4 relative z-20 app-blur border-t border-textMain/10 flex-1 justify-between"
+      >
         <div>
           <h3
-            className="font-bold text-base leading-tight line-clamp-2 text-textMain group-hover:text-primary transition-colors min-w-0"
+            className={`font-bold text-base leading-tight line-clamp-2 transition-colors min-w-0 ${
+              cardCustomization.infoPanel.titleColor === 'primary'
+                ? 'text-primary'
+                : cardCustomization.infoPanel.titleColor === 'white'
+                  ? 'text-white'
+                  : 'text-textMain group-hover:text-primary'
+            }`}
             title={mod.name.replace(/^(DISABLED_|DISABLED )/, '')}
           >
             {mod.name.replace(/^(DISABLED_|DISABLED )/, '')}
           </h3>
-          {categoryName && (
+          {cardCustomization.infoPanel.showCategorySubtitle && categoryName && (
             <span className="text-[11px] font-semibold text-primary/80 block mt-1 truncate">
               {categoryName}
             </span>
@@ -405,7 +514,7 @@ export const ModCard = memo(function ModCard({
         </div>
 
         {/* Mod Tags */}
-        {mod.meta?.tags && mod.meta.tags.length > 0 && (
+        {cardCustomization.infoPanel.showTags && mod.meta?.tags && mod.meta.tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {mod.meta.tags.map((tag) => (
               <span
@@ -425,7 +534,7 @@ export const ModCard = memo(function ModCard({
 
         {/* Mod Notes Section */}
         <ModCardNotes
-          initialNotes={mod.meta?.notes}
+          initialNotes={mod.meta?.notes ?? ''}
           isEditing={isEditingNote}
           onSave={handleSaveNote}
           onCancel={() => setIsEditingNote(false)}
@@ -437,10 +546,12 @@ export const ModCard = memo(function ModCard({
             onClick={() => toggleMod(mod.full_path, mod.is_enabled)}
             disabled={isToggling}
             data-highlight-id={isFirstCard ? 'first_mod_toggle' : undefined}
-            className={`w-full py-3 rounded-xl text-sm font-bold transition-all duration-300 disabled:opacity-50 cursor-pointer ${
+            className={`w-full ${togglePaddingClass} ${toggleRadiusClass} font-bold transition-all duration-300 disabled:opacity-50 cursor-pointer ${
               mod.is_enabled
                 ? 'bg-white/5 hover:bg-red-500/20 text-textMuted hover:text-red-400 border border-white/5 hover:border-red-500/30'
-                : 'bg-primary text-white hover:bg-primary/80 shadow-lg shadow-primary/30'
+                : `bg-primary text-white hover:bg-primary/80 ${
+                    cardCustomization.toggleButton.glowEffect ? 'shadow-lg shadow-primary/30' : ''
+                  }`
             } ${
               isFirstCard && highlightTargetId === 'first_mod_toggle'
                 ? 'highlight-target animate-pulse ring-4 ring-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.8)]'
@@ -521,6 +632,15 @@ export const ModCard = memo(function ModCard({
           modName={mod.name}
           onClose={() => setShowFixModModal(false)}
           onFixApplied={onRefresh}
+        />
+      )}
+
+      {showRestoreBackupModal && (
+        <RestoreBackupModal
+          modPath={mod.full_path}
+          modName={mod.name}
+          onClose={() => setShowRestoreBackupModal(false)}
+          onRestored={onRefresh}
         />
       )}
     </motion.div>

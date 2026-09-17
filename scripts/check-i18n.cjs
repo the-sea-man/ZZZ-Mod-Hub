@@ -84,6 +84,7 @@ const BUILTIN_LOCALES = [
   "ru.json",
   "ko.json",
   "pt_BR.json",
+  "th.json",
 ];
 
 let parityErrors = 0;

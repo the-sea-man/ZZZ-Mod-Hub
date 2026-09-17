@@ -13,6 +13,8 @@ import { WarningsModal } from '../Modals/WarningsModal';
 import { HashConflictsModal } from '../Modals/HashConflictsModal';
 import { BatchFixModal } from '../Modals/BatchFixModal';
 import { ModUpdaterModal } from '../Modals/ModUpdaterModal';
+import { FolderManagementModal } from '../Modals/FolderManagementModal';
+import { ProfilesModal } from '../Modals/ProfilesModal';
 import { CategoryInfo, EntityDBInfo } from '../../types';
 import { LibraryModalsState } from '../../hooks/useLibraryModals';
 
@@ -54,24 +56,16 @@ export const LibraryModalsHost = memo(function LibraryModalsHost({
     setShowBatchFixModal,
     activeUpdateModal,
     setActiveUpdateModal,
+    showFolderManagement,
+    setShowFolderManagement,
+    showProfilesModal,
+    setShowProfilesModal,
   } = modals;
 
   return (
     <AnimatePresence>
       {editingKeybinds && (
         <KeybindEditor mod={editingKeybinds} onClose={() => setEditingKeybinds(null)} />
-      )}
-
-      {mappingCategory && (
-        <MappingModal
-          mappingCategory={mappingCategory}
-          entitiesDB={currentDB}
-          onClose={() => setMappingCategory(null)}
-          onSaved={() => {
-            onScanModsFolder();
-            setMappingCategory(null);
-          }}
-        />
       )}
 
       {installResults.length > 0 && (
@@ -156,6 +150,35 @@ export const LibraryModalsHost = memo(function LibraryModalsHost({
 
       {activeUpdateModal && (
         <ModUpdaterModal update={activeUpdateModal} onClose={() => setActiveUpdateModal(null)} />
+      )}
+
+      {showFolderManagement && (
+        <FolderManagementModal
+          isOpen={true}
+          onClose={() => setShowFolderManagement(false)}
+          categories={categories}
+          currentDB={currentDB}
+          rootPath={rootPath}
+          onRefresh={onScanModsFolder}
+          onOpenMappingModal={(cat) => setMappingCategory(cat)}
+        />
+      )}
+
+      {showProfilesModal && (
+        <ProfilesModal isOpen={true} onClose={() => setShowProfilesModal(false)} />
+      )}
+
+      {mappingCategory && (
+        <MappingModal
+          mappingCategory={mappingCategory}
+          entitiesDB={currentDB}
+          rootPath={rootPath}
+          onClose={() => setMappingCategory(null)}
+          onSaved={() => {
+            onScanModsFolder();
+            setMappingCategory(null);
+          }}
+        />
       )}
     </AnimatePresence>
   );

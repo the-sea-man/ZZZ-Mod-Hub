@@ -58,6 +58,14 @@ pub struct FixerRuleAction {
     pub target_hash: Option<String>,
     #[serde(default)]
     pub commandlist_title: Option<String>,
+    #[serde(default)]
+    pub from_indices: Option<Vec<i64>>,
+    #[serde(default)]
+    pub to_indices: Option<Vec<i64>>,
+    #[serde(default)]
+    pub from_index_counts: Option<Vec<i64>>,
+    #[serde(default)]
+    pub to_index_counts: Option<Vec<i64>>,
 }
 
 /// Single hash migration rule
@@ -117,6 +125,21 @@ pub struct BufferFixDetail {
     pub new_format: String,
 }
 
+/// Detailed description of a submesh first index shift
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct IndexFixDetail {
+    pub hash: String,
+    pub section: String,
+    pub old_index: i64,
+    pub new_index: i64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub old_count: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub new_count: Option<i64>,
+    pub character: String,
+    pub description: String,
+}
+
 /// Full analysis report for an outdated mod
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModFixAnalysis {
@@ -131,6 +154,8 @@ pub struct ModFixAnalysis {
     pub hash_fixes: Vec<HashFixDetail>,
     pub multi_res_fixes: Vec<MultiResFixDetail>,
     pub buffer_fixes: Vec<BufferFixDetail>,
+    #[serde(default)]
+    pub index_fixes: Vec<IndexFixDetail>,
     pub total_fixes: usize,
     pub has_backup: bool,
 }
@@ -146,6 +171,8 @@ pub struct ModFixResult {
     pub hashes_updated: usize,
     pub sections_added: usize,
     pub buffers_remapped: usize,
+    #[serde(default)]
+    pub indices_remapped: usize,
     pub actions_summary: Vec<String>,
     pub error: Option<String>,
 }
@@ -214,6 +241,98 @@ pub fn load_fixer_database(db_path: Option<&Path>) -> FixerDatabase {
     FixerDatabase::default()
 }
 
+/// Parsed section from an INI file
+#[derive(Debug, Clone)]
+pub struct IniSectionData {
+    pub header: String,
+    pub lines: Vec<String>,
+}
+
+impl IniSectionData {
+    pub fn get_hash(&self) -> Option<String> {
+        for l in &self.lines {
+            let trimmed = l.trim();
+            if trimmed.starts_with(';') || trimmed.starts_with('#') {
+                continue;
+            }
+            let clean = l.split(';').next().unwrap_or("").split('#').next().unwrap_or("").trim();
+            if let Some((k, v)) = clean.split_once('=') {
+                if k.trim().eq_ignore_ascii_case("hash") {
+                    let val = v.trim().to_lowercase();
+                    if !val.is_empty() {
+                        return Some(val);
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    pub fn get_match_first_index(&self) -> Option<i64> {
+        for l in &self.lines {
+            let trimmed = l.trim();
+            if trimmed.starts_with(';') || trimmed.starts_with('#') {
+                continue;
+            }
+            let clean = l.split(';').next().unwrap_or("").split('#').next().unwrap_or("").trim();
+            if let Some((k, v)) = clean.split_once('=') {
+                if k.trim().eq_ignore_ascii_case("match_first_index") {
+                    if let Ok(idx) = v.trim().parse::<i64>() {
+                        return Some(idx);
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    pub fn get_match_index_count(&self) -> Option<i64> {
+        for l in &self.lines {
+            let trimmed = l.trim();
+            if trimmed.starts_with(';') || trimmed.starts_with('#') {
+                continue;
+            }
+            let clean = l.split(';').next().unwrap_or("").split('#').next().unwrap_or("").trim();
+            if let Some((k, v)) = clean.split_once('=') {
+                if k.trim().eq_ignore_ascii_case("match_index_count") {
+                    if let Ok(idx) = v.trim().parse::<i64>() {
+                        return Some(idx);
+                    }
+                }
+            }
+        }
+        None
+    }
+}
+
+pub fn parse_ini_sections(content: &str) -> Vec<IniSectionData> {
+    let mut sections = Vec::new();
+    let mut current_header = String::new();
+    let mut current_lines = Vec::new();
+
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with('[') && trimmed.ends_with(']') {
+            if !current_header.is_empty() || !current_lines.is_empty() {
+                sections.push(IniSectionData {
+                    header: std::mem::take(&mut current_header),
+                    lines: std::mem::take(&mut current_lines),
+                });
+            }
+            current_header = trimmed[1..trimmed.len() - 1].trim().to_string();
+        } else {
+            current_lines.push(line.to_string());
+        }
+    }
+    if !current_header.is_empty() || !current_lines.is_empty() {
+        sections.push(IniSectionData {
+            header: current_header,
+            lines: current_lines,
+        });
+    }
+    sections
+}
+
 /// Extract all uncommented 8-character hex hashes from an INI file
 pub fn extract_hashes_from_ini(content: &str) -> HashSet<String> {
     let mut hashes = HashSet::new();
@@ -233,7 +352,7 @@ pub fn extract_hashes_from_ini(content: &str) -> HashSet<String> {
     hashes
 }
 
-fn is_backup_file_name(name: &str) -> bool {
+pub fn is_backup_file_name(name: &str) -> bool {
     name.starts_with("DISABLED_BACKUP_")
         || name.ends_with(".disabled.bak")
         || name.ends_with(".ini.bak")
@@ -306,6 +425,25 @@ pub fn resolve_terminal_hash(start_hash: &str, fixer_db: &FixerDatabase) -> (Str
     (current, path)
 }
 
+/// Checks if an INI hash set already satisfies an equiv hash (either directly or via terminal migration)
+pub fn is_equiv_hash_satisfied(equiv_hash: &str, mod_hashes: &HashSet<String>, fixer_db: &FixerDatabase) -> bool {
+    let target = equiv_hash.to_lowercase();
+    if mod_hashes.contains(&target) {
+        return true;
+    }
+    let (eq_term, _) = resolve_terminal_hash(&target, fixer_db);
+    if mod_hashes.contains(&eq_term) {
+        return true;
+    }
+    for h in mod_hashes {
+        let (term, _) = resolve_terminal_hash(h, fixer_db);
+        if term == target || term == eq_term {
+            return true;
+        }
+    }
+    false
+}
+
 /// Reindexes submesh draw call indices in an INI file
 #[allow(dead_code)]
 pub fn reindex_submesh_sections(
@@ -356,17 +494,124 @@ fn parse_version_tuple(v: &str) -> Option<(u32, u32)> {
     }
 }
 
-/// Match two character names case-insensitively, ignoring spaces, hyphens, and underscores
+/// Canonical registry of alternate skin identifiers from ZZZ Mod Fixer database
+/// Maps (normalized_alt_skin_key, normalized_base_character_key)
+pub const KNOWN_ALT_SKINS: &[(&str, &str)] = &[
+    ("janedoenocturneoflight", "janedoe"),
+    ("ellencampus", "ellen"),
+    ("aliceseaoftime", "alice"),
+    ("alicesummer", "alice"),
+    ("ariaagentdiscordantnote", "aria"),
+    ("ariadiscordantnote", "aria"),
+    ("astrachandelier", "astrayao"),
+    ("astrayaochandelier", "astrayao"),
+    ("bellebrillianceofstars", "belle"),
+    ("belledelicatesunlight", "belle"),
+    ("bellesummer", "belle"),
+    ("bellesummerskies", "belle"),
+    ("belletemple", "belle"),
+    ("lucyprincessonholiday", "lucy"),
+    ("manatowhiteheartsilhouette", "manato"),
+    ("miyabidignifiedblossom", "miyabi"),
+    ("nangongyurhapsodymuse", "nangongyu"),
+    ("nicolecutie", "nicole"),
+    ("panyinhuculinaryjewel", "panyinhu"),
+    ("remiellemoonlightwhispers", "remielle"),
+    ("remielleseashadepasseul", "remielle"),
+    ("sigridmajesticwavechaser", "sigrid"),
+    ("sunnaafternoonteabreak", "sunna"),
+    ("velinashadeofleisure", "velina"),
+    ("vivianirisoftheshore", "vivian"),
+    ("wiseoathofskies", "wise"),
+    ("wisepeacefulwaves", "wise"),
+    ("wisesoaringcrane", "wise"),
+    ("wisesummer", "wise"),
+    ("yeshunguangskin", "yeshunguang"),
+    ("yeshunguangtouchofdawnlight", "yeshunguang"),
+    ("yixuantrailsofink", "yixuan"),
+    ("yuzuhasummer", "yuzuha"),
+];
+
+/// Known character aliases for canonical matching
+pub const KNOWN_CHARACTER_ALIASES: &[(&str, &str)] = &[
+    ("rina", "alexandrina"),
+    ("alexandrina", "rina"),
+    ("alexandrinasebastiane", "rina"),
+    ("lucy", "luciana"),
+    ("lucianademontefio", "lucy"),
+    ("nekomata", "nekomiya"),
+    ("nekomiyamana", "nekomata"),
+    ("soukaku", "shoukaku"),
+    ("soldier11", "soldier"),
+    ("soldier", "soldier11"),
+];
+
+/// Checks whether a normalized name corresponds to a known alternate skin
+pub fn is_alternate_skin(clean_name: &str) -> bool {
+    KNOWN_ALT_SKINS.iter().any(|(alt, _)| *alt == clean_name)
+}
+
+/// Returns the base character for a known alternate skin, if applicable
+pub fn get_base_character_for_skin(clean_name: &str) -> Option<&'static str> {
+    KNOWN_ALT_SKINS
+        .iter()
+        .find(|(alt, _)| *alt == clean_name)
+        .map(|(_, base)| *base)
+}
+
+/// Match two character/skin names case-insensitively, strictly isolating alternate skins
 pub fn is_character_match(a: &str, b: &str) -> bool {
     if a.is_empty() || b.is_empty() {
         return false;
     }
     let clean_a = a.to_lowercase().replace([' ', '_', '-'], "");
     let clean_b = b.to_lowercase().replace([' ', '_', '-'], "");
-    clean_a == clean_b || clean_a.starts_with(&clean_b) || clean_b.starts_with(&clean_a)
+
+    if clean_a == clean_b {
+        return true;
+    }
+
+    let a_is_alt = is_alternate_skin(&clean_a);
+    let b_is_alt = is_alternate_skin(&clean_b);
+
+    // Invariant: Alternate skins must NEVER cross-match with base characters or other skins
+    if a_is_alt || b_is_alt {
+        return false;
+    }
+
+    // Check known alias pairs (e.g. Rina <-> Alexandrina)
+    for (alias_1, alias_2) in KNOWN_CHARACTER_ALIASES {
+        if (clean_a == *alias_1 && clean_b.starts_with(alias_2))
+            || (clean_b == *alias_1 && clean_a.starts_with(alias_2))
+            || (clean_a == *alias_2 && clean_b.starts_with(alias_1))
+            || (clean_b == *alias_2 && clean_a.starts_with(alias_1))
+        {
+            return true;
+        }
+    }
+
+    clean_a.starts_with(&clean_b) || clean_b.starts_with(&clean_a)
 }
 
-/// Detect the canonical character name from a mod's directory path or category folder
+/// Match two characters if they belong to the same base character family (e.g. Remielle and RemielleMoonlightWhispers)
+pub fn is_same_character_family(a: &str, b: &str) -> bool {
+    if a.is_empty() || b.is_empty() {
+        return false;
+    }
+    if is_character_match(a, b) {
+        return true;
+    }
+    let clean_a = a.to_lowercase().replace([' ', '_', '-'], "");
+    let clean_b = b.to_lowercase().replace([' ', '_', '-'], "");
+    if clean_a == clean_b {
+        return true;
+    }
+    let base_a = get_base_character_for_skin(&clean_a).unwrap_or(&clean_a);
+    let base_b = get_base_character_for_skin(&clean_b).unwrap_or(&clean_b);
+    base_a == base_b || is_character_match(base_a, base_b)
+}
+
+/// Detect the canonical character name (or alternate skin) from a mod's directory path or category folder
 pub fn detect_character_from_mod_path(mod_path: &Path) -> Option<String> {
     let components: Vec<&str> = mod_path.iter().filter_map(|c| c.to_str()).collect();
     for i in 0..components.len() {
@@ -374,11 +619,105 @@ pub fn detect_character_from_mod_path(mod_path: &Path) -> Option<String> {
             && i + 1 < components.len() {
                 let cat = components[i + 1];
                 if !cat.eq_ignore_ascii_case("Unassigned") {
-                    let name = cat.split('-').next().unwrap_or(cat).trim();
-                    let root_name = name.split_whitespace().next().unwrap_or(name);
-                    if !root_name.is_empty() {
-                        return Some(root_name.to_string());
+                    let parts: Vec<&str> = cat.split('-').collect();
+                    let char_name = parts[0].trim();
+                    let skin_name = if parts.len() > 1 { parts[1].trim() } else { "" };
+
+                    let clean_char = char_name.to_lowercase().replace([' ', '_', '-'], "");
+                    let clean_skin = skin_name.to_lowercase().replace([' ', '_', '-'], "").replace("thyme", "time");
+
+                    // Check if the skin in folder is a known alternate skin
+                    let combined = format!("{}{}", clean_char, clean_skin);
+                    for (alt_key, base_key) in KNOWN_ALT_SKINS {
+                        let alt_suffix = alt_key.strip_prefix(base_key).unwrap_or("");
+                        let matches_suffix = !alt_suffix.is_empty()
+                            && (clean_skin.contains(alt_suffix)
+                                || (clean_skin.len() >= 3 && alt_suffix.contains(&clean_skin)));
+                        if combined == *alt_key
+                            || (clean_char.starts_with(base_key) && matches_suffix && !clean_skin.is_empty())
+                            || (*alt_key == "janedoenocturneoflight" && clean_char.starts_with("janedoe") && clean_skin.contains("summer"))
+                        {
+                            return Some(match *alt_key {
+                                "janedoenocturneoflight" => "JaneDoeNocturneOfLight".to_string(),
+                                "ellencampus" => "EllenCampus".to_string(),
+                                "aliceseaoftime" => "AliceSeaOfTime".to_string(),
+                                "alicesummer" => "AliceSummer".to_string(),
+                                "ariaagentdiscordantnote" => "AriaAgentDiscordantNote".to_string(),
+                                "ariadiscordantnote" => "AriaDiscordantNote".to_string(),
+                                "astrachandelier" | "astrayaochandelier" => "AstraChandelier".to_string(),
+                                "bellebrillianceofstars" => "BelleBrillianceOfStars".to_string(),
+                                "belledelicatesunlight" => "BelleDelicateSunlight".to_string(),
+                                "bellesummer" | "bellesummerskies" => "BelleSummer".to_string(),
+                                "belletemple" => "BelleTemple".to_string(),
+                                "lucyprincessonholiday" => "LucyPrincessOnHoliday".to_string(),
+                                "manatowhiteheartsilhouette" => "ManatoWhiteHeartSilhouette".to_string(),
+                                "miyabidignifiedblossom" => "MiyabiDignifiedBlossom".to_string(),
+                                "nangongyurhapsodymuse" => "NangongYuRhapsodyMuse".to_string(),
+                                "nicolecutie" => "NicoleCutie".to_string(),
+                                "panyinhuculinaryjewel" => "PanYinhuCulinaryJewel".to_string(),
+                                "remiellemoonlightwhispers" => "RemielleMoonlightWhispers".to_string(),
+                                "remielleseashadepasseul" => "RemielleSeashadePasSeul".to_string(),
+                                "sigridmajesticwavechaser" => "SigridMajesticWavechaser".to_string(),
+                                "sunnaafternoonteabreak" => "SunnaAfternoonTeaBreak".to_string(),
+                                "velinashadeofleisure" => "VelinaShadeOfLeisure".to_string(),
+                                "vivianirisoftheshore" => "VivianIrisOfTheShore".to_string(),
+                                "wiseoathofskies" => "WiseOathOfSkies".to_string(),
+                                "wisepeacefulwaves" => "WisePeacefulWaves".to_string(),
+                                "wisesoaringcrane" => "WiseSoaringCrane".to_string(),
+                                "wisesummer" => "WiseSummer".to_string(),
+                                "yeshunguangskin" => "YeShunguangSkin".to_string(),
+                                "yeshunguangtouchofdawnlight" => "YeShunguangTouchOfDawnlight".to_string(),
+                                "yixuantrailsofink" => "YixuanTrailsOfInk".to_string(),
+                                "yuzuhasummer" => "YuzuhaSummer".to_string(),
+                                _ => alt_key.to_string(),
+                            });
+                        }
                     }
+
+                    // Otherwise, resolve canonical base character name
+                    let canonical_base = match clean_char.as_str() {
+                        "janedoe" | "jane" => "JaneDoe",
+                        "alexandrina" | "alexandrinasebastiane" | "rina" => "Rina",
+                        "astrayao" | "astra" => "AstraYao",
+                        "zhuyuan" => "ZhuYuan",
+                        "jufufu" => "JuFufu",
+                        "panyinhu" => "PanYinhu",
+                        "yeshunguang" => "YeShunguang",
+                        "komanomanato" | "manato" => "Manato",
+                        "hoshimimiyabi" | "miyabi" => "Miyabi",
+                        "lucianademontefio" | "lucy" => "Lucy",
+                        "nekomiyamana" | "nekomata" => "Nekomata",
+                        "soldier11" | "soldier" => "Soldier11",
+                        "tsukishiroyanagi" | "yanagi" => "Yanagi",
+                        "asabaharumasa" | "harumasa" => "Harumasa",
+                        "evelynchevalier" | "evelyn" => "Evelyn",
+                        "hugovlad" | "hugo" => "Hugo",
+                        "koledabelobog" | "koleda" => "Koleda",
+                        "luciaelowen" | "lucia" => "Lucia",
+                        "pulchrafellini" | "pulchra" => "Pulchra",
+                        "remielledan" | "remielle" => "Remielle",
+                        "ukinamiyuzuha" | "yuzuha" => "Yuzuha",
+                        "velinaairgid" | "velina" => "Velina",
+                        "vivianbanshee" | "vivian" => "Vivian",
+                        "billykid" | "billy" => "Billy",
+                        "anbydemara" | "anby" => "Anby",
+                        "antonivanov" | "anton" => "Anton",
+                        "benbigger" | "ben" => "Ben",
+                        "corinwickes" | "corin" => "Corin",
+                        "gracehoward" | "grace" => "Grace",
+                        "nicoledemara" | "nicole" => "Nicole",
+                        "piperwheel" | "piper" => "Piper",
+                        "sethlowell" | "seth" => "Seth",
+                        "burnicewhite" | "burnice" => "Burnice",
+                        "caesarking" | "caesar" => "Caesar",
+                        "vonlycaon" | "lycaon" => "Lycaon",
+                        "ellenjoe" | "ellen" => "Ellen",
+                        _ => {
+                            let root = char_name.split_whitespace().next().unwrap_or(char_name);
+                            return if !root.is_empty() { Some(root.to_string()) } else { None };
+                        }
+                    };
+                    return Some(canonical_base.to_string());
                 }
             }
     }
@@ -394,6 +733,7 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
     let mut hash_fixes: Vec<HashFixDetail> = Vec::new();
     let mut multi_res_fixes: Vec<MultiResFixDetail> = Vec::new();
     let mut buffer_fixes: Vec<BufferFixDetail> = Vec::new();
+    let mut index_fixes: Vec<IndexFixDetail> = Vec::new();
 
     let mut all_v_from: Vec<(u32, u32)> = Vec::new();
     let mut all_v_to: Vec<(u32, u32)> = Vec::new();
@@ -445,6 +785,87 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
         }
 
         if let Ok(content) = read_ini_to_string(ini_path) {
+            // Check for match_first_index and match_index_count shifts across sections
+            for sec in parse_ini_sections(&content) {
+                if let Some(ref h) = sec.get_hash() {
+                    let old_first_idx = sec.get_match_first_index();
+                    let old_cnt = sec.get_match_index_count();
+                    if old_first_idx.is_none() && old_cnt.is_none() {
+                        continue;
+                    }
+                    if let Some(rule) = fixer_db.rules.get(h) {
+                        let family_matches = match detected_char {
+                            Some(ref dc) => is_same_character_family(dc, &rule.character),
+                            None => true,
+                        };
+                        if family_matches {
+                            for action in &rule.actions {
+                                if action.action_type == "remap_indices" {
+                                    if let (Some(ref froms), Some(ref tos)) = (&action.from_indices, &action.to_indices) {
+                                        for (i, (f_idx, t_idx)) in froms.iter().zip(tos.iter()).enumerate() {
+                                            let mut need_first_remap = false;
+                                            let mut need_count_remap = false;
+                                            let mut old_count_val = None;
+                                            let mut new_count_val = None;
+
+                                            if let Some(cur_first) = old_first_idx {
+                                                if cur_first == *f_idx && *t_idx != *f_idx {
+                                                    need_first_remap = true;
+                                                }
+                                            }
+
+                                            if let (Some(ref from_cnts), Some(ref to_cnts)) = (&action.from_index_counts, &action.to_index_counts) {
+                                                if let (Some(f_c), Some(t_c)) = (from_cnts.get(i), to_cnts.get(i)) {
+                                                    if let Some(cur_cnt) = old_cnt {
+                                                        let slot_matches = old_first_idx.is_none_or(|fi| fi == *f_idx);
+                                                        if slot_matches && cur_cnt == *f_c && *t_c != *f_c {
+                                                            need_count_remap = true;
+                                                            old_count_val = Some(*f_c);
+                                                            new_count_val = Some(*t_c);
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            if need_first_remap || need_count_remap {
+                                                let desc = match (need_first_remap, need_count_remap) {
+                                                    (true, true) => format!(
+                                                        "Remap index {} -> {} & count {} -> {} in [{}] ({})",
+                                                        f_idx, t_idx, old_count_val.unwrap_or(0), new_count_val.unwrap_or(0), sec.header, rule.character
+                                                    ),
+                                                    (true, false) => format!(
+                                                        "Remap first index {} -> {} in [{}] ({})",
+                                                        f_idx, t_idx, sec.header, rule.character
+                                                    ),
+                                                    (false, true) => format!(
+                                                        "Remap index count {} -> {} in [{}] ({})",
+                                                        old_count_val.unwrap_or(0), new_count_val.unwrap_or(0), sec.header, rule.character
+                                                    ),
+                                                    (false, false) => unreachable!(),
+                                                };
+                                                let item = IndexFixDetail {
+                                                    hash: h.clone(),
+                                                    section: sec.header.clone(),
+                                                    old_index: if need_first_remap { *f_idx } else { old_first_idx.unwrap_or(0) },
+                                                    new_index: if need_first_remap { *t_idx } else { old_first_idx.unwrap_or(0) },
+                                                    old_count: old_count_val,
+                                                    new_count: new_count_val,
+                                                    character: rule.character.clone(),
+                                                    description: desc,
+                                                };
+                                                if !index_fixes.contains(&item) {
+                                                    index_fixes.push(item);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             let hashes = extract_hashes_from_ini(&content);
             let mut sorted_hashes: Vec<String> = hashes.into_iter().collect();
             sorted_hashes.sort();
@@ -455,13 +876,17 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
                         Some(ref dc) => is_character_match(dc, &rule.character),
                         None => true,
                     };
+                    let family_matches = match detected_char {
+                        Some(ref dc) => is_same_character_family(dc, &rule.character),
+                        None => true,
+                    };
                     let is_mesh_or_ib = {
                         let desc_l = rule.description.to_lowercase();
                         desc_l.contains("ib") || desc_l.contains("mesh") || desc_l.contains("draw") || desc_l.contains("position")
                     };
 
-                    // Never propose migrating another character's unique mesh IB
-                    if !char_matches && is_mesh_or_ib {
+                    // Never propose migrating another character family's unique mesh IB
+                    if !family_matches && is_mesh_or_ib {
                         continue;
                     }
 
@@ -484,13 +909,13 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
                                     continue;
                                 };
 
-                                let display_char = if char_matches {
+                                let display_char = if family_matches {
                                     rule.character.clone()
                                 } else {
                                     detected_char.clone().unwrap_or_else(|| rule.character.clone())
                                 };
 
-                                let display_desc = if char_matches {
+                                let display_desc = if family_matches {
                                     rule.description.clone()
                                 } else {
                                     format!("{} Shared Texture ({})", display_char, rule.description)
@@ -524,9 +949,10 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
                                     continue;
                                 }
                                 if let Some(ref equivs) = action.equiv_hashes {
-                                    let has_any = equivs.iter().any(|eq| sorted_hashes.contains(eq));
+                                    let mod_hash_set: HashSet<String> = sorted_hashes.iter().map(|h| h.to_lowercase()).collect();
+                                    let has_any = equivs.iter().any(|eq| is_equiv_hash_satisfied(eq, &mod_hash_set, fixer_db));
                                     if !has_any && !equivs.is_empty() {
-                                        let target_eq = equivs[0].clone();
+                                        let (target_eq, _) = resolve_terminal_hash(&equivs[0], fixer_db);
                                         let title = action.section_title.clone().unwrap_or_default();
                                         let item = MultiResFixDetail {
                                             source_hash: hash.clone(),
@@ -592,6 +1018,29 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
         }
     }
 
+    // Check for legacy combined vertex strides (92, 96, 76) that distort separated vertex streams (stride 40)
+    static LEGACY_STRIDE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?im)^[ \t]*override_byte_stride\s*=\s*(?:92|96|76)\b").expect("Valid regex"));
+    for ini_path in &ini_files {
+        let fname = ini_path.file_name().unwrap_or_default().to_string_lossy();
+        if fname.starts_with("zzzmanager_ui_") || fname.starts_with("000_zzzmanager_ui_") || fname.ends_with(".bak") {
+            continue;
+        }
+        if let Ok(content) = read_ini_to_string(ini_path) {
+            for m in LEGACY_STRIDE_RE.find_iter(&content) {
+                let old_val = m.as_str().trim();
+                let item = BufferFixDetail {
+                    buffer_filename: format!("VertexLimitRaise ({})", fname),
+                    fix_type: "normalize_byte_stride".to_string(),
+                    old_format: old_val.to_string(),
+                    new_format: "override_byte_stride = 40".to_string(),
+                };
+                if !buffer_fixes.contains(&item) {
+                    buffer_fixes.push(item);
+                }
+            }
+        }
+    }
+
     let detected_v_from = if !all_v_from.is_empty() {
         all_v_from.sort();
         let (maj, min) = all_v_from[0];
@@ -626,14 +1075,14 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
         .iter()
         .filter_map(|h| fixer_db.rules.get(h))
         .map(|r| r.character.clone())
-        .filter(|c| !c.is_empty() && detected_char.as_ref().is_none_or(|dc| is_character_match(dc, c)))
+        .filter(|c| !c.is_empty() && detected_char.as_ref().is_none_or(|dc| is_same_character_family(dc, c)))
         .collect::<HashSet<String>>()
         .into_iter()
         .collect();
 
     let detected_skin = available_skins.first().cloned().or_else(|| detected_char.clone());
-    let total_fixes = hash_fixes.len() + multi_res_fixes.len() + buffer_fixes.len();
-    let is_fixable = !hash_fixes.is_empty() || !buffer_fixes.is_empty() || !multi_res_fixes.is_empty();
+    let total_fixes = hash_fixes.len() + multi_res_fixes.len() + buffer_fixes.len() + index_fixes.len();
+    let is_fixable = !hash_fixes.is_empty() || !buffer_fixes.is_empty() || !multi_res_fixes.is_empty() || !index_fixes.is_empty();
     let has_backup = has_mod_backup(mod_path);
 
     ModFixAnalysis {
@@ -648,6 +1097,7 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
         hash_fixes,
         multi_res_fixes,
         buffer_fixes,
+        index_fixes,
         total_fixes,
         has_backup,
     }
@@ -1090,6 +1540,7 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
     let mut hashes_updated = 0;
     let mut sections_added = 0;
     let mut buffers_remapped = 0;
+    let mut indices_remapped = 0;
 
     let mut backup_created_name = None;
 
@@ -1111,6 +1562,87 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
         let mut new_content = content.clone();
         let mut ini_changed = false;
 
+        // Submesh index remapping (e.g. match_first_index and match_index_count shifts across game patches)
+        for sec in parse_ini_sections(&content) {
+            if let Some(ref h) = sec.get_hash() {
+                let old_first_idx = sec.get_match_first_index();
+                let old_cnt = sec.get_match_index_count();
+                if old_first_idx.is_none() && old_cnt.is_none() {
+                    continue;
+                }
+                if let Some(rule) = fixer_db.rules.get(h) {
+                    let family_matches = match detected_character {
+                        Some(ref dc) => is_same_character_family(dc, &rule.character),
+                        None => true,
+                    };
+                    if family_matches {
+                        for action in &rule.actions {
+                            if action.action_type == "remap_indices" {
+                                if let (Some(ref froms), Some(ref tos)) = (&action.from_indices, &action.to_indices) {
+                                    for (i, (f_idx, t_idx)) in froms.iter().zip(tos.iter()).enumerate() {
+                                        // 1. Remap match_first_index if present and matches this submesh
+                                        if let Some(cur_first) = old_first_idx {
+                                            if cur_first == *f_idx && *t_idx != *f_idx {
+                                                let sec_pat = format!(
+                                                    r"(?im)(\[{}[^\]]*\][\s\S]*?)(^[ \t]*match_first_index\s*=\s*){}\b",
+                                                    regex::escape(&sec.header),
+                                                    f_idx
+                                                );
+                                                if let Ok(re) = Regex::new(&sec_pat) {
+                                                    if re.is_match(&new_content) {
+                                                        let repl = format!("${{1}}${{2}}{}\r\n; [ZZZMODMANAGER PREVIOUS INDEX] match_first_index = {}", t_idx, f_idx);
+                                                        new_content = re.replace(&new_content, repl.as_str()).to_string();
+                                                        ini_changed = true;
+                                                        indices_remapped += 1;
+                                                        actions_summary.push(format!("Remapped match_first_index {} -> {} in [{}] ({})", f_idx, t_idx, sec.header, rule.character));
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // 2. Remap match_index_count if present and matches this submesh
+                                        if let (Some(ref from_cnts), Some(ref to_cnts)) = (&action.from_index_counts, &action.to_index_counts) {
+                                            if let (Some(f_c), Some(t_c)) = (from_cnts.get(i), to_cnts.get(i)) {
+                                                if let Some(cur_cnt) = old_cnt {
+                                                    let slot_matches = old_first_idx.is_none_or(|fi| fi == *f_idx);
+                                                    if slot_matches && cur_cnt == *f_c && *t_c != *f_c {
+                                                        let count_pat = format!(
+                                                            r"(?im)(\[{}[^\]]*\][\s\S]*?)(^[ \t]*match_index_count\s*=\s*){}\b",
+                                                            regex::escape(&sec.header),
+                                                            f_c
+                                                        );
+                                                        if let Ok(re) = Regex::new(&count_pat) {
+                                                            if re.is_match(&new_content) {
+                                                                let repl = format!("${{1}}${{2}}{}\r\n; [ZZZMODMANAGER PREVIOUS COUNT] match_index_count = {}", t_c, f_c);
+                                                                new_content = re.replace(&new_content, repl.as_str()).to_string();
+                                                                ini_changed = true;
+                                                                indices_remapped += 1;
+                                                                actions_summary.push(format!("Remapped match_index_count {} -> {} in [{}] ({})", f_c, t_c, sec.header, rule.character));
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Normalize legacy override_byte_stride (e.g. 92, 96, 76) to 40 on character vertex limit raise sections
+        static STRIDE_REPLACE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?im)^([ \t]*override_byte_stride\s*=\s*)(?:92|96|76)\b").expect("Valid regex"));
+        if STRIDE_REPLACE_RE.is_match(&new_content) {
+            let repl = "${1}40\r\n; [ZZZMODMANAGER PREVIOUS STRIDE] override_byte_stride = 92";
+            new_content = STRIDE_REPLACE_RE.replace_all(&new_content, repl).to_string();
+            ini_changed = true;
+            buffers_remapped += 1;
+            actions_summary.push("Normalized legacy override_byte_stride to 40 to prevent vertex mesh distortion".to_string());
+        }
+
         // Collect buffer modifications needed: (buf_filename, fix_type, old_format, new_format, stride)
         type BufTask = (String, String, Vec<String>, Vec<String>, usize);
         let mut buf_tasks: Vec<BufTask> = Vec::new();
@@ -1121,13 +1653,17 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                     Some(ref dc) => is_character_match(dc, &rule.character),
                     None => true,
                 };
+                let family_matches = match detected_character {
+                    Some(ref dc) => is_same_character_family(dc, &rule.character),
+                    None => true,
+                };
                 let is_mesh_or_ib = {
                     let desc_l = rule.description.to_lowercase();
                     desc_l.contains("ib") || desc_l.contains("mesh") || desc_l.contains("draw") || desc_l.contains("position")
                 };
 
-                // Do not update character-specific unique meshes of another character
-                if !char_matches && is_mesh_or_ib {
+                // Do not update character-specific unique meshes of another character family
+                if !family_matches && is_mesh_or_ib {
                     continue;
                 }
 
@@ -1173,7 +1709,8 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                             if let Some(ref equivs) = action.equiv_hashes {
                                 let has_any = equivs.iter().any(|eq| active_hashes.contains(eq) || new_content.contains(eq));
                                 if !has_any && !equivs.is_empty() {
-                                    let target_eq = &equivs[0];
+                                    let (terminal_target_eq, _) = resolve_terminal_hash(&equivs[0], fixer_db);
+                                    let target_eq = &terminal_target_eq;
                                     let title = action.section_title.clone().unwrap_or_else(|| format!("{}.Duplicate", rule.character));
 
                                     // Extract lines from the source section matching `hash = <hash>` to preserve its body (e.g. `this = Resource...`)
@@ -1246,10 +1783,23 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                             }
 
                             if let Some(ref equivs) = action.equiv_hashes {
-                                let has_any = equivs.iter().any(|eq| active_hashes.contains(eq) || new_content.contains(eq));
+                                let has_any = equivs.iter().any(|eq| {
+                                    let eq_lower = eq.to_lowercase();
+                                    active_hashes.contains(&eq_lower)
+                                        || new_content.to_lowercase().contains(&eq_lower)
+                                        || is_equiv_hash_satisfied(&eq_lower, &active_hashes, fixer_db)
+                                });
                                 if !has_any && !equivs.is_empty() {
-                                    let target_eq = &equivs[0];
+                                    let (terminal_target_eq, _) = resolve_terminal_hash(&equivs[0], fixer_db);
+                                    let target_eq = &terminal_target_eq;
                                     let title = action.section_title.clone().unwrap_or_default();
+
+                                    // Guard: if INI already has an override section for this title, do not overwrite/conflict
+                                    let sec_tag = format!("[TextureOverride{}]", title);
+                                    if new_content.to_lowercase().contains(&sec_tag.to_lowercase()) {
+                                        continue;
+                                    }
+
                                     let body = action.section_content.clone().unwrap_or_default();
                                     let body_formatted = if !body.is_empty() && !body.ends_with('\n') {
                                         format!("{}\r\n", body)
@@ -1411,7 +1961,7 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
         }
     }
 
-    Ok(ModFixResult {
+    let res = ModFixResult {
         mod_path: mod_path.to_string_lossy().replace('\\', "/"),
         success: true,
         backup_created: backup_created_name,
@@ -1420,9 +1970,28 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
         hashes_updated,
         sections_added,
         buffers_remapped,
+        indices_remapped,
         actions_summary,
         error: None,
-    })
+    };
+
+    let mod_name = mod_path.file_name().unwrap_or_default().to_string_lossy().to_string();
+    let details = if res.actions_summary.is_empty() {
+        "Applied mod upgrade fixes".to_string()
+    } else {
+        res.actions_summary.join("; ")
+    };
+    let has_backup = res.backup_created.is_some();
+    crate::infra::logger::log_alteration(
+        "mod_fix",
+        &mod_name,
+        &res.mod_path,
+        &details,
+        res.backup_created.as_deref(),
+        has_backup,
+    );
+
+    Ok(res)
 }
 
 fn find_backup_files_recursive(dir: &Path, out: &mut Vec<PathBuf>, depth: usize) {
@@ -1444,53 +2013,204 @@ fn find_backup_files_recursive(dir: &Path, out: &mut Vec<PathBuf>, depth: usize)
     }
 }
 
-/// Restore a mod from its latest backup files across its directory tree
+/// Information about a single backup file discovered in a mod folder
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ModBackupInfo {
+    pub backup_path: String,
+    pub backup_file_name: String,
+    pub target_file_name: String,
+    pub target_path: String,
+    pub created_at: Option<u64>,
+    pub backup_size_bytes: u64,
+    pub target_size_bytes: Option<u64>,
+    pub target_exists: bool,
+}
+
+/// Result of restoring one or more selected backups
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RestoreBackupResult {
+    pub success: bool,
+    pub restored_files: Vec<String>,
+    pub remaining_backups_count: usize,
+    pub error: Option<String>,
+}
+
+/// Resolves the destination active file, full target path, and timestamp for a backup file
+pub fn resolve_backup_target_info(backup_path: &Path) -> Option<(String, PathBuf, Option<u64>)> {
+    let name = backup_path.file_name()?.to_str()?;
+    let parent = backup_path.parent().unwrap_or_else(|| Path::new("."));
+
+    if name.starts_with("DISABLED_BACKUP_") {
+        if let Some(caps) = BACKUP_RE.captures(name) {
+            let orig_name = caps.get(1).map_or("", |m| m.as_str());
+            let ext = caps.get(2).map_or("", |m| m.as_str());
+            let clean_orig = if orig_name.ends_with(&format!(".{}", ext)) {
+                orig_name.to_string()
+            } else {
+                format!("{}.{}", orig_name, ext)
+            };
+            let ts = name
+                .strip_prefix("DISABLED_BACKUP_")
+                .and_then(|s| s.split('_').next())
+                .and_then(|s| s.parse::<u64>().ok());
+            let target_path = parent.join(&clean_orig);
+            return Some((clean_orig, target_path, ts));
+        }
+    } else if name.ends_with(".disabled.bak") {
+        let clean_orig = name.trim_end_matches(".disabled.bak").to_string();
+        let target_path = parent.join(&clean_orig);
+        return Some((clean_orig, target_path, None));
+    } else if name.ends_with(".ini.bak") {
+        let clean_orig = name.trim_end_matches(".bak").to_string();
+        let target_path = parent.join(&clean_orig);
+        return Some((clean_orig, target_path, None));
+    } else if name.ends_with(".buf.bak") {
+        let clean_orig = name.trim_end_matches(".bak").to_string();
+        let target_path = parent.join(&clean_orig);
+        return Some((clean_orig, target_path, None));
+    }
+
+    None
+}
+
+/// Lists all backup files in a mod folder with metadata and target file resolution
+pub fn list_mod_backups(mod_path: &Path) -> Result<Vec<ModBackupInfo>, AppError> {
+    if !mod_path.exists() || !mod_path.is_dir() {
+        return Err(AppError::Custom(format!("Mod path does not exist: {:?}", mod_path)));
+    }
+
+    let mut backup_paths = Vec::new();
+    find_backup_files_recursive(mod_path, &mut backup_paths, 0);
+
+    let mut results = Vec::new();
+    for bp in backup_paths {
+        if let Some((target_name, target_path, ts_opt)) = resolve_backup_target_info(&bp) {
+            let backup_file_name = bp.file_name().unwrap_or_default().to_string_lossy().to_string();
+            let backup_size_bytes = fs::metadata(&bp).map(|m| m.len()).unwrap_or(0);
+            let (target_exists, target_size_bytes) = match fs::metadata(&target_path) {
+                Ok(m) => (true, Some(m.len())),
+                Err(_) => (false, None),
+            };
+
+            // If timestamp not in name, fall back to file modified time
+            let created_at = ts_opt.or_else(|| {
+                fs::metadata(&bp).ok().and_then(|m| m.modified().ok()).and_then(|t| {
+                    t.duration_since(std::time::UNIX_EPOCH).ok().map(|d| d.as_secs())
+                })
+            });
+
+            results.push(ModBackupInfo {
+                backup_path: bp.to_string_lossy().replace('\\', "/"),
+                backup_file_name,
+                target_file_name: target_name,
+                target_path: target_path.to_string_lossy().replace('\\', "/"),
+                created_at,
+                backup_size_bytes,
+                target_size_bytes,
+                target_exists,
+            });
+        }
+    }
+
+    // Sort newest first by timestamp, then filename
+    results.sort_by(|a, b| {
+        b.created_at.cmp(&a.created_at)
+            .then_with(|| a.target_file_name.cmp(&b.target_file_name))
+    });
+
+    Ok(results)
+}
+
+/// Restores only selected backup files into their active locations with security checks
+pub fn restore_selected_mod_backups(
+    mod_path: &Path,
+    selected_backup_paths: &[String],
+    keep_backups: bool,
+) -> Result<RestoreBackupResult, AppError> {
+    if !mod_path.exists() || !mod_path.is_dir() {
+        return Err(AppError::Custom(format!("Mod path does not exist: {:?}", mod_path)));
+    }
+
+    let canonical_mod_path = mod_path.canonicalize().map_err(|e| {
+        AppError::Custom(format!("Failed to canonicalize mod path: {}", e))
+    })?;
+
+    let mut restored_files = Vec::new();
+
+    for bp_str in selected_backup_paths {
+        let bp = PathBuf::from(bp_str);
+        if !bp.exists() {
+            continue;
+        }
+
+        // Security check: Path traversal prevention
+        let canonical_bp = match bp.canonicalize() {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+
+        if !canonical_bp.starts_with(&canonical_mod_path) {
+            return Err(AppError::Custom(format!(
+                "Security violation: Backup path {:?} is outside mod directory {:?}",
+                bp, mod_path
+            )));
+        }
+
+        if let Some((target_name, target_path, _)) = resolve_backup_target_info(&canonical_bp) {
+            // Ensure target directory exists
+            if let Some(parent) = target_path.parent() {
+                let _ = fs::create_dir_all(parent);
+            }
+
+            if fs::copy(&canonical_bp, &target_path).is_ok() {
+                restored_files.push(target_name);
+                if !keep_backups {
+                    let _ = fs::remove_file(&canonical_bp);
+                }
+            }
+        }
+    }
+
+    let remaining_backups = list_mod_backups(mod_path).map(|v| v.len()).unwrap_or(0);
+
+    if !restored_files.is_empty() {
+        let mod_name = mod_path.file_name().unwrap_or_default().to_string_lossy().to_string();
+        crate::infra::logger::log_alteration(
+            "restore",
+            &mod_name,
+            &mod_path.to_string_lossy(),
+            &format!(
+                "Restored {} files from backup: {}",
+                restored_files.len(),
+                restored_files.join(", ")
+            ),
+            None,
+            false,
+        );
+    }
+
+    Ok(RestoreBackupResult {
+        success: !restored_files.is_empty(),
+        restored_files,
+        remaining_backups_count: remaining_backups,
+        error: None,
+    })
+}
+
+/// Restore a mod from all its latest backup files across its directory tree
 pub fn restore_mod_backup(mod_path: &Path) -> Result<bool, AppError> {
     if !mod_path.exists() || !mod_path.is_dir() {
         return Err(AppError::Custom(format!("Mod path does not exist: {:?}", mod_path)));
     }
 
-    let mut backup_files = Vec::new();
-    find_backup_files_recursive(mod_path, &mut backup_files, 0);
-
-    if backup_files.is_empty() {
+    let backups = list_mod_backups(mod_path)?;
+    if backups.is_empty() {
         return Ok(false);
     }
 
-    let mut restored_any = false;
-
-    for backup_path in backup_files {
-        let parent_dir = backup_path.parent().unwrap_or(mod_path);
-        let name = backup_path.file_name().unwrap_or_default().to_string_lossy().to_string();
-
-        if name.starts_with("DISABLED_BACKUP_") {
-            if let Some(caps) = BACKUP_RE.captures(&name) {
-                let orig_name = caps.get(1).map_or("", |m| m.as_str());
-                let ext = caps.get(2).map_or("", |m| m.as_str());
-                // Handle both single extension ("Caesar") and legacy double extension ("Caesar.ini")
-                let clean_orig = if orig_name.ends_with(&format!(".{}", ext)) {
-                    orig_name.to_string()
-                } else {
-                    format!("{}.{}", orig_name, ext)
-                };
-                let target_path = parent_dir.join(clean_orig);
-
-                if fs::copy(&backup_path, &target_path).is_ok() {
-                    let _ = fs::remove_file(&backup_path);
-                    restored_any = true;
-                }
-            }
-        } else if name.ends_with(".disabled.bak") {
-            let target_name = name.trim_end_matches(".disabled.bak");
-            let target_path = parent_dir.join(target_name);
-            if fs::copy(&backup_path, &target_path).is_ok() {
-                let _ = fs::remove_file(&backup_path);
-                restored_any = true;
-            }
-        }
-    }
-
-    Ok(restored_any)
+    let backup_paths: Vec<String> = backups.into_iter().map(|b| b.backup_path).collect();
+    let res = restore_selected_mod_backups(mod_path, &backup_paths, false)?;
+    Ok(res.success)
 }
 
 /// Helper to scan all mods in the Mods folder for outdated hashes
@@ -1570,18 +2290,22 @@ pub fn internal_batch_apply_mod_fixes_with_cancel(
         let p = Path::new(p_str);
         match apply_mod_fix(p, fixer_db) {
             Ok(res) => results.push(res),
-            Err(e) => results.push(ModFixResult {
-                mod_path: p_str.clone(),
-                success: false,
-                backup_created: None,
-                modified_ini_files: Vec::new(),
-                modified_buf_files: Vec::new(),
-                hashes_updated: 0,
-                sections_added: 0,
-                buffers_remapped: 0,
-                actions_summary: Vec::new(),
-                error: Some(e.to_string()),
-            }),
+            Err(e) => {
+                crate::infra::logger::log_error("mod_fixer", &e.to_string(), Some(p_str));
+                results.push(ModFixResult {
+                    mod_path: p_str.clone(),
+                    success: false,
+                    backup_created: None,
+                    modified_ini_files: Vec::new(),
+                    modified_buf_files: Vec::new(),
+                    hashes_updated: 0,
+                    sections_added: 0,
+                    buffers_remapped: 0,
+                    indices_remapped: 0,
+                    actions_summary: Vec::new(),
+                    error: Some(e.to_string()),
+                });
+            }
         }
     }
     results
@@ -1608,7 +2332,13 @@ pub fn fix_mod(app: AppHandle, mod_path: String) -> Result<ModFixResult, AppErro
     let p = Path::new(&mod_path);
     let app_db_path = app.path().app_data_dir().ok().map(|d| d.join("database.json"));
     let fixer_db = load_fixer_database(app_db_path.as_deref());
-    apply_mod_fix(p, &fixer_db)
+    match apply_mod_fix(p, &fixer_db) {
+        Ok(res) => Ok(res),
+        Err(e) => {
+            crate::infra::logger::log_error("mod_fixer", &e.to_string(), Some(&mod_path));
+            Err(e)
+        }
+    }
 }
 
 #[tauri::command]
@@ -1641,6 +2371,24 @@ pub fn restore_mod_backup_command(mod_path: String) -> Result<bool, AppError> {
     let mod_path = crate::utils::expand_path(&mod_path);
     let p = Path::new(&mod_path);
     restore_mod_backup(p)
+}
+
+#[tauri::command]
+pub fn list_mod_backups_command(mod_path: String) -> Result<Vec<ModBackupInfo>, AppError> {
+    let mod_path = crate::utils::expand_path(&mod_path);
+    let p = Path::new(&mod_path);
+    list_mod_backups(p)
+}
+
+#[tauri::command]
+pub fn restore_selected_mod_backups_command(
+    mod_path: String,
+    backup_paths: Vec<String>,
+    keep_backups: bool,
+) -> Result<RestoreBackupResult, AppError> {
+    let mod_path = crate::utils::expand_path(&mod_path);
+    let p = Path::new(&mod_path);
+    restore_selected_mod_backups(p, &backup_paths, keep_backups)
 }
 
 #[cfg(test)]

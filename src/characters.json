@@ -4181,29 +4181,29 @@
               }
             },
             "Body": {
-              "draw_vb": "22ec622c",
-              "position_vb": "554d46cf",
-              "blend_vb": "7f6fe876",
-              "texcoord_vb": "5dcc6ee1",
-              "ib": "f57f3e40",
+              "draw_vb": "6a0d36f2",
+              "position_vb": "0929171b",
+              "blend_vb": "93b69961",
+              "texcoord_vb": "c24cc6a1",
+              "ib": "92cb56c9",
               "textures": {
-                "Diffuse": "0e408177",
+                "Diffuse": "bb0f08b9",
                 "NormalMap": "ebac056e",
-                "LightMap": "6102ae18",
-                "MaterialMap": "cccb8109"
+                "LightMap": "0e9d14dc",
+                "MaterialMap": "8240c688"
               }
             },
             "Legs": {
-              "draw_vb": "96dc0a8e",
-              "position_vb": "fa9635bc",
-              "blend_vb": "ff05e5f9",
-              "texcoord_vb": "7c0db158",
-              "ib": "09a51ed3",
+              "draw_vb": "ea50e1d1",
+              "position_vb": "11fbd4a3",
+              "blend_vb": "3841a909",
+              "texcoord_vb": "14ab0adc",
+              "ib": "24a512cb",
               "textures": {
-                "Diffuse": "877b0ce6",
+                "Diffuse": "017c13e4",
                 "NormalMap": "ebac056e",
-                "LightMap": "baeb2662",
-                "MaterialMap": "3b0c9e0a"
+                "LightMap": "0a902460",
+                "MaterialMap": "fb096287"
               }
             },
             "Wings": {
@@ -4226,10 +4226,10 @@
               "texcoord_vb": "6b85337d",
               "ib": "f89dd462",
               "textures": {
-                "Diffuse": "877b0ce6",
+                "Diffuse": "017c13e4",
                 "NormalMap": "ebac056e",
-                "LightMap": "baeb2662",
-                "MaterialMap": "3b0c9e0a"
+                "LightMap": "0a902460",
+                "MaterialMap": "fb096287"
               }
             },
             "Eyebrows": {
@@ -4270,11 +4270,11 @@
               }
             },
             "Body": {
-              "draw_vb": "48288582",
-              "position_vb": "13c77c3a",
-              "blend_vb": "9bca83d8",
-              "texcoord_vb": "c55c57ce",
-              "ib": "241deac5",
+              "draw_vb": "df41c403",
+              "position_vb": "22d04ad5",
+              "blend_vb": "5ec5e567",
+              "texcoord_vb": "d637a74d",
+              "ib": "2cd6516a",
               "textures": {
                 "Diffuse": "686a0805",
                 "NormalMap": "ebac056e",

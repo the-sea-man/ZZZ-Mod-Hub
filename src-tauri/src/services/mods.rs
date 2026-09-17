@@ -227,6 +227,7 @@ pub fn scan_mods_folder_sync_with_cancel(
                             thumbnail_url,
                             meta,
                             total_size_bytes,
+                            has_backup: scan.has_backup,
                         })
                     })
                     .collect();
@@ -524,6 +525,7 @@ pub struct ModDirScanResult {
     pub preview_url: Option<String>,
     pub meta_content: Option<String>,
     pub gb_id: Option<u64>,
+    pub has_backup: bool,
 }
 
 /// Recursively scans a mod directory:
@@ -531,6 +533,7 @@ pub struct ModDirScanResult {
 /// - Finds preview images (preferring root with nested subfolder fallback).
 /// - Reads .zmm-meta.json (preferring root with nested subfolder fallback).
 /// - Extracts GameBanana ID from candidate files or folder name if present.
+/// - Detects if any backup files (.bak / .disabled.bak) exist in the directory tree.
 pub fn scan_single_mod_dir(mod_path: &Path) -> ModDirScanResult {
     let mut total_size_bytes: u64 = 0;
     let mut root_preview: Option<String> = None;
@@ -538,6 +541,7 @@ pub fn scan_single_mod_dir(mod_path: &Path) -> ModDirScanResult {
     let mut root_meta: Option<String> = None;
     let mut nested_meta: Option<String> = None;
     let mut gb_id: Option<u64> = None;
+    let mut has_backup = false;
 
     // 1. Fast path: Check folder name in memory first
     if let Some(folder_name) = mod_path.file_name().and_then(|f| f.to_str()) {
@@ -630,6 +634,10 @@ pub fn scan_single_mod_dir(mod_path: &Path) -> ModDirScanResult {
                             }
                         }
                     }
+
+                    if !has_backup && crate::services::mod_fixer::is_backup_file_name(&fname_lossy) {
+                        has_backup = true;
+                    }
                 }
             }
         }
@@ -640,6 +648,7 @@ pub fn scan_single_mod_dir(mod_path: &Path) -> ModDirScanResult {
         preview_url: root_preview.or(nested_preview),
         meta_content: root_meta.or(nested_meta),
         gb_id,
+        has_backup,
     }
 }
 

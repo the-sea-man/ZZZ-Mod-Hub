@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   Sparkles,
   Info,
+  RefreshCw,
 } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useAppStore } from '../../store/useAppStore';
@@ -91,9 +92,15 @@ export function LanguageManagerModal({ onClose }: LanguageManagerModalProps) {
     const bundle = i18n.getResourceBundle(code, 'translation') || {};
     let translatedCount = 0;
     const totalKeys = masterKeys.length;
+    const masterRecord = en as Record<string, string>;
 
     for (const key of masterKeys) {
-      if (bundle[key] && bundle[key].trim().length > 0) {
+      const val = bundle[key];
+      if (val && typeof val === 'string' && val.trim().length > 0) {
+        // If not English, ignore keys that are identical to the English master string
+        if (code !== 'en' && val.trim() === masterRecord[key]?.trim()) {
+          continue;
+        }
         translatedCount++;
       }
     }
@@ -165,7 +172,7 @@ export function LanguageManagerModal({ onClose }: LanguageManagerModalProps) {
   };
 
   // Start batch translating full pack
-  const startTranslatingPack = async (code: string, name: string) => {
+  const startTranslatingPack = async (code: string, name: string, _force = false) => {
     setTranslatingTarget({ code, name });
     setProgressPct(0);
     setProgressCurrent(0);
@@ -222,13 +229,18 @@ export function LanguageManagerModal({ onClose }: LanguageManagerModalProps) {
       (l) => l.code.toLowerCase() === code.toLowerCase()
     );
     if (alreadyInstalled) {
+      const shouldRetranslate = window.confirm(t('retranslate_confirm', { name: item.nativeName }));
+      if (shouldRetranslate) {
+        startTranslatingPack(item.code, item.nativeName, true);
+        return;
+      }
       await i18n.changeLanguage(code);
       setLanguage(code);
       showToast(t('language_installed_success', { name: item.nativeName }));
       return;
     }
 
-    startTranslatingPack(item.code, item.nativeName);
+    startTranslatingPack(item.code, item.nativeName, false);
   };
 
   // Auto-fill missing strings in current editor
@@ -747,6 +759,15 @@ export function LanguageManagerModal({ onClose }: LanguageManagerModalProps) {
                               </div>
 
                               <div className="flex items-center gap-1">
+                                {!isBuiltin && (
+                                  <button
+                                    onClick={() => startTranslatingPack(lang.code, lang.name, true)}
+                                    className="p-1.5 text-textMuted hover:text-primary hover:bg-white/5 rounded-lg transition-colors"
+                                    title={t('retranslate_pack')}
+                                  >
+                                    <RefreshCw size={14} />
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => handleExportLanguage(lang.code, lang.name)}
                                   className="p-1.5 text-textMuted hover:text-textMain hover:bg-white/5 rounded-lg transition-colors"

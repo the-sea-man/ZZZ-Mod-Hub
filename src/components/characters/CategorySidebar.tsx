@@ -87,14 +87,17 @@ export const CategorySidebar = memo(function CategorySidebar({
 
   return (
     <div className="w-80 border-r border-textMain/5 flex flex-col glass-panel relative z-10">
-      <div className="p-4 border-b border-white/5 flex items-center justify-between shrink-0 glass-panel rounded-none z-20">
-        <span className="text-sm font-bold text-textMuted">{t('folders', 'Folders')}</span>
+      <div className="p-3 border-b border-white/5 flex items-center justify-between shrink-0 glass-panel rounded-none z-20">
+        <span className="text-xs font-bold uppercase tracking-wider text-textMuted shrink-0">
+          {t('folders', 'Folders')}
+        </span>
+
         <button
           onClick={handleCycleFilter}
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface hover:bg-white/10 text-xs font-semibold text-textMuted hover:text-textMain transition-colors border border-white/5 cursor-pointer shadow-sm"
           title={t('filter_cycle_tooltip', 'Cycle category visibility')}
         >
-          <Filter size={12} className="text-primary" />
+          <Filter size={12} className="text-primary shrink-0" />
           <span>{getFilterLabel()}</span>
         </button>
       </div>
