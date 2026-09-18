@@ -1,2 +1,1 @@
-npx lint-staged --max-arg-length 4000
-npm run check
+node scripts/pre-commit.cjs

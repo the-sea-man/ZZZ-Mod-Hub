@@ -13,6 +13,7 @@ static BACKUP_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^DISABLED_BACK
 
 use crate::error::AppError;
 use crate::utils::{find_ini_files, read_ini_to_string};
+use crate::services::component_split;
 
 /// In-memory cache for the parsed fixer database.
 /// Keyed by the resolved JSON file path so switching databases is handled correctly.
@@ -431,6 +432,10 @@ pub fn is_equiv_hash_satisfied(equiv_hash: &str, mod_hashes: &HashSet<String>, f
     if mod_hashes.contains(&target) {
         return true;
     }
+    // Check if target is a legacy Jane head hash that was rerouted to Hands (294a319a)
+    if matches!(target.as_str(), "9268a5af" | "7b16a708") && mod_hashes.contains("294a319a") {
+        return true;
+    }
     let (eq_term, _) = resolve_terminal_hash(&target, fixer_db);
     if mod_hashes.contains(&eq_term) {
         return true;
@@ -742,7 +747,14 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
 
     for ini_path in &ini_files {
         let fname = ini_path.file_name().unwrap_or_default().to_string_lossy();
-        if fname.starts_with("zzzmanager_ui_") || fname.starts_with("000_zzzmanager_ui_") || fname.ends_with(".bak") {
+        // 3DMigoto excludes DISABLED* from its recursive include, so these are inert
+        // reference copies. Fixing them changes nothing in game and their diagnostics are
+        // misleading - a stale DISABLED copy reports failures the live INI never had.
+        if fname.starts_with("zzzmanager_ui_")
+            || fname.starts_with("000_zzzmanager_ui_")
+            || fname.to_uppercase().starts_with("DISABLED")
+            || fname.ends_with(".bak")
+        {
             continue;
         }
 
@@ -780,7 +792,14 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
 
     for ini_path in &ini_files {
         let fname = ini_path.file_name().unwrap_or_default().to_string_lossy();
-        if fname.starts_with("zzzmanager_ui_") || fname.starts_with("000_zzzmanager_ui_") || fname.ends_with(".bak") {
+        // 3DMigoto excludes DISABLED* from its recursive include, so these are inert
+        // reference copies. Fixing them changes nothing in game and their diagnostics are
+        // misleading - a stale DISABLED copy reports failures the live INI never had.
+        if fname.starts_with("zzzmanager_ui_")
+            || fname.starts_with("000_zzzmanager_ui_")
+            || fname.to_uppercase().starts_with("DISABLED")
+            || fname.ends_with(".bak")
+        {
             continue;
         }
 
@@ -866,6 +885,9 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
                 }
             }
 
+            let is_jane = detected_char.as_ref().is_some_and(|dc| is_character_match(dc, "JaneDoe"));
+            let jane_hijacked = is_jane && is_jane_head_hijacked(&content);
+
             let hashes = extract_hashes_from_ini(&content);
             let mut sorted_hashes: Vec<String> = hashes.into_iter().collect();
             sorted_hashes.sort();
@@ -901,7 +923,7 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
                         match action.action_type.as_str() {
                             "update_hash" => {
                                 let (terminal_hash, _) = resolve_terminal_hash(hash, fixer_db);
-                                let target_hash = if terminal_hash != hash.to_lowercase() {
+                                let mut target_hash = if terminal_hash != hash.to_lowercase() {
                                     terminal_hash
                                 } else if let Some(ref new_h) = action.new_hash {
                                     new_h.clone()
@@ -915,11 +937,23 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
                                     detected_char.clone().unwrap_or_else(|| rule.character.clone())
                                 };
 
-                                let display_desc = if family_matches {
+                                let mut display_desc = if family_matches {
                                     rule.description.clone()
                                 } else {
                                     format!("{} Shared Texture ({})", display_char, rule.description)
                                 };
+
+                                if jane_hijacked {
+                                    if let Some(hands_h) = get_jane_hands_reroute_hash_guarded(&content, hash) {
+                                        target_hash = hands_h.to_string();
+                                        display_desc = format!("{} (Rerouted to Hands & Accessories)", display_desc);
+                                    }
+                                } else if let Some((old_h, new_h, face_char)) = find_universal_face_rule(hash) {
+                                    if hash.eq_ignore_ascii_case(old_h) {
+                                        target_hash = new_h.to_string();
+                                        display_desc = format!("{} Face Texcoord (3.2 upgrade)", face_char);
+                                    }
+                                }
 
                                 let item = HashFixDetail {
                                     old_hash: hash.clone(),
@@ -946,6 +980,11 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
                                     None => false,
                                 };
                                 if !can_inject {
+                                    continue;
+                                }
+                                // When Jane Doe's head was hijacked for clothing/arms, the mod is an outfit mod, not a hair mod.
+                                // Never inject Jane.Hair.IB or multiply hair textures for a hijacked mod!
+                                if jane_hijacked && action.section_title.as_ref().is_some_and(|t| t.to_lowercase().contains("hair")) {
                                     continue;
                                 }
                                 if let Some(ref equivs) = action.equiv_hashes {
@@ -1009,18 +1048,128 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
                                 if !char_matches {
                                     continue;
                                 }
+                                // If Jane Doe: only propose update_blend_indices if the mod actually contains legacy head/blend hashes
+                                if is_jane {
+                                    let has_legacy_head = sorted_hashes.iter().any(|h| {
+                                        matches!(
+                                            h.to_lowercase().as_str(),
+                                            "9268a5af" | "7b16a708" | "e7a3b7dc" | "24323bf9" | "8721477f" | "0a10c747"
+                                        )
+                                    });
+                                    if !has_legacy_head {
+                                        continue;
+                                    }
+                                }
                                 let old_count = action.old_indices.as_ref().map(|v| v.len()).unwrap_or(0);
+                                let desc = if is_jane {
+                                    if jane_hijacked {
+                                        "Remapped 2.5+ Hands bone indices (HAND_MAPPINGS)".to_string()
+                                    } else {
+                                        "Remapped 2.5+ Hair bone indices (HAIR_MAPPINGS)".to_string()
+                                    }
+                                } else {
+                                    "Remapped 3.0 skeleton bone indices".to_string()
+                                };
                                 let item = BufferFixDetail {
                                     buffer_filename: format!("vb2 Blend Buffer ({})", rule.character),
                                     fix_type: "update_blend_indices".to_string(),
                                     old_format: format!("{} legacy bone indices", old_count),
-                                    new_format: "Remapped 3.0 skeleton bone indices".to_string(),
+                                    new_format: desc,
                                 };
                                 if !buffer_fixes.contains(&item) {
                                     buffer_fixes.push(item);
                                 }
                             }
                             _ => {}
+                        }
+                    }
+                }
+            }
+
+            // Auto-detect Jane Doe blend buffer bone remapping if not already in buffer_fixes
+            if is_jane {
+                let has_legacy_head = sorted_hashes.iter().any(|h| {
+                    matches!(
+                        h.to_lowercase().as_str(),
+                        "9268a5af" | "7b16a708" | "e7a3b7dc" | "24323bf9" | "8721477f" | "0a10c747"
+                    )
+                });
+                if has_legacy_head {
+                    let all_vb2 = find_all_slot_buffers(&content, "vb2");
+                    let comp_type = if jane_hijacked { "hands" } else { "hair" };
+                    let safe_vb2 = filter_safe_blend_buffers_for_component(&all_vb2, comp_type);
+                    for (b_name, _) in safe_vb2 {
+                        let item = BufferFixDetail {
+                            buffer_filename: format!("vb2 Blend Buffer (JaneDoe - {})", b_name),
+                            fix_type: "update_blend_indices".to_string(),
+                            old_format: "Jane Doe legacy 1.4 skeleton bone indices".to_string(),
+                            new_format: if jane_hijacked {
+                                "Remapped 2.5+ Hands bone indices (HAND_MAPPINGS)".to_string()
+                            } else {
+                                "Remapped 2.5+ Hair bone indices (HAIR_MAPPINGS)".to_string()
+                            },
+                        };
+                        if !buffer_fixes.contains(&item) {
+                            buffer_fixes.push(item);
+                        }
+                    }
+                }
+            }
+
+            // Auto-detect Dialyn blend buffer bone remapping if not already in buffer_fixes
+            if detected_char.as_ref().is_some_and(|dc| is_character_match(dc, "Dialyn")) {
+                let has_legacy_dialyn = sorted_hashes.iter().any(|h| {
+                    matches!(h.to_lowercase().as_str(), "3d7e53cf" | "ff36809b")
+                });
+                if has_legacy_dialyn {
+                    let all_vb2 = find_all_slot_buffers(&content, "vb2");
+                    let safe_vb2 = filter_safe_blend_buffers_for_component(&all_vb2, "dialyn");
+                    for (b_name, _) in safe_vb2 {
+                        let item = BufferFixDetail {
+                            buffer_filename: format!("vb2 Blend Buffer (Dialyn - {})", b_name),
+                            fix_type: "update_blend_indices".to_string(),
+                            old_format: "Dialyn legacy skeleton bone indices".to_string(),
+                            new_format: "Remapped 3.0+ Dialyn bone indices".to_string(),
+                        };
+                        if !buffer_fixes.contains(&item) {
+                            buffer_fixes.push(item);
+                        }
+                    }
+                }
+            }
+
+            // Auto-detect Universal Face 3.1 -> 3.2 texcoord format upgrade
+            for hash in &sorted_hashes {
+                if let Some((old_h, new_h, face_char)) = find_universal_face_rule(hash) {
+                    let mut vb1_bufs = find_referenced_buffers(&content, old_h, "vb1");
+                    if vb1_bufs.is_empty() {
+                        vb1_bufs = find_referenced_buffers(&content, new_h, "vb1");
+                    }
+                    if vb1_bufs.is_empty() {
+                        vb1_bufs = find_referenced_buffers(&content, hash, "vb1");
+                    }
+                    for (buf_file, stride) in vb1_bufs {
+                        let buf_path = ini_path.parent().unwrap_or(mod_path).join(&buf_file);
+                        let needs_remap = if buf_path.exists() {
+                            if let Ok(meta) = fs::metadata(&buf_path) {
+                                let len = meta.len() as usize;
+                                len > 0 && len % 36 == 0 && len % 48 != 0
+                            } else {
+                                stride == 36
+                            }
+                        } else {
+                            stride == 36
+                        };
+                        if needs_remap {
+                            let item = BufferFixDetail {
+                                buffer_filename: format!("vb1 Face Texcoord ({})", buf_file),
+                                fix_type: "remap_texcoord".to_string(),
+                                old_format: "4B,2f,2f,2f,2f (36-byte)".to_string(),
+                                new_format: format!("4f,2f,2f,2f,2f (48-byte) - {} Face", face_char),
+                            };
+                            if !buffer_fixes.contains(&item) {
+                                buffer_fixes.push(item);
+                            }
                         }
                     }
                 }
@@ -1032,7 +1181,14 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
     static LEGACY_STRIDE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?im)^[ \t]*override_byte_stride\s*=\s*(?:92|96|76)\b").expect("Valid regex"));
     for ini_path in &ini_files {
         let fname = ini_path.file_name().unwrap_or_default().to_string_lossy();
-        if fname.starts_with("zzzmanager_ui_") || fname.starts_with("000_zzzmanager_ui_") || fname.ends_with(".bak") {
+        // 3DMigoto excludes DISABLED* from its recursive include, so these are inert
+        // reference copies. Fixing them changes nothing in game and their diagnostics are
+        // misleading - a stale DISABLED copy reports failures the live INI never had.
+        if fname.starts_with("zzzmanager_ui_")
+            || fname.starts_with("000_zzzmanager_ui_")
+            || fname.to_uppercase().starts_with("DISABLED")
+            || fname.ends_with(".bak")
+        {
             continue;
         }
         if let Ok(content) = read_ini_to_string(ini_path) {
@@ -1420,43 +1576,496 @@ pub fn ensure_handling_skip_on_draw_sections(ini_content: &str) -> (String, usiz
     (lines.join("\r\n"), count)
 }
 
-/// Injects modern submesh suppression blocks for characters where newer game versions
-/// split secondary components (e.g. Belle's Legs, Earrings, Hairpin, and BodyB draw calls).
-pub fn ensure_character_suppressions(ini_content: &str, character: &str) -> (String, usize) {
-    if !is_character_match(character, "Belle") {
-        return (ini_content.to_string(), 0);
+/// 53 Universal Face Meshes in ZZZ that transitioned from 4B to 4f COLOR format (stride 36 -> 48)
+pub static UNIVERSAL_FACE_3_2_HASHES: &[(&str, &str, &str)] = &[
+    ("014159dd", "287c161c", "YeShunguangSkin"),
+    ("01b43c04", "ffac76ac", "AstraYao"),
+    ("02426764", "2e04aac2", "Yixuan"),
+    ("0749a6d7", "7c9dbd4a", "Alice"),
+    ("0aacc89a", "99d2733a", "Hugo"),
+    ("1132301e", "d4a12ab7", "Trigger"),
+    ("20095c2e", "48152e31", "Harumasa"),
+    ("27fd9193", "d90368ed", "Dialyn"),
+    ("2bc69f3c", "dfc76798", "Cissia"),
+    ("2bcb59f6", "a0dfaf80", "Seed"),
+    ("2fe49591", "58468aba", "Piper"),
+    ("31df6120", "d5958556", "Nicole"),
+    ("325bb10f", "0fd41a37", "Manato"),
+    ("37a09c33", "9d0f7ef5", "Yuzuha"),
+    ("3e7815b5", "f818271a", "Anby"),
+    ("40cdb80f", "08316415", "Yidhari"),
+    ("43cb221f", "9648c6d3", "Lucia"),
+    ("50c5d703", "0afe5a44", "Vivian"),
+    ("558c7001", "144828a7", "Anton"),
+    ("57994826", "f41b27e6", "Koleda"),
+    ("60732ab5", "7a476f86", "MiyabiSkin"),
+    ("615a1f62", "48191f72", "Orphie"),
+    ("61782f72", "14b70725", "Burnice"),
+    ("63481380", "c3b7516b", "Grace"),
+    ("644e5029", "d3d65ca5", "Promeia"),
+    ("731a54ff", "d68e27c1", "Corin"),
+    ("74ea3d75", "11f5d81b", "Pulchra"),
+    ("79b29cb1", "9e3c9d74", "Caesar"),
+    ("7c53d0fd", "d38d3862", "Ben"),
+    ("7cd06c1a", "e9f8263f", "Seth"),
+    ("7e7eb188", "da3a8174", "PanYinlin"),
+    ("845a7b68", "fc6c8a74", "Soldier11"),
+    ("89df8e16", "2b31a89c", "Soukaku"),
+    ("90263f13", "0ae87295", "Ellen"),
+    ("95bc72aa", "99763ca7", "ZhuYuan"),
+    ("a37ea81f", "38df753b", "Billy"),
+    ("a6a5789f", "6aa1d624", "Nekomata"),
+    ("a8904724", "e7658dc7", "Qingyi"),
+    ("ade78e5f", "f0e74f07", "Lycaon"),
+    ("af36c071", "6814c8ec", "Lucy"),
+    ("b64267d6", "e4125d03", "Rina"),
+    ("b7837b2d", "a01a3ca5", "Miyabi"),
+    ("bc54c000", "5c80e1ec", "BurniceSkin"),
+    ("c12ea84b", "273a7d45", "Bao"),
+    ("c5391d3e", "8627bc89", "EllenSkin"),
+    ("c7c6cfb4", "ef316f73", "JaneDoe"),
+    ("c8d1fc42", "e826b528", "Sunna"),
+    ("cf0897b2", "d9ffc71d", "Lighter"),
+    ("d5d05051", "f516a247", "Yanagi"),
+    ("dd5cb465", "f08eb010", "JuFubuki"),
+    ("e467d0a9", "406089bf", "Evelyn"),
+    ("f62f01f0", "7963d33e", "General"),
+    ("fcf0e4fe", "855c8eb3", "AstraYaoSkin"),
+];
+
+/// Returns the (old_3_1_hash, new_3_2_hash, character) entry if hash is a known face mesh
+pub fn find_universal_face_rule(hash: &str) -> Option<(&'static str, &'static str, &'static str)> {
+    let h_lower = hash.to_lowercase();
+    UNIVERSAL_FACE_3_2_HASHES.iter().copied().find(|(old_h, new_h, _)| {
+        old_h.eq_ignore_ascii_case(&h_lower) || new_h.eq_ignore_ascii_case(&h_lower)
+    })
+}
+
+/// Inspects an INI file to detect if Jane Doe's legacy Head/Hair draw call
+/// was hijacked to render arms, jacket, pouches, gloves, sleeves, or accessories
+/// (a common workaround in ZZZ 1.0-1.4 because vanilla lacked a dedicated Hands slot).
+pub fn is_jane_head_hijacked(ini_content: &str) -> bool {
+    let lower = ini_content.to_lowercase();
+
+    // 1. Direct clue: Binding Body textures (diffuse, normal, lightmap) into Head/Hair sections
+    if lower.contains("resourcejanedoebodyanormalmap")
+        || lower.contains("resourcejanedoebodyadiffuse")
+        || (lower.contains("head") && lower.contains("bodyadiffuse"))
+        || (lower.contains("head") && lower.contains("bodyanormal"))
+    {
+        return true;
     }
 
-    let mut out = ini_content.to_string();
-    let content_lower = out.to_lowercase();
-    let mut added = 0;
+    // 2. Submesh / section inspection for clothing & limb keywords in Head sections
+    let sections = parse_ini_sections(ini_content);
+    for sec in &sections {
+        let sec_name = sec.header.to_lowercase();
+        let is_head_sec = sec_name.contains("head") || sec_name.contains("hair");
+        let has_legacy_head_hash = sec.get_hash().as_deref().map_or(false, |h| {
+            matches!(
+                h,
+                "9268a5af"
+                    | "7b16a708"
+                    | "e7a3b7dc"
+                    | "24323bf9"
+                    | "8721477f"
+                    | "0a10c747"
+                    | "acec29f8"
+                    | "257a90d6"
+                    | "2d06e785"
+                    | "5721e4e7"
+            )
+        });
 
-    let suppressions: &[(&str, &str, Option<&str>)] = &[
-        ("BelleLegs", "e6afd8d1", None),
-        ("BelleEarrings", "07920753", None),
-        ("BelleHairpin", "3acf9aea", None),
-        ("BelleBodyB", "c2b4ce3a", Some("match_first_index = 31275")),
-    ];
+        if is_head_sec || has_legacy_head_hash {
+            for line in &sec.lines {
+                let l = line.to_lowercase();
+                if l.contains("arm")
+                    || l.contains("jacket")
+                    || l.contains("glove")
+                    || l.contains("sleeve")
+                    || l.contains("pouch")
+                    || l.contains("tie")
+                    || l.contains("bodyanormal")
+                    || l.contains("bodyadiffuse")
+                {
+                    return true;
+                }
+            }
+        }
+    }
 
-    for (name, hash, extra) in suppressions {
-        let hash_present = content_lower.contains(hash);
-        let should_inject = match extra {
-            Some(ex) => !content_lower.contains(&ex.to_lowercase()),
-            None => !hash_present,
+    false
+}
+
+/// Reroutes legacy Jane Doe Head/Hair hashes to modern Hands & Accessories hashes
+/// when the Head draw call was hijacked to render limbs/clothing.
+pub fn get_jane_hands_reroute_hash(legacy_hash: &str) -> Option<&'static str> {
+    match legacy_hash.to_lowercase().as_str() {
+        "9268a5af" | "7b16a708" => Some("294a319a"), // IB -> Hands IB
+        "e7a3b7dc" | "24323bf9" => Some("82e7c056"), // Position VB -> Hands Position VB
+        "acec29f8" | "257a90d6" => Some("6d482e21"), // Texcoord VB -> Hands Texcoord VB
+        "8721477f" | "0a10c747" => Some("d06a9206"), // Blend VB -> Hands Blend VB
+        "2d06e785" | "5721e4e7" => Some("2b5dc947"), // Draw / VertexLimitRaise VB -> Hands Draw VB
+        _ => None,
+    }
+}
+
+/// Returns true when `hash`'s own section defines a standalone modern render pass: a plain
+/// (non-indexed) `draw =` call gated behind `if DRAW_TYPE == 1` (the standard 3DMigoto idiom
+/// restricting a full custom mesh replacement to the main color pass, so it doesn't fire during
+/// shadow/depth prepasses). Full-body-rework mods often reuse the SAME legacy Head/Hair hash
+/// family for two unrelated things at once: a genuine, self-contained modern Hair mesh (this
+/// signal) AND a truly hijacked IB elsewhere in the file that repurposes that hair's underlying
+/// vertex buffer via `drawindexed` subsets to render hands/gloves/accessories. Those two must not
+/// share one hijack verdict, or the genuine hair gets rerouted/bone-remapped as if it were hands.
+fn jane_hash_has_standalone_draw_type_gate(ini_content: &str, hash: &str) -> bool {
+    let target = hash.to_lowercase();
+    parse_ini_sections(ini_content).iter().any(|sec| {
+        sec.get_hash().as_deref() == Some(target.as_str())
+            && sec.lines.iter().any(|l| {
+                let compact = l.trim().to_lowercase().replace(' ', "");
+                compact.starts_with("if") && compact.contains("draw_type==1")
+            })
+    })
+}
+
+/// Family of Jane Doe Hair Blend/Position/Texcoord/VertexLimitRaise hashes that
+/// `get_jane_hands_reroute_hash` reroutes to Hands & Accessories when hijacked.
+const JANE_HAIR_BLEND_FAMILY_HASHES: [&str; 8] = [
+    "8721477f", "0a10c747", "e7a3b7dc", "24323bf9", "acec29f8", "257a90d6", "2d06e785", "5721e4e7",
+];
+
+/// Guards `get_jane_hands_reroute_hash` against rerouting a hash whose Hair Blend/Position/
+/// Texcoord/VertexLimitRaise family has its own standalone modern Hair render pass elsewhere in
+/// the same file (see `jane_has_standalone_hair_blend`). The `if DRAW_TYPE == 1` gate typically
+/// lives only in the Blend section itself, not in its sibling Position/Texcoord/VertexLimitRaise
+/// sections — so the whole family must share one verdict, or siblings would still be misrouted
+/// even after the Blend hash is correctly protected.
+fn get_jane_hands_reroute_hash_guarded(ini_content: &str, hash: &str) -> Option<&'static str> {
+    let h_lower = hash.to_lowercase();
+    if JANE_HAIR_BLEND_FAMILY_HASHES.iter().any(|fam| fam.eq_ignore_ascii_case(&h_lower))
+        && jane_has_standalone_hair_blend(ini_content)
+    {
+        return None;
+    }
+    get_jane_hands_reroute_hash(hash)
+}
+
+/// Returns true if any hash in the Hair Blend/Position/Texcoord/VertexLimitRaise family has its
+/// own standalone modern Hair render pass in this INI (see `jane_hash_has_standalone_draw_type_gate`).
+/// When true, the shared vb2 blend buffer must use Hair bone mappings, not Hands, even though the
+/// file also contains a genuinely hijacked IB elsewhere.
+fn jane_has_standalone_hair_blend(ini_content: &str) -> bool {
+    JANE_HAIR_BLEND_FAMILY_HASHES
+        .iter()
+        .any(|h| jane_hash_has_standalone_draw_type_gate(ini_content, h))
+}
+
+/// Classifies a Jane Doe hijacked drawindexed sub-range's preceding comment as targeting genuine
+/// hair geometry (as opposed to hand/glove/clothing), using the same descriptive labels modders
+/// leave on these draw calls (mirroring `decompose_jane_hijacked_limbs`'s ".ArmsHEAD"/"JacketHEAD"
+/// style). Word-boundary matched to avoid substring false positives (e.g. "wear" must not match "ear").
+fn jane_comment_labels_hair(comment: &str) -> bool {
+    comment
+        .to_lowercase()
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|w| !w.is_empty())
+        .any(|w| {
+            w.contains("hair") || w.starts_with("pigtail") || w.starts_with("ponytail") || w.starts_with("bang") || w.starts_with("fring") || w == "ear" || w == "ears"
+        })
+}
+
+/// Reads raw vertex indices from a 3DMigoto index buffer (.ib) file for the
+/// [start_index, start_index + count) range, honoring the declared index format.
+fn read_ib_index_range(ib_path: &Path, format: &str, start_index: usize, count: usize) -> Vec<u32> {
+    let Ok(bytes) = fs::read(ib_path) else {
+        return Vec::new();
+    };
+    let index_size = if format.to_uppercase().contains("R16") { 2usize } else { 4usize };
+    let mut out = Vec::with_capacity(count);
+    for i in 0..count {
+        let offset = (start_index + i) * index_size;
+        if offset + index_size > bytes.len() {
+            break;
+        }
+        let value = if index_size == 2 {
+            u16::from_le_bytes([bytes[offset], bytes[offset + 1]]) as u32
+        } else {
+            u32::from_le_bytes([bytes[offset], bytes[offset + 1], bytes[offset + 2], bytes[offset + 3]])
+        };
+        out.push(value);
+    }
+    out
+}
+
+/// For a Jane Doe mod whose hijacked IB hash (9268a5af/7b16a708) mixes genuine hair-strand
+/// drawindexed subsets with hand/clothing subsets against a SHARED vertex/blend buffer, scans
+/// every drawindexed line's preceding comment inside sections using that hash to classify each
+/// sub-range, then resolves that section's own `ib =` resource to read the actual vertex indices
+/// each hair-labeled range touches. Returns the vertex indices that must keep Hair bone mappings
+/// instead of the Hand mappings applied to the rest of the shared buffer. `base_dir` is the
+/// directory the INI's own relative resource paths resolve against.
+fn collect_jane_hijacked_hair_vertex_indices(base_dir: &Path, ini_content: &str) -> HashSet<u32> {
+    let mut hair_vertices = HashSet::new();
+    let sections = parse_ini_sections(ini_content);
+
+    // Resource name -> (filename, format)
+    let mut resource_ib: HashMap<String, (String, String)> = HashMap::new();
+    for sec in &sections {
+        if !sec.header.to_lowercase().starts_with("resource") {
+            continue;
+        }
+        let mut filename = None;
+        let mut format = String::new();
+        for l in &sec.lines {
+            let clean = l.split(';').next().unwrap_or("").split('#').next().unwrap_or("").trim();
+            if let Some((k, v)) = clean.split_once('=') {
+                let k_l = k.trim().to_lowercase();
+                let v_t = v.trim().trim_matches('"');
+                if k_l == "filename" {
+                    filename = Some(v_t.trim_start_matches(".\\").trim_start_matches("./").to_string());
+                } else if k_l == "format" {
+                    format = v_t.to_string();
+                }
+            }
+        }
+        if let Some(f) = filename {
+            resource_ib.insert(sec.header.clone(), (f, format));
+        }
+    }
+
+    for sec in &sections {
+        let hash_matches = sec.get_hash().as_deref().is_some_and(|h| matches!(h, "9268a5af" | "7b16a708"));
+        if !hash_matches {
+            continue;
+        }
+
+        let mut ib_resource = None;
+        for l in &sec.lines {
+            let clean = l.split(';').next().unwrap_or("").split('#').next().unwrap_or("").trim();
+            if let Some((k, v)) = clean.split_once('=') {
+                if k.trim().eq_ignore_ascii_case("ib") {
+                    ib_resource = Some(v.trim().to_string());
+                }
+            }
+        }
+        let Some(ib_res) = ib_resource else { continue };
+        let Some((filename, format)) = resource_ib.iter().find_map(|(name, val)| {
+            if name.eq_ignore_ascii_case(&ib_res) || (name.len() > 8 && name.starts_with("Resource") && name[8..].eq_ignore_ascii_case(&ib_res)) {
+                Some(val.clone())
+            } else {
+                None
+            }
+        }) else {
+            continue;
         };
 
-        if should_inject {
-            let extra_line = extra.map(|e| format!("{}\r\n", e)).unwrap_or_default();
-            let block = format!(
-                "\r\n\r\n; [ZZZMODMANAGER AUTO-GENERATED VANILLA COMPONENT SUPPRESSION]\r\n[TextureOverride{}]\r\nhash = {}\r\n{}handling = skip",
-                name, hash, extra_line
-            );
-            out.push_str(&block);
-            added += 1;
+        let ib_path = base_dir.join(&filename);
+
+        // Walk lines, tracking whether the most recent comment labels the next drawindexed as hair.
+        let mut pending_is_hair = false;
+        for l in &sec.lines {
+            let trimmed = l.trim();
+            if trimmed.starts_with(';') {
+                let comment_text = trimmed.trim_start_matches(';').trim();
+                if !comment_text.is_empty() {
+                    pending_is_hair = jane_comment_labels_hair(comment_text);
+                }
+                continue;
+            }
+            let lower = trimmed.to_lowercase();
+            if let Some(rest) = lower.strip_prefix("drawindexed") {
+                if pending_is_hair {
+                    let after_eq = rest.trim_start().trim_start_matches('=');
+                    let parts: Vec<&str> = after_eq.split(',').map(|p| p.trim()).collect();
+                    if parts.len() >= 2 {
+                        if let (Ok(count), Ok(start)) = (parts[0].parse::<usize>(), parts[1].parse::<usize>()) {
+                            for v in read_ib_index_range(&ib_path, &format, start, count) {
+                                hair_vertices.insert(v);
+                            }
+                        }
+                    }
+                }
+                pending_is_hair = false;
+            }
+        }
+    }
+
+    hair_vertices
+}
+
+/// Filters blend buffer candidate files to protect unaffected character components
+/// (e.g. prevent Body or Knives/Boots blend buffers from being corrupted with Hair or Hand bone mappings).
+pub fn filter_safe_blend_buffers_for_component(
+    buffers: &[(String, usize)],
+    component_type: &str,
+) -> Vec<(String, usize)> {
+    buffers
+        .iter()
+        .filter(|(name, _)| {
+            let n = name.to_lowercase();
+            // Never corrupt body or knives/boots with hair or hand mappings
+            if (component_type == "hair" || component_type == "hands")
+                && (n.contains("body") || n.contains("knife") || n.contains("knives") || n.contains("boot"))
+            {
+                return false;
+            }
+            if component_type == "hair" && n.contains("hand") {
+                return false;
+            }
+            true
+        })
+        .cloned()
+        .collect()
+}
+
+/// Decomposes composite Jane Doe Head draw calls (which packed Hair + Forearms/Hands into a 27,420-index block)
+/// into distinct limb submeshes while suppressing the duplicate vanilla hair.
+/// In 2.5+, vanilla hair is rendered natively in the dedicated Hair slot (3275b812).
+/// Extracting the 3 limb submeshes ensures forearms, wrists, and hands are preserved without missing middle arms or duplicate hair.
+pub fn decompose_jane_hijacked_limbs(ini_content: &str) -> (String, bool) {
+    let mut changed = false;
+    let mut out = ini_content.to_string();
+
+    // 1. Match the 27,420 composite draw call (whether raw or previously commented out)
+    static DECOMPOSE_RE: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r"(?im)^([ \t]*)(?:;\s*\[ZZZMODMANAGER[^\]]*\]\s*)?drawindexed\s*=\s*27420\s*,\s*(\d+)\s*,\s*(\d+)[^\r\n]*").expect("Valid regex")
+    });
+
+    // This whole 27,420-index composite draw layout (rule 1), its accompanying 1,626-index
+    // "duplicate ears" draw (rule 2), and its 17,929-vertex buffer (rule 3) are all hardcoded
+    // fingerprints of ONE specific hijacked mod layout. Full-body-rework mods with a different
+    // draw-call layout (many small toggle-conditional drawindexed calls instead of one composite
+    // block) must not have rules 2/3 applied to them just because they also happen to contain an
+    // unrelated "drawindexed = 1626" or a VertexLimitRaise section on a shared hash — that would
+    // delete legitimate content (e.g. a real short-hair toggle) or corrupt an unrelated buffer's
+    // vertex count. Rules 2 and 3 therefore only run once rule 1's signature layout is confirmed
+    // present (or was already decomposed in a previous pass).
+    let composite_layout_present = DECOMPOSE_RE.is_match(&out) || out.contains("ZZZMODMANAGER DECOMPOSED JANE DOE LIMBS");
+
+    if DECOMPOSE_RE.is_match(&out) {
+        out = DECOMPOSE_RE.replace(&out, |caps: &regex::Captures| {
+            changed = true;
+            let indent = &caps[1];
+            let offset = caps[2].parse::<usize>().unwrap_or(34170);
+            let inst = &caps[3];
+            let p1 = offset + 864;   // Glove details (1,188 indices)
+            let p2 = offset + 8859;  // Wrists & Hands (4,527 indices)
+            let p3 = offset + 22647; // Forearms (4,773 indices - connects to .ArmsHEAD)
+            format!(
+                "{indent}; [ZZZMODMANAGER DECOMPOSED JANE DOE LIMBS / SUPPRESSED DUPLICATE VANILLA HAIR]\r\n\
+                 {indent}drawindexed = 1188, {p1}, {inst}\r\n\
+                 {indent}drawindexed = 4527, {p2}, {inst}\r\n\
+                 {indent}drawindexed = 4773, {p3}, {inst}",
+                indent = indent,
+                p1 = p1,
+                p2 = p2,
+                p3 = p3,
+                inst = inst
+            )
+        }).to_string();
+    }
+
+    // 2. Suppress legacy mouse ears in HeadB (1,626 indices) since 2.5 Hair slot renders ears natively
+    static JANE_EARS_DRAW_RE: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r"(?im)^([ \t]*)(drawindexed\s*=\s*1626\b[^\r\n]*)").expect("Valid regex")
+    });
+    if composite_layout_present && JANE_EARS_DRAW_RE.is_match(&out) {
+        out = JANE_EARS_DRAW_RE
+            .replace_all(&out, |caps: &regex::Captures| {
+                changed = true;
+                format!("{}handling = skip\r\n{}; [ZZZMODMANAGER SUPPRESSED DUPLICATE VANILLA EARS] {}", &caps[1], &caps[1], &caps[2])
+            })
+            .to_string();
+    }
+
+    // 3. Ensure VertexLimitRaise on the modern Hands draw hash (2b5dc947) accommodates the 17,929 vertex mod buffer
+    static VLR_SEC_RE: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r"(?im)(\[TextureOverride[^\]]*HeadVertexLimitRaise\]\s*(?:\r?\n\s*;[^\r\n]*)*\s*hash\s*=\s*(?:2b5dc947|2d06e785))").expect("Valid regex")
+    });
+    if composite_layout_present && !out.contains("override_vertex_count = 17929") && VLR_SEC_RE.is_match(&out) {
+        out = VLR_SEC_RE.replace(&out, |caps: &regex::Captures| {
+            changed = true;
+            format!("{}\r\noverride_vertex_count = 17929\r\noverride_byte_stride = 40", &caps[1])
+        }).to_string();
+    }
+
+    (out, changed)
+}
+
+/// Backward compatibility wrapper for decompose_jane_hijacked_limbs
+pub fn suppress_jane_head_duplicate_hair(ini_content: &str) -> (String, usize) {
+    let (res, changed) = decompose_jane_hijacked_limbs(ini_content);
+    (res, if changed { 1 } else { 0 })
+}
+
+/// Injects modern submesh suppression blocks and LoDs for characters where newer game versions
+/// split secondary components or require LoD handling (e.g. Belle's Legs, Hairpin, BodyB, and Jane Doe's LoDs).
+pub fn ensure_character_suppressions(ini_content: &str, character: &str) -> (String, usize) {
+    let mut out = ini_content.to_string();
+    let mut added = 0;
+
+    if is_character_match(character, "Belle") {
+        let content_lower = out.to_lowercase();
+        let suppressions: &[(&str, &str, Option<&str>)] = &[
+            ("BelleLegs", "e6afd8d1", None),
+            ("BelleEarrings", "07920753", None),
+            ("BelleHairpin", "3acf9aea", None),
+            ("BelleBodyB", "c2b4ce3a", Some("match_first_index = 31275")),
+        ];
+
+        for (name, hash, extra) in suppressions {
+            let hash_present = content_lower.contains(hash);
+            let should_inject = match extra {
+                Some(ex) => !content_lower.contains(&ex.to_lowercase()),
+                None => !hash_present,
+            };
+
+            if should_inject {
+                let extra_line = extra.map(|e| format!("{}\r\n", e)).unwrap_or_default();
+                let block = format!(
+                    "\r\n\r\n; [ZZZMODMANAGER AUTO-GENERATED VANILLA COMPONENT SUPPRESSION]\r\n[TextureOverride{}]\r\nhash = {}\r\n{}handling = skip",
+                    name, hash, extra_line
+                );
+                out.push_str(&block);
+                added += 1;
+            }
+        }
+    } else if is_character_match(character, "JaneDoe") || is_character_match(character, "Jane") {
+        let content_lower = out.to_lowercase();
+        let has_body = content_lower.contains("ba4255a5") || content_lower.contains("10050266") || content_lower.contains("e27f398e");
+        let has_hands = content_lower.contains("294a319a") || content_lower.contains("82e7c056") || content_lower.contains("d06a9206") || is_jane_head_hijacked(&out);
+
+        if has_body {
+            if !content_lower.contains("58e88ad0") {
+                out.push_str("\r\n\r\n; [ZZZMODMANAGER AUTO-GENERATED JANE DOE LOD OVERRIDE]\r\n[TextureOverrideJaneLoDBodyBlend]\r\nhash = 58e88ad0\r\nhandling = skip");
+                added += 1;
+            }
+            if !content_lower.contains("341b1f7b") {
+                out.push_str("\r\n\r\n; [ZZZMODMANAGER AUTO-GENERATED JANE DOE LOD OVERRIDE]\r\n[TextureOverrideJaneLoDBodyIB]\r\nhash = 341b1f7b\r\nhandling = skip");
+                added += 1;
+            }
+        }
+
+        if has_hands {
+            if !content_lower.contains("4c54eb77") {
+                out.push_str("\r\n\r\n; [ZZZMODMANAGER AUTO-GENERATED JANE DOE LOD OVERRIDE]\r\n[TextureOverrideJaneLoDHandsBlend]\r\nhash = 4c54eb77\r\nhandling = skip");
+                added += 1;
+            }
+            if !content_lower.contains("07888ddb") {
+                out.push_str("\r\n\r\n; [ZZZMODMANAGER AUTO-GENERATED JANE DOE LOD OVERRIDE]\r\n[TextureOverrideJaneLoDHandsIB]\r\nhash = 07888ddb\r\nhandling = skip");
+                added += 1;
+            }
         }
     }
 
     (out, added)
+}
+
+/// Alias for ensure_character_suppressions to express both LoD and suppression injection semantics
+pub fn ensure_character_lods_and_suppressions(ini_content: &str, character: &str) -> (String, usize) {
+    ensure_character_suppressions(ini_content, character)
 }
 
 /// Calculate format chunk byte size
@@ -1490,7 +2099,15 @@ pub fn update_resource_stride_in_ini(ini_content: &str, buf_filename: &str, new_
         section_ranges.push((start, lines.len()));
     }
 
-    let buf_lower = buf_filename.to_lowercase();
+    // Compare by file name only. A resource may point into a subfolder
+    // (`filename = Buffer/Foo.buf`), and callers pass the bare name - matching the whole
+    // declared path silently skipped those mods, leaving a rewritten buffer described by its
+    // old stride. 3DMigoto then reads every vertex from the wrong offset, drifting further
+    // the deeper into the buffer it gets, which renders as scrambled UVs.
+    let base_name = |v: &str| -> String {
+        v.rsplit(['/', '\\']).next().unwrap_or(v).to_lowercase()
+    };
+    let buf_lower = base_name(buf_filename);
     let mut changed = false;
 
     for (start, end) in section_ranges {
@@ -1506,7 +2123,7 @@ pub fn update_resource_stride_in_ini(ini_content: &str, buf_filename: &str, new_
                     v_t = v_t[1..v_t.len() - 1].trim();
                 }
                 let clean_v = v_t.trim_start_matches(".\\").trim_start_matches("./");
-                if k_t.eq_ignore_ascii_case("filename") && clean_v.to_lowercase() == buf_lower {
+                if k_t.eq_ignore_ascii_case("filename") && base_name(clean_v) == buf_lower {
                     has_target_filename = true;
                 } else if k_t.eq_ignore_ascii_case("stride") {
                     stride_line_idx = Some(idx);
@@ -1645,7 +2262,6 @@ pub fn shrink_color_buffer_bytes(buffer: &[u8], stride: usize) -> Vec<u8> {
 }
 
 /// Remap vertex bone blend indices in a 32-byte stride buffer
-#[allow(dead_code)]
 pub fn remap_bone_indices_buffer_bytes(
     buffer: &[u8],
     stride: usize,
@@ -1672,8 +2288,41 @@ pub fn remap_bone_indices_buffer_bytes(
     new_buffer
 }
 
+/// Remaps vb2 blend buffer bone indices per-vertex: `hair_mappings` for vertices whose index is in
+/// `hair_vertex_indices`, `default_mappings` for every other vertex. Used when a single shared
+/// buffer mixes genuine hair geometry with hijacked hand/clothing geometry (see
+/// `collect_jane_hijacked_hair_vertex_indices`) and a uniform, whole-buffer mapping choice would
+/// corrupt one side or the other.
+pub fn remap_bone_indices_buffer_bytes_mixed(
+    buffer: &[u8],
+    stride: usize,
+    default_mappings: &HashMap<u32, u32>,
+    hair_mappings: &HashMap<u32, u32>,
+    hair_vertex_indices: &HashSet<u32>,
+) -> Vec<u8> {
+    if stride < 32 || !buffer.len().is_multiple_of(stride) {
+        return buffer.to_vec();
+    }
+    let vertex_count = buffer.len() / stride;
+    let mut new_buffer = buffer.to_vec();
+
+    for i in 0..vertex_count {
+        let v_start = i * stride;
+        let mappings = if hair_vertex_indices.contains(&(i as u32)) { hair_mappings } else { default_mappings };
+        let mut cursor = Cursor::new(&buffer[v_start + 16..v_start + 32]);
+        let mut out_cursor = Cursor::new(&mut new_buffer[v_start + 16..v_start + 32]);
+
+        for _ in 0..4 {
+            let idx = cursor.read_u32::<LittleEndian>().unwrap_or(0);
+            let mapped_idx = mappings.get(&idx).copied().unwrap_or(idx);
+            let _ = out_cursor.write_u32::<LittleEndian>(mapped_idx);
+        }
+    }
+
+    new_buffer
+}
+
 /// Returns Jane Doe Hair bone blend remapping dictionary
-#[allow(dead_code)]
 pub fn get_jane_hair_bone_mappings() -> HashMap<u32, u32> {
     let raw = [
         (26, 4), (27, 5), (28, 6), (29, 7), (30, 8), (31, 9), (32, 10), (33, 11), (34, 12), (35, 13),
@@ -1689,7 +2338,6 @@ pub fn get_jane_hair_bone_mappings() -> HashMap<u32, u32> {
 }
 
 /// Returns Jane Doe Hand bone blend remapping dictionary
-#[allow(dead_code)]
 pub fn get_jane_hand_bone_mappings() -> HashMap<u32, u32> {
     let raw = [
         (4, 0), (5, 1), (6, 2), (7, 3), (8, 4), (9, 5), (10, 6), (11, 7), (12, 8), (13, 9), (14, 10),
@@ -1705,7 +2353,6 @@ pub fn get_jane_hand_bone_mappings() -> HashMap<u32, u32> {
 }
 
 /// Returns Dialyn bone blend remapping dictionary
-#[allow(dead_code)]
 pub fn get_dialyn_bone_mappings() -> HashMap<u32, u32> {
     let raw = [
         (18, 20), (19, 18), (20, 19),
@@ -1748,7 +2395,14 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
 
     for ini_path in &ini_files {
         let fname = ini_path.file_name().unwrap_or_default().to_string_lossy().to_string();
-        if fname.starts_with("zzzmanager_ui_") || fname.starts_with("000_zzzmanager_ui_") || fname.ends_with(".bak") {
+        // 3DMigoto excludes DISABLED* from its recursive include, so these are inert
+        // reference copies. Fixing them changes nothing in game and their diagnostics are
+        // misleading - a stale DISABLED copy reports failures the live INI never had.
+        if fname.starts_with("zzzmanager_ui_")
+            || fname.starts_with("000_zzzmanager_ui_")
+            || fname.to_uppercase().starts_with("DISABLED")
+            || fname.ends_with(".bak")
+        {
             continue;
         }
 
@@ -1761,9 +2415,94 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
         let mut new_content = content.clone();
         let mut ini_changed = false;
 
+        let is_jane = detected_character.as_ref().is_some_and(|dc| is_character_match(dc, "JaneDoe"));
+        let jane_hijacked = is_jane && is_jane_head_hijacked(&content);
+        // A hijacked IB (9268a5af/7b16a708) can coexist with a genuinely standalone modern Hair
+        // mesh in the same file, both drawing from the SAME shared vb2 blend buffer. Neither a
+        // uniform Hand nor a uniform Hair bone-mapping choice is correct for that shared buffer;
+        // the specific vertex indices proven (via drawindexed comment labels + actual index
+        // buffer content) to belong to hair-labeled sub-draws need Hair mappings, while
+        // everything else in the buffer keeps the default Hand mappings.
+        let jane_hijacked_hair_vertices: HashSet<u32> = if is_jane && jane_hijacked {
+            collect_jane_hijacked_hair_vertex_indices(ini_path.parent().unwrap_or(mod_path), &content)
+        } else {
+            HashSet::new()
+        };
+
+        // If the game split this legacy component into two modern components, the mod has to be
+        // registered on both, each with its own bone palette. That supersedes every per-hash
+        // migration and whole-buffer bone remap below for the component it consumes.
+        let mut split_source_blend: Option<String> = None;
+        let mut component_split_applied = false;
+        // Set when this mod needs a split but could not get one. Migrating its legacy
+        // hashes anyway would point the component's buffers and its index buffer at two
+        // different modern components, which renders the character with the split-off
+        // half missing entirely - worse than leaving the mod alone.
+        let mut split_required_but_failed: Option<&'static component_split::ComponentSplitRule> = None;
+        // Set when the split actually ran, so later binary conversions can also reach the
+        // per-component buffers it produced.
+        let mut split_rule_applied: Option<&'static component_split::ComponentSplitRule> = None;
+        if let Some(split_rule) =
+            component_split::find_component_split(&content, detected_character.as_deref())
+        {
+            let base_dir = ini_path.parent().unwrap_or(mod_path);
+            let remap = split_rule
+                .legacy_ibs()
+                .map(|ib| component_split::subdraw_remap_from_db(fixer_db, ib))
+                .find(|m| !m.is_empty())
+                .unwrap_or_default();
+            match component_split::apply_component_split(base_dir, &content, split_rule, &remap) {
+                Ok(split) => {
+                    if backup_created_name.is_none() {
+                        let backup_name = format!("DISABLED_BACKUP_{}_{}.ini.bak", timestamp, fname);
+                        let backup_path = ini_path.with_file_name(&backup_name);
+                        if fs::copy(ini_path, &backup_path).is_ok() {
+                            backup_created_name = Some(backup_name);
+                        }
+                    }
+                    new_content = split.new_ini.clone();
+                    ini_changed = true;
+                    component_split_applied = true;
+                    split_rule_applied = Some(split_rule);
+                    split_source_blend = Some(split.source_blend.clone());
+                    for f in &split.files_written {
+                        modified_buf_files.push(f.clone());
+                    }
+                    buffers_remapped += 2;
+                    actions_summary.push(format!(
+                        "Split legacy {} component across modern {} ({} verts) and {} ({} verts), \
+                         bone-remapping each half into its own palette",
+                        split_rule.character,
+                        split_rule.primary_label,
+                        split.primary_vertices,
+                        split_rule.secondary_label,
+                        split.secondary_vertices
+                    ));
+                }
+                Err(e) if e.is_blocking() => {
+                    split_required_but_failed = Some(split_rule);
+                    actions_summary.push(format!(
+                        "Left the legacy {} component untouched - it needs a {}/{} component \
+                         split that cannot be performed: {e}",
+                        split_rule.character, split_rule.primary_label, split_rule.secondary_label
+                    ));
+                }
+                Err(e) => {
+                    // Could not inspect the component at all, so fall through to the
+                    // ordinary per-hash migration rather than assuming a split was needed.
+                    actions_summary.push(format!("Component split not applicable: {e}"));
+                }
+            }
+        }
+
         // Submesh index remapping (e.g. match_first_index and match_index_count shifts across game patches)
         for sec in parse_ini_sections(&content) {
             if let Some(ref h) = sec.get_hash() {
+                // Sub-draw offsets belong to the component the section is migrating to.
+                // If that migration is being withheld, the offsets must stay as authored.
+                if split_required_but_failed.is_some_and(|r| r.legacy_contains(h)) {
+                    continue;
+                }
                 let old_first_idx = sec.get_match_first_index();
                 let old_cnt = sec.get_match_index_count();
                 if old_first_idx.is_none() && old_cnt.is_none() {
@@ -1832,10 +2571,12 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
             }
         }
 
-        // Normalize legacy override_byte_stride (e.g. 92, 96, 76) to 40 on character vertex limit raise sections
-        static STRIDE_REPLACE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?im)^([ \t]*override_byte_stride\s*=\s*)(?:92|96|76)\b").expect("Valid regex"));
+        // Normalize legacy override_byte_stride (e.g. 92, 96, 76) to 40 on character vertex limit raise sections.
+        // ${2} carries the value actually matched - the rollback annotation must record the
+        // real previous stride, not a fixed guess, or restoring from it corrupts the section.
+        static STRIDE_REPLACE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?im)^([ \t]*override_byte_stride\s*=\s*)(92|96|76)\b").expect("Valid regex"));
         if STRIDE_REPLACE_RE.is_match(&new_content) {
-            let repl = "${1}40\r\n; [ZZZMODMANAGER PREVIOUS STRIDE] override_byte_stride = 92";
+            let repl = "${1}40\r\n; [ZZZMODMANAGER PREVIOUS STRIDE] override_byte_stride = ${2}";
             new_content = STRIDE_REPLACE_RE.replace_all(&new_content, repl).to_string();
             ini_changed = true;
             buffers_remapped += 1;
@@ -1847,6 +2588,11 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
         let mut buf_tasks: Vec<BufTask> = Vec::new();
 
         for hash in &active_hashes {
+            // A component that needs a split but did not get one must keep its legacy
+            // hashes: migrating them would split the component across two modern targets.
+            if split_required_but_failed.is_some_and(|r| r.legacy_contains(hash)) {
+                continue;
+            }
             if let Some(rule) = fixer_db.rules.get(hash) {
                 let char_matches = match detected_character {
                     Some(ref dc) => is_character_match(dc, &rule.character),
@@ -1870,13 +2616,26 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                     match action.action_type.as_str() {
                         "update_hash" => {
                             let (terminal_h, _) = resolve_terminal_hash(hash, fixer_db);
-                            let target_h = if terminal_h != hash.to_lowercase() {
+                            let mut target_h = if terminal_h != hash.to_lowercase() {
                                 terminal_h
                             } else if let Some(ref new_h) = action.new_hash {
                                 new_h.clone()
                             } else {
                                 continue;
                             };
+
+                            let mut desc = rule.description.clone();
+                            if jane_hijacked {
+                                if let Some(hands_h) = get_jane_hands_reroute_hash_guarded(&content, hash) {
+                                    target_h = hands_h.to_string();
+                                    desc = format!("{} (Rerouted to Hands & Accessories)", desc);
+                                }
+                            } else if let Some((old_h, new_h, face_char)) = find_universal_face_rule(hash) {
+                                if hash.eq_ignore_ascii_case(old_h) {
+                                    target_h = new_h.to_string();
+                                    desc = format!("{} Face Texcoord (3.2 upgrade)", face_char);
+                                }
+                            }
 
                             let pattern = format!(r"(?i)(^|\r?\n)(\s*)(hash\s*=\s*){}", hash);
                             if let Ok(hash_re) = Regex::new(&pattern) {
@@ -1885,7 +2644,7 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                                     new_content = hash_re.replace_all(&new_content, replacement.as_str()).to_string();
                                     ini_changed = true;
                                     hashes_updated += 1;
-                                    actions_summary.push(format!("Updated hash {} -> {} ({})", hash, target_h, rule.description));
+                                    actions_summary.push(format!("Updated hash {} -> {} ({})", hash, target_h, desc));
                                 }
                             }
                         }
@@ -2046,7 +2805,22 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                             if !char_matches {
                                 continue;
                             }
-                            let buffers = find_referenced_buffers(&content, hash, "vb1");
+                            let mut buffers = find_referenced_buffers(&content, hash, "vb1");
+                            // A component split replaces the legacy texcoord binding with one
+                            // buffer per modern component, sliced out of this same source, so
+                            // they inherit its vertex format and the conversion has to reach
+                            // them too. Left out, the split halves keep the pre-1.2 32-byte
+                            // stride the game stopped reading and their UVs come out
+                            // progressively more scrambled the deeper into the buffer they sit.
+                            // In shared mode there are no slices and this finds the source
+                            // buffer again, which the de-dup below drops.
+                            if let Some(rule) = split_rule_applied {
+                                for modern in [rule.primary.texcoord_vb, rule.secondary.texcoord_vb] {
+                                    buffers.extend(find_referenced_buffers(&new_content, modern, "vb1"));
+                                }
+                            }
+                            buffers.sort();
+                            buffers.dedup();
                             for (buf_file, stride) in buffers {
                                 buf_tasks.push((buf_file, "shrink_texcoord_color".to_string(), Vec::new(), Vec::new(), stride));
                             }
@@ -2055,18 +2829,40 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                             if !char_matches {
                                 continue;
                             }
-                            let old_idx = action.old_indices.clone().unwrap_or_default();
-                            let new_idx = action.new_indices.clone().unwrap_or_default();
+                            let mut old_idx = action.old_indices.clone().unwrap_or_default();
+                            let mut new_idx = action.new_indices.clone().unwrap_or_default();
                             let target_h = if let Some(ref th) = action.target_hash {
                                 if !th.is_empty() { th.as_str() } else { hash }
                             } else {
                                 hash
                             };
+
+                            let comp_type = if is_jane {
+                                if jane_hijacked { "hands" } else { "hair" }
+                            } else if detected_character.as_ref().is_some_and(|dc| is_character_match(dc, "Dialyn")) {
+                                "dialyn"
+                            } else {
+                                "generic"
+                            };
+
+                            if is_jane {
+                                if jane_hijacked {
+                                    let mappings = get_jane_hand_bone_mappings();
+                                    old_idx = mappings.keys().copied().collect();
+                                    new_idx = mappings.values().copied().collect();
+                                } else if old_idx.is_empty() {
+                                    let mappings = get_jane_hair_bone_mappings();
+                                    old_idx = mappings.keys().copied().collect();
+                                    new_idx = mappings.values().copied().collect();
+                                }
+                            }
+
                             let mut buffers = find_referenced_buffers(&content, target_h, "vb2");
                             if buffers.is_empty() {
                                 buffers = find_all_slot_buffers(&content, "vb2");
                             }
-                            for (buf_file, stride) in buffers {
+                            let safe_buffers = filter_safe_blend_buffers_for_component(&buffers, comp_type);
+                            for (buf_file, stride) in safe_buffers {
                                 buf_tasks.push((
                                     buf_file,
                                     "update_blend_indices".to_string(),
@@ -2082,10 +2878,115 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
             }
         }
 
+        // 1. Ensure Jane Doe blend buffers have the correct bone mappings (Hands vs Hair).
+        // Skipped when a component split ran: it already remapped each half into its own
+        // palette, and a second whole-buffer pass would corrupt one of them.
+        if is_jane && !component_split_applied && split_required_but_failed.is_none() {
+            let has_legacy_head = active_hashes.iter().any(|h| {
+                matches!(
+                    h.to_lowercase().as_str(),
+                    "9268a5af" | "7b16a708" | "e7a3b7dc" | "24323bf9" | "8721477f" | "0a10c747"
+                )
+            });
+            if has_legacy_head {
+                let all_vb2 = find_all_slot_buffers(&content, "vb2");
+                let comp_type = if jane_hijacked { "hands" } else { "hair" };
+                let safe_vb2 = filter_safe_blend_buffers_for_component(&all_vb2, comp_type);
+                let mappings = if jane_hijacked {
+                    get_jane_hand_bone_mappings()
+                } else {
+                    get_jane_hair_bone_mappings()
+                };
+                let old_k: Vec<String> = mappings.keys().map(|k| k.to_string()).collect();
+                let new_v: Vec<String> = mappings.values().map(|v| v.to_string()).collect();
+                for (b_file, stride) in safe_vb2 {
+                    if !buf_tasks.iter().any(|(f, t, _, _, _)| f == &b_file && t == "update_blend_indices") {
+                        buf_tasks.push((
+                            b_file,
+                            "update_blend_indices".to_string(),
+                            old_k.clone(),
+                            new_v.clone(),
+                            stride,
+                        ));
+                    }
+                }
+            }
+        }
+
+        // 2. Ensure Dialyn blend buffers have the correct bone mappings
+        if detected_character.as_ref().is_some_and(|dc| is_character_match(dc, "Dialyn")) {
+            let has_legacy_dialyn = active_hashes.iter().any(|h| {
+                matches!(h.to_lowercase().as_str(), "3d7e53cf" | "ff36809b")
+            });
+            if has_legacy_dialyn {
+                let all_vb2 = find_all_slot_buffers(&content, "vb2");
+                let safe_vb2 = filter_safe_blend_buffers_for_component(&all_vb2, "dialyn");
+                let mappings = get_dialyn_bone_mappings();
+                let old_k: Vec<String> = mappings.keys().map(|k| k.to_string()).collect();
+                let new_v: Vec<String> = mappings.values().map(|v| v.to_string()).collect();
+                for (b_file, stride) in safe_vb2 {
+                    if !buf_tasks.iter().any(|(f, t, _, _, _)| f == &b_file && t == "update_blend_indices") {
+                        buf_tasks.push((
+                            b_file,
+                            "update_blend_indices".to_string(),
+                            old_k.clone(),
+                            new_v.clone(),
+                            stride,
+                        ));
+                    }
+                }
+            }
+        }
+
+        // 3. Ensure Universal Face 3.1 -> 3.2 texcoord format upgrade if not already queued
+        for h in &active_hashes {
+            if let Some((old_h, new_h, _char_name)) = find_universal_face_rule(h) {
+                let mut vb1_bufs = find_referenced_buffers(&content, old_h, "vb1");
+                if vb1_bufs.is_empty() {
+                    vb1_bufs = find_referenced_buffers(&content, new_h, "vb1");
+                }
+                if vb1_bufs.is_empty() {
+                    vb1_bufs = find_referenced_buffers(&content, h, "vb1");
+                }
+                for (b_file, stride) in vb1_bufs {
+                    if !buf_tasks.iter().any(|(f, t, _, _, _)| f == &b_file && t == "remap_texcoord") {
+                        let old_face_fmt = vec![
+                            "4B".to_string(),
+                            "2f".to_string(),
+                            "2f".to_string(),
+                            "2f".to_string(),
+                            "2f".to_string(),
+                        ];
+                        let new_face_fmt = vec![
+                            "4f".to_string(),
+                            "2f".to_string(),
+                            "2f".to_string(),
+                            "2f".to_string(),
+                            "2f".to_string(),
+                        ];
+                        buf_tasks.push((
+                            b_file,
+                            "remap_texcoord".to_string(),
+                            old_face_fmt,
+                            new_face_fmt,
+                            if stride == 0 { 36 } else { stride },
+                        ));
+                    }
+                }
+            }
+        }
+
         let mut seen_buf_tasks: HashSet<(PathBuf, String)> = HashSet::new();
 
         // Apply buffer transformations
         for (buf_name, fix_type, old_fmt, new_fmt, stride) in buf_tasks {
+            // The component split already produced per-palette copies of this buffer; remapping
+            // the shared source again would corrupt whichever half it is not appropriate for.
+            if fix_type == "update_blend_indices"
+                && split_source_blend.as_deref().is_some_and(|src| src.eq_ignore_ascii_case(&buf_name))
+            {
+                continue;
+            }
             let buf_path = ini_path.parent().unwrap_or(mod_path).join(&buf_name);
             let task_key = (buf_path.clone(), fix_type.clone());
             if seen_buf_tasks.contains(&task_key) {
@@ -2137,7 +3038,18 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                             } else {
                                 stride
                             };
-                            (remap_bone_indices_buffer_bytes(&raw_bytes, effective_stride, &mapping), None)
+                            if is_jane && jane_hijacked && !jane_hijacked_hair_vertices.is_empty() {
+                                // This buffer is shared between a genuinely hijacked hand/clothing
+                                // draw and a standalone hair draw; remap Hair-labeled vertices with
+                                // Hair mappings and leave everything else on the default mapping.
+                                let hair_mapping = get_jane_hair_bone_mappings();
+                                (
+                                    remap_bone_indices_buffer_bytes_mixed(&raw_bytes, effective_stride, &mapping, &hair_mapping, &jane_hijacked_hair_vertices),
+                                    None,
+                                )
+                            } else {
+                                (remap_bone_indices_buffer_bytes(&raw_bytes, effective_stride, &mapping), None)
+                            }
                         }
                         _ => (raw_bytes.clone(), None),
                     };
@@ -2180,6 +3092,18 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                 ini_changed = true;
                 sections_added += supp_count;
                 actions_summary.push(format!("Injected {} modern vanilla component suppression blocks", supp_count));
+            }
+        }
+
+        // Upgrade hijacked Jane Doe mods to use canonical Hands & Accessories (294a319a).
+        // Its hardcoded 27,420 / 1,626 / 17,929 fingerprints describe one specific mod layout,
+        // so it must not run on a mod the component split already restructured.
+        if is_jane && jane_hijacked && !component_split_applied && split_required_but_failed.is_none() {
+            let (content_after_decomp, decomp_changed) = decompose_jane_hijacked_limbs(&new_content);
+            if decomp_changed {
+                new_content = content_after_decomp;
+                ini_changed = true;
+                actions_summary.push("Decomposed hijacked Jane Doe Head section into articulated forearms and hands (294a319a)".to_string());
             }
         }
 

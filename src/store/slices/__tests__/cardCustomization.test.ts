@@ -4,6 +4,9 @@ import {
   DEFAULT_MOD_CARD_CUSTOMIZATION,
   CARD_PRESETS,
   getBorderRadiusClass,
+  getAspectRatioClass,
+  getElementalTheme,
+  validateAndNormalizeCardTheme,
 } from '../../../types/cardCustomization';
 
 describe('cardCustomization slice', () => {
@@ -83,7 +86,8 @@ describe('cardCustomization slice', () => {
     // Apply Cyber Glow preset
     useAppStore.getState().applyCardPreset('cyber');
     config = useAppStore.getState().cardCustomization;
-    expect(config.frame.borderColor).toBe('primary');
+    expect(config.frame.borderColor).toBe('element');
+    expect(config.frame.elementalGlow).toBe(true);
     expect(config.frame.shadowIntensity).toBe('intense');
     expect(config.infoPanel.titleColor).toBe('primary');
 
@@ -125,7 +129,7 @@ describe('cardCustomization slice', () => {
 
   it('resets all components when componentId is not provided', () => {
     useAppStore.getState().applyCardPreset('cyber');
-    expect(useAppStore.getState().cardCustomization.frame.borderColor).toBe('primary');
+    expect(useAppStore.getState().cardCustomization.frame.borderColor).toBe('element');
 
     useAppStore.getState().resetCardCustomization();
     expect(useAppStore.getState().cardCustomization).toEqual(DEFAULT_MOD_CARD_CUSTOMIZATION);
@@ -140,5 +144,79 @@ describe('cardCustomization slice', () => {
     expect(getBorderRadiusClass('3xl')).toBe('rounded-3xl');
     expect(getBorderRadiusClass('full')).toBe('rounded-full');
     expect(getBorderRadiusClass('match')).toBe('rounded-2xl');
+  });
+
+  it('getAspectRatioClass returns correct aspect ratio classes', () => {
+    expect(getAspectRatioClass('portrait')).toBe('aspect-[4/5]');
+    expect(getAspectRatioClass('square')).toBe('aspect-square');
+    expect(getAspectRatioClass('wide')).toBe('aspect-[16/9]');
+    expect(getAspectRatioClass()).toBe('aspect-[4/5]');
+  });
+
+  it('getElementalTheme resolves colors for all ZZZ elements and default fallback', () => {
+    const ice = getElementalTheme('Ice');
+    expect(ice.element).toBe('Ice');
+    expect(ice.hex).toBe('#38bdf8');
+    expect(ice.borderClass).toBe('border-sky-400');
+
+    const fire = getElementalTheme('Fire');
+    expect(fire.element).toBe('Fire');
+    expect(fire.hex).toBe('#fb923c');
+    expect(fire.borderClass).toBe('border-orange-400');
+
+    const electric = getElementalTheme('electric');
+    expect(electric.element).toBe('Electric');
+    expect(electric.hex).toBe('#a855f7');
+    expect(electric.borderClass).toBe('border-purple-400');
+
+    const physical = getElementalTheme('Physical');
+    expect(physical.element).toBe('Physical');
+    expect(physical.hex).toBe('#facc15');
+    expect(physical.borderClass).toBe('border-amber-400');
+
+    const ether = getElementalTheme('Ether');
+    expect(ether.element).toBe('Ether');
+    expect(ether.hex).toBe('#f472b6');
+    expect(ether.borderClass).toBe('border-pink-400');
+
+    const fallback = getElementalTheme(null);
+    expect(fallback.element).toBe('Default');
+    expect(fallback.borderClass).toBe('border-primary');
+  });
+
+  it('validateAndNormalizeCardTheme validates and defensively clamps configs', () => {
+    // Valid object
+    const valid = validateAndNormalizeCardTheme(DEFAULT_MOD_CARD_CUSTOMIZATION);
+    expect(valid).toEqual(DEFAULT_MOD_CARD_CUSTOMIZATION);
+
+    // Valid JSON string
+    const fromJson = validateAndNormalizeCardTheme(
+      JSON.stringify({
+        frame: { bgOpacity: 50, blurAmount: 10, aspectRatio: 'wide', elementalGlow: true },
+      })
+    );
+    expect(fromJson).not.toBeNull();
+    expect(fromJson?.frame.bgOpacity).toBe(50);
+    expect(fromJson?.frame.blurAmount).toBe(10);
+    expect(fromJson?.frame.aspectRatio).toBe('wide');
+    expect(fromJson?.frame.elementalGlow).toBe(true);
+    // Missing fields should be populated from defaults
+    expect(fromJson?.actionButtons.showFolderButton).toBe(true);
+    expect(fromJson?.badges.showFavoriteHeart).toBe(true);
+
+    // Clamping out-of-range numbers
+    const clamped = validateAndNormalizeCardTheme({
+      frame: { bgOpacity: 999, blurAmount: -50, borderWidth: 10 },
+      imageOverlay: { darkeningGradient: -20 },
+    });
+    expect(clamped?.frame.bgOpacity).toBe(100);
+    expect(clamped?.frame.blurAmount).toBe(0);
+    expect(clamped?.frame.borderWidth).toBe(3);
+    expect(clamped?.imageOverlay.darkeningGradient).toBe(0);
+
+    // Invalid string or input
+    expect(validateAndNormalizeCardTheme('not a valid json {')).toBeNull();
+    expect(validateAndNormalizeCardTheme(null)).toBeNull();
+    expect(validateAndNormalizeCardTheme(12345)).toBeNull();
   });
 });

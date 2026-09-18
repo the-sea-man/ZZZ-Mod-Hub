@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useAppStore } from '../../store/useAppStore';
-import { Palette, Moon, Sun, Sparkles, Globe } from 'lucide-react';
+import { Palette, Moon, Sun, Sparkles, Globe, Sliders } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { LanguageManagerModal } from '../Modals/LanguageManagerModal';
 
@@ -42,6 +42,7 @@ export function ThemeSettings() {
     setBgImageFit,
     setCustomBackground,
     highlightTargetId,
+    setSettingsActiveTab,
   } = useAppStore();
 
   const [openAccordion, setOpenAccordion] = useState<string | null>('theme');
@@ -271,7 +272,7 @@ export function ThemeSettings() {
                   <div>
                     <label className="block text-sm font-bold text-textMuted mb-2 flex justify-between">
                       <span>{t('settings_mod_card_size')}</span>
-                      <span>{cardSize}px</span>
+                      <span className="font-mono text-primary font-bold">{cardSize}px</span>
                     </label>
                     <input
                       type="range"
@@ -281,9 +282,38 @@ export function ThemeSettings() {
                       onChange={(e) => setCardSize(parseInt(e.target.value))}
                       className="w-full h-2 bg-background/50 rounded-lg appearance-none cursor-pointer accent-primary"
                     />
-                    <p className="text-xs text-textMuted mt-2">
-                      {t('settings_mod_card_size_desc')}
-                    </p>
+                    <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+                      {[
+                        { label: t('card_density_compact', 'Compact'), size: 170 },
+                        { label: t('card_density_standard', 'Standard'), size: 220 },
+                        { label: t('card_density_large', 'Large'), size: 280 },
+                        { label: t('card_density_showcase', 'Showcase'), size: 340 },
+                      ].map((preset) => (
+                        <button
+                          key={preset.size}
+                          type="button"
+                          onClick={() => setCardSize(preset.size)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            cardSize === preset.size
+                              ? 'bg-primary text-white shadow-sm'
+                              : 'bg-surface hover:bg-surface/80 text-textMuted hover:text-textMain border border-textMain/5'
+                          }`}
+                        >
+                          {preset.label} ({preset.size}px)
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-textMain/5">
+                      <p className="text-xs text-textMuted">{t('settings_mod_card_size_desc')}</p>
+                      <button
+                        type="button"
+                        onClick={() => setSettingsActiveTab('card_appearance')}
+                        className="text-xs text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer shrink-0 ml-2"
+                      >
+                        <Sliders size={13} />
+                        <span>{t('open_card_designer', 'Open Card Designer')}</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div>

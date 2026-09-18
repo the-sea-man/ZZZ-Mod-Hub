@@ -642,6 +642,41 @@ filename = "CaesarBlend.buf"
         assert!(updated2.contains("stride = 28"));
     }
 
+    /// A resource may keep its buffers in a subfolder, and callers pass the bare file name.
+    /// Matching the whole declared path skipped those mods: `shrink_texcoord_color` rewrote the
+    /// buffer from a 32-byte stride to 20 but the INI kept saying 32, so 3DMigoto read every
+    /// vertex from the wrong offset - drifting further the deeper into the buffer it went, which
+    /// rendered as a mesh whose UVs get progressively more scrambled.
+    #[test]
+    fn test_update_resource_stride_in_ini_matches_buffers_in_subfolders() {
+        for declared in [
+            "Buffer/Jane.buf",
+            "Buffer\\Jane.buf",
+            ".\\Buffer\\Jane.buf",
+            "\"./Buffer/Jane.buf\"",
+            "Jane.buf",
+        ] {
+            let ini = format!("[ResourceJane]
+type = Buffer
+filename = {declared}
+stride = 32
+");
+            let (updated, changed) = update_resource_stride_in_ini(&ini, "Jane.buf", 20);
+            assert!(changed, "stride updated for filename = {declared}");
+            assert!(updated.contains("stride = 20"), "new stride written for {declared}");
+            assert!(!updated.contains("stride = 32"), "old stride replaced for {declared}");
+        }
+
+        // A different buffer in the same folder must not be touched.
+        let ini = "[ResourceOther]
+type = Buffer
+filename = Buffer/Other.buf
+stride = 32
+";
+        let (_, changed) = update_resource_stride_in_ini(ini, "Jane.buf", 20);
+        assert!(!changed, "an unrelated buffer keeps its stride");
+    }
+
     #[test]
     fn test_update_blend_indices_serde_alias_and_remapping() {
         let json_rule = r#"{
@@ -1142,6 +1177,184 @@ this = ResourceJaneHairAMaterialMap
         assert!(!fixed_ini.contains("JaneDoeNocturneOfLight"), "Must NEVER inject Nocturne of Light section");
         assert!(fixed_ini.contains("hash = 3275b812"), "Must upgrade 9268a5af to 3275b812");
         assert!(fixed_ini.contains("handling = skip"), "Must preserve handling = skip");
+
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_jane_mixed_standalone_hair_and_hijacked_hands_contract() {
+        // Reproduces the real "JaneDice" full-body-rework bug: the mod legitimately draws its
+        // own modern Hair mesh (hash 8721477f) gated behind `if DRAW_TYPE == 1` from a vb2 blend
+        // buffer, while a SEPARATE, genuinely hijacked IB (hash 9268a5af) draws BOTH hand/glove
+        // AND hair-strand drawindexed subsets against that SAME shared buffer via custom .ib
+        // subsets. Three things must all hold at once:
+        // 1. The standalone Hair hash (8721477f) must upgrade normally, never reroute to Hands.
+        // 2. The genuinely hijacked IB hash (9268a5af) must still reroute to Hands & Accessories.
+        // 3. The shared blend buffer must be remapped PER VERTEX: hand-region vertices keep Hand
+        //    bone mappings (already validated/working), hair-region vertices (identified via the
+        //    "HairLong" drawindexed comment + the actual .ib index values it touches) get Hair
+        //    bone mappings instead — a uniform whole-buffer choice would corrupt one side or the
+        //    other.
+        let unique_id = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+        let temp_dir = std::env::temp_dir().join(format!("zzz_test_fixer_janedice_mixed_{}", unique_id));
+        let _ = fs::remove_dir_all(&temp_dir);
+        let mod_dir = temp_dir.join("JaneDiceMixed");
+        let _ = fs::create_dir_all(&mod_dir);
+
+        let ini_content = r#"; JaneDice
+[TextureOverrideJaneHairBlend]
+hash = 8721477f
+handling = skip
+vb2 = ResourceJaneHairBlend
+if DRAW_TYPE == 1
+	vb0 = ResourceJaneHairPosition
+	draw = 100,0
+endif
+
+[TextureOverrideJaneHairIB]
+hash = 9268a5af
+handling = skip
+
+[TextureOverrideJaneHairA]
+hash = 9268a5af
+match_first_index = 0
+ib = ResourceJaneHairAIB
+; GlovesBase
+drawindexed = 40, 0, 0
+; HairLong
+drawindexed = 60, 40, 0
+
+[ResourceJaneHairBlend]
+type = Buffer
+stride = 32
+filename = JaneHairBlend.buf
+
+[ResourceJaneHairPosition]
+type = Buffer
+stride = 40
+filename = JaneHairPosition.buf
+
+[ResourceJaneHairAIB]
+type = Buffer
+format = DXGI_FORMAT_R32_UINT
+filename = JaneHairA.ib
+"#;
+        fs::write(mod_dir.join("Jane.ini"), ini_content).unwrap();
+
+        // 100 vertices, stride 32. Vertices 0-39 (hand-region: "GlovesBase") use legacy bone
+        // index 4 (Hand mapping: 4 -> 0). Vertices 40-99 (hair-region: "HairLong") use legacy
+        // bone index 26 (Hair mapping: 26 -> 4; 26 has no entry in the Hand table, so it would
+        // stay unmapped if the whole buffer were wrongly treated as all-hair or all-hand).
+        // Weights must be REAL floats. Filler bytes such as 0xAA decode to a denormal that
+        // rounds to zero, which makes every vertex unclassifiable and silently sends the
+        // whole component to one half - the fixture stops testing what it claims to.
+        let mut blend_buf = Vec::new();
+        let mut pos_buf = Vec::new();
+        for v in 0..100u32 {
+            blend_buf.write_f32::<LittleEndian>(1.0).unwrap();
+            for _ in 0..3 {
+                blend_buf.write_f32::<LittleEndian>(0.0).unwrap();
+            }
+            let bone = if v < 40 { 4 } else { 26 };
+            blend_buf.write_u32::<LittleEndian>(bone).unwrap();
+            for _ in 0..3 {
+                blend_buf.write_u32::<LittleEndian>(0).unwrap();
+            }
+            // hands low, head high, so the geometric tiebreak is meaningful too
+            pos_buf.write_f32::<LittleEndian>(0.0).unwrap();
+            pos_buf.write_f32::<LittleEndian>(if v < 40 { 1.0 } else { 10.0 }).unwrap();
+            pos_buf.write_f32::<LittleEndian>(0.0).unwrap();
+            pos_buf.extend(std::iter::repeat_n(0u8, 28));
+        }
+        fs::write(mod_dir.join("JaneHairBlend.buf"), &blend_buf).unwrap();
+        fs::write(mod_dir.join("JaneHairPosition.buf"), &pos_buf).unwrap();
+
+        // Index buffer: identity mapping (ib[i] = i), so "GlovesBase" (drawindexed 40,0,0) touches
+        // vertices 0-39 and "HairLong" (drawindexed 60,40,0) touches vertices 40-99.
+        let mut ib_buf = Vec::new();
+        for i in 0..100u32 {
+            ib_buf.write_u32::<LittleEndian>(i).unwrap();
+        }
+        fs::write(mod_dir.join("JaneHairA.ib"), &ib_buf).unwrap();
+
+        let mut db = FixerDatabase::default();
+        db.rules.insert(
+            "8721477f".to_string(),
+            FixerRule {
+                hash: "8721477f".to_string(),
+                character: "JaneDoe".to_string(),
+                description: "Jane Hair Blend Hash".to_string(),
+                version_from: "1.4".to_string(),
+                version_to: "2.5".to_string(),
+                actions: vec![FixerRuleAction {
+                    action_type: "update_hash".to_string(),
+                    new_hash: Some("e42171df".to_string()),
+                    ..Default::default()
+                }],
+            },
+        );
+        db.rules.insert(
+            "9268a5af".to_string(),
+            FixerRule {
+                hash: "9268a5af".to_string(),
+                character: "JaneDoe".to_string(),
+                description: "Jane Hair IB Hash".to_string(),
+                version_from: "1.4".to_string(),
+                version_to: "2.5".to_string(),
+                actions: vec![FixerRuleAction {
+                    action_type: "update_hash".to_string(),
+                    new_hash: Some("3275b812".to_string()),
+                    ..Default::default()
+                }],
+            },
+        );
+
+        let analysis = analyze_mod_for_fixes(&mod_dir, &db);
+        assert!(analysis.is_fixable);
+
+        let standalone_fix = analysis.hash_fixes.iter().find(|f| f.old_hash == "8721477f").expect("must analyze hair blend hash");
+        assert_eq!(standalone_fix.new_hash, "e42171df", "Standalone Hair Blend hash must upgrade normally, not reroute to Hands");
+        assert!(!standalone_fix.description.contains("Rerouted"), "Standalone Hair Blend must not be flagged as rerouted");
+
+        let ib_fix = analysis.hash_fixes.iter().find(|f| f.old_hash == "9268a5af").expect("must analyze hijacked IB hash");
+        assert_eq!(ib_fix.new_hash, "294a319a", "Genuinely hijacked IB hash must still reroute to Hands");
+
+        let fix_res = apply_mod_fix(&mod_dir, &db).expect("Fix must succeed");
+        assert!(fix_res.success);
+
+        let fixed_ini = fs::read_to_string(mod_dir.join("Jane.ini")).unwrap();
+        assert!(fixed_ini.contains("hash = e42171df"), "Hair Blend must upgrade to its real modern hash");
+        assert!(fixed_ini.contains("hash = 294a319a"), "Hijacked IB must still reroute to Hands IB");
+
+        // This mod's blend buffer mixes both palettes, so the component split owns it now.
+        // It writes a correctly-remapped buffer per component and leaves the shared source
+        // untouched, superseding the earlier in-place per-vertex remap of one buffer.
+        assert!(
+            fixed_ini.contains("hash = d06a9206"),
+            "the split must register an Arms component, which binds the Arms blend hash"
+        );
+        let arms = fs::read(mod_dir.join("JaneDoeArmsSplitBlend.buf"))
+            .expect("Arms blend buffer generated");
+        let hair = fs::read(mod_dir.join("JaneDoeHairSplitBlend.buf"))
+            .expect("Hair blend buffer generated");
+
+        // Hand-region vertices carry the Hand mapping (4 -> 0); hair-region vertices the
+        // Hair mapping (26 -> 4), each inside its own component's buffer.
+        // This mod binds no vb1, so the split runs in SHARED mode: both buffers stay full
+        // size and each vertex is remapped through its own component's palette. Vertices the
+        // component never draws are parked at 0, so read a vertex each component owns.
+        let bone_at = |b: &[u8], v: usize| {
+            Cursor::new(&b[v * 32 + 16..v * 32 + 32]).read_u32::<LittleEndian>().unwrap()
+        };
+        assert_eq!(bone_at(&arms, 0), 0, "Arms buffer, hand vertex: bone 4 -> 0");
+        assert_eq!(bone_at(&hair, 40), 4, "Hair buffer, hair vertex: bone 26 -> 4");
+
+        let source = fs::read(mod_dir.join("JaneHairBlend.buf")).unwrap();
+        assert_eq!(
+            Cursor::new(&source[16..32]).read_u32::<LittleEndian>().unwrap(),
+            4,
+            "the shared source buffer must be left as authored"
+        );
 
         let _ = fs::remove_dir_all(&temp_dir);
     }
@@ -1972,3 +2185,435 @@ match_priority = 0
 
         let _ = fs::remove_dir_all(&temp_dir);
     }
+
+    #[test]
+    fn test_jane_doe_bone_remapping_hair_and_hands() {
+        // 1. Hair bone mappings test
+        let hair_map = get_jane_hair_bone_mappings();
+        assert_eq!(hair_map.get(&26).copied(), Some(4));
+        assert_eq!(hair_map.get(&27).copied(), Some(5));
+        assert_eq!(hair_map.get(&40).copied(), Some(19));
+        assert_eq!(hair_map.get(&90).copied(), Some(33));
+        assert_eq!(hair_map.get(&126).copied(), Some(68));
+
+        // 2. Hand bone mappings test
+        let hand_map = get_jane_hand_bone_mappings();
+        assert_eq!(hand_map.get(&4).copied(), Some(0));
+        assert_eq!(hand_map.get(&54).copied(), Some(22));
+        assert_eq!(hand_map.get(&89).copied(), Some(57));
+        assert_eq!(hand_map.get(&127).copied(), Some(58));
+        assert_eq!(hand_map.get(&129).copied(), Some(60));
+
+        // 3. Buffer transformation test with weight preservation
+        let mut buf = vec![0xAAu8; 16]; // Mock 16-byte weights
+        buf.write_u32::<LittleEndian>(4).unwrap();
+        buf.write_u32::<LittleEndian>(54).unwrap();
+        buf.write_u32::<LittleEndian>(127).unwrap();
+        buf.write_u32::<LittleEndian>(999).unwrap(); // Unmapped
+
+        let remapped = remap_bone_indices_buffer_bytes(&buf, 32, &hand_map);
+        assert_eq!(&remapped[0..16], &[0xAAu8; 16], "Weights must remain 100% byte identical");
+
+        let mut cursor = Cursor::new(&remapped[16..32]);
+        assert_eq!(cursor.read_u32::<LittleEndian>().unwrap(), 0);  // 4 -> 0
+        assert_eq!(cursor.read_u32::<LittleEndian>().unwrap(), 22); // 54 -> 22
+        assert_eq!(cursor.read_u32::<LittleEndian>().unwrap(), 58); // 127 -> 58
+        assert_eq!(cursor.read_u32::<LittleEndian>().unwrap(), 999); // 999 untouched
+    }
+
+    #[test]
+    fn test_jane_doe_head_hijack_detection() {
+        // Case A: Hijacked with body normal map
+        let ini_normal = r#"
+[TextureOverrideJaneDoeHeadA]
+hash = 9268a5af
+ps-t4 = ResourceJaneDoeBodyANormalMap
+ib = ResourceJaneDoeHeadAIB
+"#;
+        assert!(is_jane_head_hijacked(ini_normal));
+
+        // Case B: Hijacked with clothing/limb comments
+        let ini_comment = r#"
+[TextureOverrideJaneDoeHeadA]
+hash = 9268a5af
+; .ArmsHEAD
+drawindexed = 3792, 27420, 0
+; JacketHEAD
+drawindexed = 2958, 31212, 0
+"#;
+        assert!(is_jane_head_hijacked(ini_comment));
+
+        // Case C: Hijacked with body diffuse reference
+        let ini_diffuse = r#"
+[TextureOverrideJaneDoeHeadADiffuse]
+hash = f7ef1a53
+this = ResourceJaneDoeBodyADiffuse
+"#;
+        assert!(is_jane_head_hijacked(ini_diffuse));
+
+        // Case D: Genuine hair mod (must NOT be detected as hijacked)
+        let ini_hair = r#"
+[TextureOverrideJaneDoeHairA]
+hash = 9268a5af
+; Ponytail submesh
+drawindexed = 5000, 0, 0
+ps-t0 = ResourceJaneDoeHairDiffuse
+ps-t1 = ResourceJaneDoeHairNormal
+"#;
+        assert!(!is_jane_head_hijacked(ini_hair));
+    }
+
+    #[test]
+    fn test_jane_hands_reroute_hash_contract() {
+        assert_eq!(get_jane_hands_reroute_hash("9268a5af"), Some("294a319a"));
+        assert_eq!(get_jane_hands_reroute_hash("7b16a708"), Some("294a319a"));
+        assert_eq!(get_jane_hands_reroute_hash("e7a3b7dc"), Some("82e7c056"));
+        assert_eq!(get_jane_hands_reroute_hash("24323bf9"), Some("82e7c056"));
+        assert_eq!(get_jane_hands_reroute_hash("acec29f8"), Some("6d482e21"));
+        assert_eq!(get_jane_hands_reroute_hash("8721477f"), Some("d06a9206"));
+        assert_eq!(get_jane_hands_reroute_hash("2d06e785"), Some("2b5dc947"));
+        assert_eq!(get_jane_hands_reroute_hash("10050266"), None); // Body hash not rerouted
+    }
+
+    #[test]
+    fn test_filter_safe_blend_buffers_protects_body_and_knives() {
+        let buffers = vec![
+            ("JaneDoeHeadBlend.buf".to_string(), 32),
+            ("JaneDoeBodyBlend.buf".to_string(), 32),
+            ("JaneDoeBootKnivesBlend.buf".to_string(), 32),
+        ];
+
+        // For Hands: Head blend is accepted, Body and BootKnives are strictly protected
+        let safe_hands = filter_safe_blend_buffers_for_component(&buffers, "hands");
+        assert_eq!(safe_hands.len(), 1);
+        assert_eq!(safe_hands[0].0, "JaneDoeHeadBlend.buf");
+
+        // For Hair: Head blend is accepted, Body and BootKnives are strictly protected
+        let safe_hair = filter_safe_blend_buffers_for_component(&buffers, "hair");
+        assert_eq!(safe_hair.len(), 1);
+        assert_eq!(safe_hair[0].0, "JaneDoeHeadBlend.buf");
+    }
+
+    #[test]
+    fn test_dialyn_bone_remapping_contract() {
+        let map = get_dialyn_bone_mappings();
+        assert_eq!(map.get(&18).copied(), Some(20));
+        assert_eq!(map.get(&54).copied(), Some(62));
+        assert_eq!(map.get(&113).copied(), Some(114));
+        assert_eq!(map.get(&188).copied(), Some(189));
+    }
+
+    #[test]
+    fn test_universal_face_36_to_48_conversion_contract() {
+        // Test Jane Doe Face in 3.1 -> 3.2
+        let rule = find_universal_face_rule("c7c6cfb4");
+        assert_eq!(rule, Some(("c7c6cfb4", "ef316f73", "JaneDoe")));
+
+        // Test Anby Face
+        let rule_anby = find_universal_face_rule("3e7815b5");
+        assert_eq!(rule_anby, Some(("3e7815b5", "f818271a", "Anby")));
+
+        // Mock 36-byte vertex: 4B (4 bytes) + 4x 2f (32 bytes)
+        let mut buf_36 = Vec::new();
+        buf_36.extend_from_slice(&[255, 128, 0, 255]); // 4B color
+        for _ in 0..8 {
+            buf_36.write_f32::<LittleEndian>(1.0).unwrap(); // 8x f32 = 4x 2f
+        }
+        assert_eq!(buf_36.len(), 36);
+
+        let old_fmt = vec!["4B".to_string(), "2f".to_string(), "2f".to_string(), "2f".to_string(), "2f".to_string()];
+        let new_fmt = vec!["4f".to_string(), "2f".to_string(), "2f".to_string(), "2f".to_string(), "2f".to_string()];
+
+        let buf_48 = remap_buffer_bytes(&buf_36, 36, &old_fmt, &new_fmt);
+        assert_eq!(buf_48.len(), 48);
+
+        let mut cursor = Cursor::new(&buf_48);
+        let c0 = cursor.read_f32::<LittleEndian>().unwrap();
+        let c1 = cursor.read_f32::<LittleEndian>().unwrap();
+        let c2 = cursor.read_f32::<LittleEndian>().unwrap();
+        let c3 = cursor.read_f32::<LittleEndian>().unwrap();
+
+        assert!((c0 - 1.0).abs() < 1e-4);
+        assert!((c1 - (128.0 / 255.0)).abs() < 1e-4);
+        assert!((c2 - 0.0).abs() < 1e-4);
+        assert!((c3 - 1.0).abs() < 1e-4);
+    }
+
+    #[test]
+    fn test_jane_doe_bottom_heavy_end_to_end_fix() {
+        let unique_id = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let temp_dir = std::env::temp_dir().join(format!("zzz_test_jane_bh_{}", unique_id));
+        let mod_dir = temp_dir
+            .join("Playable Characters")
+            .join("Jane Doe - Hidden Nightfade")
+            .join("JaneDoe-BottomHeavy");
+        fs::create_dir_all(&mod_dir).unwrap();
+
+        // INI with hijacked head section (arms and jacket in head draw call)
+        let ini_content = r#"; JaneDoe
+[TextureOverrideJaneDoeHeadPosition]
+hash = e7a3b7dc
+handling = skip
+vb0 = ResourceJaneDoeHeadPosition
+vb2 = ResourceJaneDoeHeadBlend
+draw = 17929,0
+
+[TextureOverrideJaneDoeBodyPosition]
+hash = 10050266
+handling = skip
+vb0 = ResourceJaneDoeBodyPosition
+vb2 = ResourceJaneDoeBodyBlend
+draw = 44335,0
+
+[TextureOverrideJaneDoeHeadIB]
+hash = 9268a5af
+handling = skip
+
+[TextureOverrideJaneDoeHeadA]
+hash = 9268a5af
+match_first_index = 0
+run = CommandListSkinTexture
+ps-t4 = ResourceJaneDoeBodyANormalMap
+ib = ResourceJaneDoeHeadAIB
+; JaneDoeHeadA
+	; .ArmsHEAD
+	drawindexed = 3792, 27420, 0
+	; JacketHEAD
+	drawindexed = 2958, 31212, 0
+	; JaneDoeHeadA
+	drawindexed = 27420, 34170, 0
+
+[TextureOverrideJaneDoeHeadB]
+hash = 9268a5af
+handling = skip
+match_first_index = 33780
+drawindexed = 1626, 1626, 0
+
+[TextureOverrideJaneDoeBodyIB]
+hash = ba4255a5
+handling = skip
+
+[ResourceJaneDoeHeadBlend]
+type = Buffer
+stride = 32
+filename = JaneDoeHeadBlend.buf
+
+[ResourceJaneDoeBodyBlend]
+type = Buffer
+stride = 32
+filename = JaneDoeBodyBlend.buf
+"#;
+        fs::write(mod_dir.join("JaneDoeBottomHeavy.ini"), ini_content).unwrap();
+
+        // 1. JaneDoeHeadBlend.buf with legacy bone index 54 (should remap to 22)
+        let mut head_buf = vec![0x55u8; 16]; // Weights
+        head_buf.write_u32::<LittleEndian>(54).unwrap();
+        head_buf.write_u32::<LittleEndian>(4).unwrap();
+        head_buf.write_u32::<LittleEndian>(127).unwrap();
+        head_buf.write_u32::<LittleEndian>(0).unwrap();
+        fs::write(mod_dir.join("JaneDoeHeadBlend.buf"), &head_buf).unwrap();
+
+        // 2. JaneDoeBodyBlend.buf with index 54 (must NOT be remapped - body skeleton untouched)
+        let mut body_buf = vec![0x77u8; 16]; // Weights
+        body_buf.write_u32::<LittleEndian>(54).unwrap();
+        body_buf.write_u32::<LittleEndian>(55).unwrap();
+        body_buf.write_u32::<LittleEndian>(56).unwrap();
+        body_buf.write_u32::<LittleEndian>(57).unwrap();
+        fs::write(mod_dir.join("JaneDoeBodyBlend.buf"), &body_buf).unwrap();
+
+        let mut db = FixerDatabase::default();
+        // Rule: legacy Hair IB 9268a5af
+        db.rules.insert(
+            "9268a5af".to_string(),
+            FixerRule {
+                hash: "9268a5af".to_string(),
+                character: "JaneDoe".to_string(),
+                description: "Jane Doe Hair IB Hash".to_string(),
+                version_from: "1.0".to_string(),
+                version_to: "2.5".to_string(),
+                actions: vec![FixerRuleAction {
+                    action_type: "update_hash".to_string(),
+                    new_hash: Some("3275b812".to_string()),
+                    ..Default::default()
+                }],
+            },
+        );
+        // Rule: legacy Hair Position e7a3b7dc
+        db.rules.insert(
+            "e7a3b7dc".to_string(),
+            FixerRule {
+                hash: "e7a3b7dc".to_string(),
+                character: "JaneDoe".to_string(),
+                description: "Jane Doe Hair Position Hash".to_string(),
+                version_from: "1.0".to_string(),
+                version_to: "2.5".to_string(),
+                actions: vec![FixerRuleAction {
+                    action_type: "update_hash".to_string(),
+                    new_hash: Some("33a09cfe".to_string()),
+                    ..Default::default()
+                }],
+            },
+        );
+
+        // Run analysis
+        let analysis = analyze_mod_for_fixes(&mod_dir, &db);
+        assert!(analysis.is_fixable);
+        assert_eq!(analysis.detected_character, Some("JaneDoe".to_string()));
+
+        // Run apply_mod_fix
+        let res = apply_mod_fix(&mod_dir, &db).expect("Fix must succeed");
+        assert!(res.success);
+        assert!(res.hashes_updated >= 2);
+        assert!(res.buffers_remapped >= 1);
+
+        let fixed_ini = fs::read_to_string(mod_dir.join("JaneDoeBottomHeavy.ini")).unwrap();
+
+        // Verify hash was rerouted to Hands & Accessories (294a319a), NOT Hair (3275b812)!
+        assert!(fixed_ini.contains("hash = 294a319a"), "Hijacked Head IB must reroute to Hands (294a319a)");
+        assert!(!fixed_ini.contains("hash = 3275b812"), "Must NOT replace hair with hijacked limbs/jacket");
+        assert!(fixed_ini.contains("hash = 82e7c056"), "Hijacked Position must reroute to Hands Position (82e7c056)");
+
+        // Verify LoD overrides were injected
+        assert!(fixed_ini.contains("58e88ad0"), "Must inject Jane LoD Body Blend override");
+        assert!(fixed_ini.contains("341b1f7b"), "Must inject Jane LoD Body IB override");
+        assert!(fixed_ini.contains("4c54eb77"), "Must inject Jane LoD Hands Blend override");
+        assert!(fixed_ini.contains("07888ddb"), "Must inject Jane LoD Hands IB override");
+
+        // Verify JaneDoeHeadBlend.buf had HAND_MAPPINGS applied (54 -> 22, 4 -> 0, 127 -> 58)
+        let fixed_head_buf = fs::read(mod_dir.join("JaneDoeHeadBlend.buf")).unwrap();
+        assert_eq!(&fixed_head_buf[0..16], &[0x55u8; 16], "Head weights must remain byte identical");
+        let mut head_cur = Cursor::new(&fixed_head_buf[16..32]);
+        assert_eq!(head_cur.read_u32::<LittleEndian>().unwrap(), 22); // 54 -> 22
+        assert_eq!(head_cur.read_u32::<LittleEndian>().unwrap(), 0);  // 4 -> 0
+        assert_eq!(head_cur.read_u32::<LittleEndian>().unwrap(), 58); // 127 -> 58
+
+        // Verify JaneDoeBodyBlend.buf was PROTECTED and UNTOUCHED (body bones intact)
+        let fixed_body_buf = fs::read(mod_dir.join("JaneDoeBodyBlend.buf")).unwrap();
+        assert_eq!(&fixed_body_buf[0..16], &[0x77u8; 16], "Body weights must remain byte identical");
+        let mut body_cur = Cursor::new(&fixed_body_buf[16..32]);
+        assert_eq!(body_cur.read_u32::<LittleEndian>().unwrap(), 54, "Body bone 54 must NOT be corrupted");
+        assert_eq!(body_cur.read_u32::<LittleEndian>().unwrap(), 55, "Body bone 55 must NOT be corrupted");
+        assert_eq!(body_cur.read_u32::<LittleEndian>().unwrap(), 56, "Body bone 56 must NOT be corrupted");
+        // Verify duplicate vanilla hair and ears were suppressed
+        assert!(fixed_ini.contains("SUPPRESSED DUPLICATE VANILLA HAIR"), "Must suppress duplicate hair draw call");
+        assert!(fixed_ini.contains("SUPPRESSED DUPLICATE VANILLA EARS"), "Must suppress duplicate ears draw call");
+        // Verify decomposed limbs are present: 1188 (gloves), 4527 (wrists/hands), 4773 (forearms)
+        assert!(fixed_ini.contains("drawindexed = 1188, 35034, 0"), "Must contain decomposed glove details");
+        assert!(fixed_ini.contains("drawindexed = 4527, 43029, 0"), "Must contain decomposed wrists & hands");
+        assert!(fixed_ini.contains("drawindexed = 4773, 56817, 0"), "Must contain decomposed forearms connecting to upper arm");
+
+        // Idempotency: re-analyzing after fix must report is_fixable = false (zero leftover fixes)
+        let second_analysis = analyze_mod_for_fixes(&mod_dir, &db);
+        assert!(!second_analysis.is_fixable, "Mod must not be flagged for fixes again after upgrade");
+        assert_eq!(second_analysis.total_fixes, 0, "Total fixes must be 0 after successful upgrade");
+
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_suppress_jane_head_duplicate_hair_contract() {
+        let snippet = r#"
+[TextureOverrideJaneDoeHeadA]
+hash = 294a319a
+match_first_index = 0
+; .ArmsHEAD
+drawindexed = 3792, 27420, 0
+; JacketHEAD
+drawindexed = 2958, 31212, 0
+; JaneDoeHeadA
+drawindexed = 27420, 34170, 0
+; PouchHEAD
+drawindexed = 570, 61590, 0
+
+[TextureOverrideJaneDoeHeadB]
+hash = 294a319a
+handling = skip
+match_first_index = 16986
+; JaneDoeHeadB
+drawindexed = 1626, 1626, 0
+"#;
+        let (suppressed, count) = suppress_jane_head_duplicate_hair(snippet);
+        assert_eq!(count, 1, "Must trigger decomposition");
+        assert!(suppressed.contains("DECOMPOSED JANE DOE LIMBS / SUPPRESSED DUPLICATE VANILLA HAIR"));
+        assert!(suppressed.contains("drawindexed = 1188, 35034, 0"));
+        assert!(suppressed.contains("drawindexed = 4527, 43029, 0"));
+        assert!(suppressed.contains("drawindexed = 4773, 56817, 0"));
+        assert!(suppressed.contains("; [ZZZMODMANAGER SUPPRESSED DUPLICATE VANILLA EARS] drawindexed = 1626, 1626, 0"));
+        // Arms, Jacket, Pouch must remain untouched and active
+        assert!(suppressed.contains("drawindexed = 3792, 27420, 0"));
+        assert!(suppressed.contains("drawindexed = 2958, 31212, 0"));
+        assert!(suppressed.contains("drawindexed = 570, 61590, 0"));
+    }
+
+    #[test]
+    fn test_decompose_jane_hijacked_limbs_comprehensive() {
+        let snippet = r#"; JaneDoe
+[TextureOverrideJaneDoeHeadVertexLimitRaise]
+hash = 2b5dc947
+; override_vertex_count = 1046
+; override_byte_stride = 104
+
+[TextureOverrideJaneDoeHeadA]
+hash = 294a319a
+match_first_index = 0
+run = CommandListSkinTexture
+ps-t4 = ResourceJaneDoeBodyANormalMap
+ib = ResourceJaneDoeHeadAIB
+; JaneDoeHeadA
+	; .ArmsHEAD
+	if $jack == 0
+		handling = skip
+	else if $jack == 1
+		drawindexed = 3792, 27420, 0
+	endif
+	; JacketHEAD
+	if $jack == 0
+		drawindexed = 2958, 31212, 0
+	else if $jack == 1
+		handling = skip
+	endif
+	; JaneDoeHeadA
+	drawindexed = 27420, 34170, 0
+	; PouchHEAD
+	if $main == 0
+		handling = skip
+	else if $main == 1
+		drawindexed = 570, 61590, 0
+	endif
+
+[TextureOverrideJaneDoeHeadB]
+hash = 294a319a
+match_first_index = 33780
+ib = ResourceJaneDoeHeadBIB
+drawindexed = 1626, 1626, 0
+"#;
+        let (first_pass, changed1) = decompose_jane_hijacked_limbs(snippet);
+        assert!(changed1, "First pass must modify INI");
+
+        // Verify decomposed limbs
+        assert!(first_pass.contains("drawindexed = 1188, 35034, 0"));
+        assert!(first_pass.contains("drawindexed = 4527, 43029, 0"));
+        assert!(first_pass.contains("drawindexed = 4773, 56817, 0"));
+        assert!(!first_pass.contains("drawindexed = 27420, 34170, 0"));
+
+        // Verify ears suppressed
+        assert!(first_pass.contains("handling = skip"));
+        assert!(first_pass.contains("SUPPRESSED DUPLICATE VANILLA EARS"));
+        assert!(first_pass.contains("drawindexed = 1626, 1626, 0"));
+
+        // Verify VertexLimitRaise raised to 17929
+        assert!(first_pass.contains("override_vertex_count = 17929"));
+        assert!(first_pass.contains("override_byte_stride = 40"));
+
+        // Verify user variables and other submeshes preserved
+        assert!(first_pass.contains("if $jack == 1"));
+        assert!(first_pass.contains("drawindexed = 3792, 27420, 0"));
+        assert!(first_pass.contains("drawindexed = 2958, 31212, 0"));
+        assert!(first_pass.contains("drawindexed = 570, 61590, 0"));
+
+        // Idempotency: Second pass must make ZERO modifications
+        let (second_pass, changed2) = decompose_jane_hijacked_limbs(&first_pass);
+        assert!(!changed2, "Second pass must be completely idempotent");
+        assert_eq!(first_pass, second_pass, "Content must remain identical on second pass");
+    }
+

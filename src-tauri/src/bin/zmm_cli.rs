@@ -21,6 +21,8 @@ struct CliConfig {
 enum Command {
     VerifyMods { dir: PathBuf },
     VerifyMod { dir: PathBuf, quality: String },
+    FixMod { dir: PathBuf },
+    CheckFixable { dir: PathBuf },
     HealthCheck,
     Help,
 }
@@ -81,6 +83,8 @@ COMMANDS:
                              corrupt files, and script integrity warnings.
     verify-mod  <MOD_DIR>    Deeply inspect and parse a single mod folder,
                              verifying 3D meshes, textures, toggles, and INIs.
+    check-fixable <MOD_DIR>  Analyze a mod folder to check if version upgrades are needed.
+    fix-mod <MOD_DIR>        Automatically upgrade and fix a broken/outdated mod folder.
     health-check             Audit character databases and migration rules.
     help                     Display this help message.
 
@@ -207,6 +211,22 @@ fn parse_cli_args() -> Result<CliConfig, String> {
             Command::VerifyMod {
                 dir: PathBuf::from(&positional[1]),
                 quality,
+            }
+        }
+        "fix-mod" | "fixmod" | "fix" => {
+            if positional.len() < 2 {
+                return Err("fix-mod requires a mod path: zmm-cli fix-mod <MOD_DIR>".to_string());
+            }
+            Command::FixMod {
+                dir: PathBuf::from(&positional[1]),
+            }
+        }
+        "check-fixable" | "checkfixable" => {
+            if positional.len() < 2 {
+                return Err("check-fixable requires a mod path: zmm-cli check-fixable <MOD_DIR>".to_string());
+            }
+            Command::CheckFixable {
+                dir: PathBuf::from(&positional[1]),
             }
         }
         "health-check" | "healthcheck" | "health" => Command::HealthCheck,
@@ -574,6 +594,60 @@ fn execute_health_check(db_path: &Path, json: bool) -> ExitCode {
     }
 }
 
+fn execute_check_fixable(dir: &Path, db_path: &Path, json: bool) -> ExitCode {
+    let fixer_db = zzzmodmanager_tauri_lib::mod_fixer::load_fixer_database(Some(db_path));
+    let analysis = zzzmodmanager_tauri_lib::mod_fixer::analyze_mod_for_fixes(dir, &fixer_db);
+    if json {
+        println!("{}", serde_json::to_string_pretty(&analysis).unwrap_or_default());
+    } else {
+        println!("========================================================================");
+        println!(" ZzzModManager - Mod Fixability Analysis");
+        println!("========================================================================");
+        println!("Mod Path:            {}", dir.display());
+        println!("Is Fixable:          {}", analysis.is_fixable);
+        println!("Detected Character:  {:?}", analysis.detected_character);
+        println!("Detected Skin:       {:?}", analysis.detected_skin);
+        println!("Total Fixes:         {}", analysis.total_fixes);
+        println!("Hash Upgrades:       {}", analysis.hash_fixes.len());
+        println!("Buffer Remaps:       {}", analysis.buffer_fixes.len());
+        println!("Multi-Res Fixes:     {}", analysis.multi_res_fixes.len());
+        println!("========================================================================");
+    }
+    ExitCode::from(0)
+}
+
+fn execute_fix_mod(dir: &Path, db_path: &Path, json: bool) -> ExitCode {
+    let fixer_db = zzzmodmanager_tauri_lib::mod_fixer::load_fixer_database(Some(db_path));
+    match zzzmodmanager_tauri_lib::mod_fixer::apply_mod_fix(dir, &fixer_db) {
+        Ok(res) => {
+            if json {
+                println!("{}", serde_json::to_string_pretty(&res).unwrap_or_default());
+            } else {
+                println!("========================================================================");
+                println!(" ZzzModManager - Mod Fix Result");
+                println!("========================================================================");
+                println!("Mod Path:            {}", dir.display());
+                println!("Success:             {}", res.success);
+                println!("Hashes Updated:      {}", res.hashes_updated);
+                println!("Sections Added:      {}", res.sections_added);
+                println!("Buffers Remapped:    {}", res.buffers_remapped);
+                println!("INI Files Modified:  {:?}", res.modified_ini_files);
+                println!("Buffers Modified:    {:?}", res.modified_buf_files);
+                println!("Actions Summary:");
+                for action in &res.actions_summary {
+                    println!("  - {}", action);
+                }
+                println!("========================================================================");
+            }
+            if res.success { ExitCode::from(0) } else { ExitCode::from(1) }
+        }
+        Err(e) => {
+            eprintln!("[ERROR] Failed to fix mod: {}", e);
+            ExitCode::from(1)
+        }
+    }
+}
+
 fn main() -> ExitCode {
     let config = match parse_cli_args() {
         Ok(cfg) => cfg,
@@ -593,6 +667,8 @@ fn main() -> ExitCode {
         }
         Command::VerifyMods { dir } => execute_verify_mods(&dir, &db_path, config.json),
         Command::VerifyMod { dir, quality } => execute_verify_mod(&dir, &quality, config.json),
+        Command::CheckFixable { dir } => execute_check_fixable(&dir, &db_path, config.json),
+        Command::FixMod { dir } => execute_fix_mod(&dir, &db_path, config.json),
         Command::HealthCheck => execute_health_check(&db_path, config.json),
     }
 }

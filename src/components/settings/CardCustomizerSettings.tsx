@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   LayoutTemplate,
   Image as ImageIcon,
@@ -15,6 +15,10 @@ import {
   Maximize2,
   Lock,
   Unlock,
+  Share2,
+  Upload,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -23,7 +27,11 @@ import {
   CARD_PRESETS,
   DEFAULT_MOD_CARD_CUSTOMIZATION,
   getBorderRadiusClass,
+  getAspectRatioClass,
+  getElementalTheme,
 } from '../../types/cardCustomization';
+import { ModInfo } from '../../types';
+import { ImportCardThemeModal } from '../Modals/ImportCardThemeModal';
 
 export function CardCustomizerSettings() {
   const { t } = useTranslation();
@@ -32,6 +40,10 @@ export function CardCustomizerSettings() {
     setCardCustomization,
     resetCardCustomization,
     applyCardPreset,
+    cardSize,
+    setCardSize,
+    showToast,
+    categories = [],
   } = useAppStore();
 
   const [selectedComponent, setSelectedComponent] = useState<ModCardComponentId>('card_frame');
@@ -39,6 +51,116 @@ export function CardCustomizerSettings() {
   const [previewActive, setPreviewActive] = useState<boolean>(true);
   const [isFavorite, setIsFavorite] = useState<boolean>(true);
   const [isLocked, setIsLocked] = useState<boolean>(false);
+  const [showImportModal, setShowImportModal] = useState<boolean>(false);
+  const [sampleArtIndex, setSampleArtIndex] = useState<number>(0);
+
+  // Sample Artworks for Preview Cycler
+  interface SampleArtwork {
+    id: string;
+    label: string;
+    characterName: string;
+    categorySubtitle: string;
+    tags: string[];
+    element: 'Ice' | 'Fire' | 'Electric' | 'Physical' | 'Ether' | null;
+    imageUrl: string;
+  }
+
+  const sampleArtworks: SampleArtwork[] = useMemo(() => {
+    const list: SampleArtwork[] = [
+      {
+        id: 'default',
+        label: 'Default',
+        characterName: 'Shark Skin Outfit',
+        categorySubtitle: 'Victoria Housekeeping • Ellen Joe',
+        tags: ['outfit', 'retexture'],
+        element: null,
+        imageUrl: '/app_background.jpg',
+      },
+      {
+        id: 'ellen',
+        label: 'Ellen (Ice)',
+        characterName: 'Shark Tail School Uniform',
+        categorySubtitle: 'Victoria Housekeeping • Ellen Joe',
+        tags: ['ice', 'outfit'],
+        element: 'Ice',
+        imageUrl: '/app_background.jpg',
+      },
+      {
+        id: 'burnice',
+        label: 'Burnice (Fire)',
+        characterName: 'Nitro Fuel Cocktail Barista',
+        categorySubtitle: 'Sons of Calydon • Burnice White',
+        tags: ['fire', 'retexture'],
+        element: 'Fire',
+        imageUrl: '/app_background.jpg',
+      },
+      {
+        id: 'jane',
+        label: 'Jane (Physical)',
+        characterName: 'Crimson Shadow Suit',
+        categorySubtitle: 'Criminal Investigation • Jane Doe',
+        tags: ['physical', 'model'],
+        element: 'Physical',
+        imageUrl: '/app_background.jpg',
+      },
+      {
+        id: 'rina',
+        label: 'Rina (Electric)',
+        characterName: 'Electro-Magnetic Maid',
+        categorySubtitle: 'Victoria Housekeeping • Alexandrina',
+        tags: ['electric', 'audio'],
+        element: 'Electric',
+        imageUrl: '/app_background.jpg',
+      },
+      {
+        id: 'zhuyuan',
+        label: 'Zhu Yuan (Ether)',
+        characterName: 'Special Ops Tactical',
+        categorySubtitle: 'PubSec • Zhu Yuan',
+        tags: ['ether', 'mesh'],
+        element: 'Ether',
+        imageUrl: '/app_background.jpg',
+      },
+    ];
+
+    const installedWithPreviews: { mod: ModInfo; categoryName: string }[] = [];
+    for (const c of categories) {
+      for (const m of c.mods || []) {
+        if (m.preview_url || m.thumbnail_url) {
+          installedWithPreviews.push({ mod: m, categoryName: c.category_name });
+        }
+      }
+    }
+
+    if (installedWithPreviews.length > 0) {
+      installedWithPreviews.slice(0, 2).forEach(({ mod: m, categoryName }, idx: number) => {
+        list.push({
+          id: `installed_${idx}`,
+          label: m.name.replace(/^(DISABLED_|DISABLED )/, '').slice(0, 10),
+          characterName: m.name.replace(/^(DISABLED_|DISABLED )/, ''),
+          categorySubtitle: categoryName || 'Installed Mod',
+          tags: (m.meta?.tags || ['installed']) as string[],
+          element: null,
+          imageUrl: m.thumbnail_url || m.preview_url || '/app_background.jpg',
+        });
+      });
+    }
+
+    return list;
+  }, [categories]);
+
+  const currentSample = sampleArtworks[sampleArtIndex] || sampleArtworks[0];
+  const sampleElementTheme = getElementalTheme(currentSample.element);
+
+  const handleShareTheme = async () => {
+    try {
+      const json = JSON.stringify(cardCustomization, null, 2);
+      await navigator.clipboard.writeText(json);
+      showToast(t('card_theme_copied_toast', 'Card theme copied to clipboard! Ready to share.'));
+    } catch {
+      showToast(t('failed_copy_clipboard', 'Failed to copy to clipboard'));
+    }
+  };
 
   // Helper for applying partial config to cardCustomization
   const updateFrame = (patch: Partial<typeof cardCustomization.frame>) => {
@@ -61,7 +183,14 @@ export function CardCustomizerSettings() {
   };
 
   // Compute shadow class
-  const getShadowClass = (intensity: string) => {
+  const getShadowClass = (
+    intensity: string,
+    elementalGlow?: boolean,
+    elementGlowClass?: string
+  ) => {
+    if (elementalGlow && elementGlowClass) {
+      return elementGlowClass;
+    }
     switch (intensity) {
       case 'none':
         return 'shadow-none';
@@ -93,8 +222,10 @@ export function CardCustomizerSettings() {
   };
 
   // Compute border color class
-  const getBorderColorClass = (color: string) => {
+  const getBorderColorClass = (color: string, elementBorderClass?: string) => {
     switch (color) {
+      case 'element':
+        return elementBorderClass || 'border-primary';
       case 'primary':
         return 'border-primary';
       case 'white':
@@ -219,9 +350,28 @@ export function CardCustomizerSettings() {
             </div>
           </div>
 
-          {/* Quick Presets & Global Reset */}
+          {/* Theme Share, Import & Global Reset */}
           <div className="flex flex-wrap items-center gap-2">
             <button
+              type="button"
+              onClick={handleShareTheme}
+              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-all flex items-center gap-1.5 cursor-pointer"
+              title={t('card_share_theme_tooltip', 'Copy current theme JSON to clipboard')}
+            >
+              <Share2 size={14} />
+              <span>{t('card_share_theme', 'Share Theme')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowImportModal(true)}
+              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-textMuted hover:text-textMain border border-white/5 transition-all flex items-center gap-1.5 cursor-pointer"
+              title={t('card_import_theme_tooltip', 'Import a card theme code or JSON')}
+            >
+              <Upload size={14} />
+              <span>{t('card_import_theme', 'Import Theme')}</span>
+            </button>
+            <button
+              type="button"
               onClick={() => resetCardCustomization()}
               className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-textMuted hover:text-textMain border border-white/5 transition-all flex items-center gap-1.5 cursor-pointer"
               title={t('card_reset_all_tooltip', 'Reset all card styles to defaults')}
@@ -302,6 +452,70 @@ export function CardCustomizerSettings() {
             )}
           </p>
 
+          {/* Preview Artwork Cycler Toolbar */}
+          <div className="p-3.5 rounded-2xl bg-surface/50 border border-textMain/5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-textMuted uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles size={13} className="text-primary" />
+                <span>{t('card_sample_artwork', 'Sample Artwork')}</span>
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSampleArtIndex((prev) => (prev > 0 ? prev - 1 : sampleArtworks.length - 1))
+                  }
+                  className="p-1 rounded-lg bg-white/5 hover:bg-white/10 text-textMuted hover:text-textMain transition-all cursor-pointer"
+                  title={t('card_sample_prev', 'Previous sample')}
+                >
+                  <ChevronLeft size={14} />
+                </button>
+                <span className="text-[11px] font-mono font-bold text-textMuted px-1.5">
+                  {sampleArtIndex + 1}/{sampleArtworks.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSampleArtIndex((prev) => (prev < sampleArtworks.length - 1 ? prev + 1 : 0))
+                  }
+                  className="p-1 rounded-lg bg-white/5 hover:bg-white/10 text-textMuted hover:text-textMain transition-all cursor-pointer"
+                  title={t('card_sample_next', 'Next sample')}
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Agent Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+              {sampleArtworks.map((sample, idx) => {
+                const sampleTheme = getElementalTheme(sample.element);
+                const isSelected = sampleArtIndex === idx;
+                return (
+                  <button
+                    key={sample.id}
+                    type="button"
+                    onClick={() => setSampleArtIndex(idx)}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'bg-white/5 hover:bg-white/10 text-textMuted hover:text-textMain border border-white/5'
+                    }`}
+                  >
+                    {sample.element && (
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: sampleTheme.hex }}
+                        title={sample.element}
+                      />
+                    )}
+                    <span>{sample.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Interactive Card Container */}
           <div className="p-4 rounded-3xl bg-black/30 border border-white/5 flex justify-center">
             <div
@@ -313,11 +527,16 @@ export function CardCustomizerSettings() {
                 backdropFilter: `blur(${cardCustomization.frame.blurAmount}px)`,
                 WebkitBackdropFilter: `blur(${cardCustomization.frame.blurAmount}px)`,
               }}
-              className={`w-72 overflow-hidden flex flex-col relative transition-all duration-200 select-none group cursor-pointer ${getBorderRadiusClass(
+              className={`w-72 sm:w-80 max-w-full overflow-hidden flex flex-col relative transition-all duration-200 select-none group cursor-pointer ${getBorderRadiusClass(
                 cardCustomization.frame.borderRadius
               )} ${getBorderWidthClass(cardCustomization.frame.borderWidth)} ${getBorderColorClass(
-                cardCustomization.frame.borderColor
-              )} ${getShadowClass(cardCustomization.frame.shadowIntensity)} ${
+                cardCustomization.frame.borderColor,
+                sampleElementTheme.borderClass
+              )} ${getShadowClass(
+                cardCustomization.frame.shadowIntensity,
+                cardCustomization.frame.elementalGlow,
+                sampleElementTheme.glowShadowClass
+              )} ${
                 selectedComponent === 'card_frame'
                   ? 'ring-2 ring-primary ring-offset-2 ring-offset-black'
                   : hoveredComponent === 'card_frame'
@@ -343,7 +562,9 @@ export function CardCustomizerSettings() {
                   setHoveredComponent('image_overlay');
                 }}
                 onMouseLeave={() => setHoveredComponent(null)}
-                className={`aspect-[4/5] bg-gradient-to-b from-zinc-800 to-zinc-950 flex items-center justify-center relative overflow-hidden transition-all ${
+                className={`${getAspectRatioClass(
+                  cardCustomization.frame.aspectRatio
+                )} bg-gradient-to-b from-zinc-800 to-zinc-950 flex items-center justify-center relative overflow-hidden transition-all ${
                   selectedComponent === 'image_overlay'
                     ? 'ring-2 ring-inset ring-primary'
                     : hoveredComponent === 'image_overlay'
@@ -354,7 +575,7 @@ export function CardCustomizerSettings() {
                 {/* Mock Mod Artwork Graphic */}
                 <div className="absolute inset-0 overflow-hidden">
                   <img
-                    src="/app_background.jpg"
+                    src={currentSample.imageUrl}
                     alt="Mockup Preview"
                     className={`h-full w-full object-cover opacity-90 transition-transform duration-200 ${
                       cardCustomization.imageOverlay.imageHoverZoom ? 'group-hover:scale-105' : ''
@@ -545,11 +766,17 @@ export function CardCustomizerSettings() {
                           : 'text-textMain group-hover:text-primary'
                     }`}
                   >
-                    Shark Skin Outfit
+                    {currentSample.characterName}
                   </h3>
                   {cardCustomization.infoPanel.showCategorySubtitle && (
-                    <span className="text-[11px] font-semibold text-primary/80 block mt-0.5 truncate">
-                      Victoria Housekeeping • Ellen Joe
+                    <span
+                      className={`text-[11px] font-semibold block mt-0.5 truncate ${
+                        cardCustomization.frame.elementalGlow
+                          ? sampleElementTheme.textColorClass
+                          : 'text-primary/80'
+                      }`}
+                    >
+                      {currentSample.categorySubtitle}
                     </span>
                   )}
                 </div>
@@ -557,10 +784,14 @@ export function CardCustomizerSettings() {
                 {/* Tags Simulation */}
                 {cardCustomization.infoPanel.showTags && (
                   <div className="flex flex-wrap gap-1">
-                    {['outfit', 'retexture'].map((tag) => (
+                    {currentSample.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary/15 text-primary border border-primary/20"
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                          cardCustomization.frame.elementalGlow
+                            ? sampleElementTheme.badgeBgClass
+                            : 'bg-primary/15 text-primary border border-primary/20'
+                        }`}
                       >
                         #{tag}
                       </span>
@@ -597,7 +828,9 @@ export function CardCustomizerSettings() {
                         ? 'bg-white/5 hover:bg-red-500/20 text-textMuted hover:text-red-400 border border-white/5 hover:border-red-500/30'
                         : `bg-primary text-white hover:bg-primary/80 ${
                             cardCustomization.toggleButton.glowEffect
-                              ? 'shadow-lg shadow-primary/30'
+                              ? cardCustomization.frame.elementalGlow
+                                ? sampleElementTheme.glowShadowClass
+                                : 'shadow-lg shadow-primary/30'
                               : ''
                           }`
                     }`}
@@ -755,20 +988,82 @@ export function CardCustomizerSettings() {
                 </div>
               </div>
 
+              {/* Aspect Ratio */}
+              <div>
+                <label className="text-sm font-bold text-textMuted block mb-2">
+                  {t('card_aspect_ratio', 'Card Aspect Ratio')}
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: 'portrait', label: t('card_aspect_portrait', 'Portrait (4:5)') },
+                    { value: 'square', label: t('card_aspect_square', 'Square (1:1)') },
+                    { value: 'wide', label: t('card_aspect_wide', 'Wide (16:9)') },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => updateFrame({ aspectRatio: opt.value as any })}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        cardCustomization.frame.aspectRatio === opt.value
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'bg-white/5 hover:bg-white/10 text-textMuted hover:text-textMain'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Elemental Smart Glow Toggle */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5">
+                <div>
+                  <span className="font-bold text-textMain block text-sm flex items-center gap-1.5">
+                    <Sparkles size={14} className="text-primary" />
+                    {t('card_elemental_glow', 'Elemental Smart Glow')}
+                  </span>
+                  <span className="text-xs text-textMuted">
+                    {t(
+                      'card_elemental_glow_desc',
+                      'Dynamically tint card borders, glow shadows, and badges matching the character’s element.'
+                    )}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateFrame({
+                      elementalGlow: !cardCustomization.frame.elementalGlow,
+                    })
+                  }
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                    cardCustomization.frame.elementalGlow ? 'bg-primary' : 'bg-white/10'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      cardCustomization.frame.elementalGlow ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
               {/* Border Color */}
               <div>
                 <label className="text-sm font-bold text-textMuted block mb-2">
                   {t('card_border_color', 'Border Accent')}
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                   {[
                     { value: 'default', label: t('border_subtle', 'Subtle') },
+                    { value: 'element', label: t('border_element', 'Elemental') },
                     { value: 'primary', label: t('border_primary', 'Primary Accent') },
                     { value: 'white', label: t('border_white', 'White / Crisp') },
                     { value: 'none', label: t('none', 'Transparent') },
                   ].map((opt) => (
                     <button
                       key={opt.value}
+                      type="button"
                       onClick={() => updateFrame({ borderColor: opt.value as any })}
                       className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         cardCustomization.frame.borderColor === opt.value
@@ -798,6 +1093,7 @@ export function CardCustomizerSettings() {
                   ].map((opt) => (
                     <button
                       key={opt.value}
+                      type="button"
                       onClick={() => updateFrame({ borderRadius: opt.value as any })}
                       className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         cardCustomization.frame.borderRadius === opt.value
@@ -825,6 +1121,7 @@ export function CardCustomizerSettings() {
                   ].map((opt) => (
                     <button
                       key={opt.value}
+                      type="button"
                       onClick={() => updateFrame({ shadowIntensity: opt.value as any })}
                       className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         cardCustomization.frame.shadowIntensity === opt.value
@@ -836,6 +1133,45 @@ export function CardCustomizerSettings() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Card Size & Grid Density */}
+              <div className="pt-4 border-t border-textMain/5 space-y-3">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-bold text-textMuted">
+                    {t('settings_mod_card_size', 'Mod Card Size')}
+                  </label>
+                  <span className="text-xs font-mono font-bold text-primary">{cardSize}px</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { label: t('card_density_compact', 'Compact'), size: 170 },
+                    { label: t('card_density_standard', 'Standard'), size: 220 },
+                    { label: t('card_density_large', 'Large'), size: 280 },
+                    { label: t('card_density_showcase', 'Showcase'), size: 340 },
+                  ].map((preset) => (
+                    <button
+                      key={preset.size}
+                      type="button"
+                      onClick={() => setCardSize(preset.size)}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        cardSize === preset.size
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'bg-white/5 hover:bg-white/10 text-textMuted hover:text-textMain'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="range"
+                  min="140"
+                  max="360"
+                  value={cardSize}
+                  onChange={(e) => setCardSize(parseInt(e.target.value, 10))}
+                  className="w-full h-2 bg-background/50 rounded-lg appearance-none cursor-pointer accent-primary"
+                />
               </div>
             </div>
           )}
@@ -1566,6 +1902,11 @@ export function CardCustomizerSettings() {
           )}
         </div>
       </div>
+
+      {/* Share & Import Theme Modal */}
+      {showImportModal && (
+        <ImportCardThemeModal isOpen={showImportModal} onClose={() => setShowImportModal(false)} />
+      )}
     </div>
   );
 }

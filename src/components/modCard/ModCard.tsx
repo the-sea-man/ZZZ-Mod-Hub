@@ -19,6 +19,8 @@ import { isModMatchingIdentifier } from '../../utils/modPath';
 import {
   DEFAULT_MOD_CARD_CUSTOMIZATION,
   getBorderRadiusClass,
+  getAspectRatioClass,
+  getElementalTheme,
 } from '../../types/cardCustomization';
 
 const getImageUrl = (url?: string) => {
@@ -144,15 +146,19 @@ export const ModCard = memo(function ModCard({
           ? 'border-[3px]'
           : 'border';
 
+  const elementalTheme = getElementalTheme(character?.element);
+
   const frameBorderColorClass = isSelected
     ? 'border-primary ring-2 ring-primary/50'
-    : cardCustomization.frame.borderColor === 'primary'
-      ? 'border-primary'
-      : cardCustomization.frame.borderColor === 'white'
-        ? 'border-white/30'
-        : cardCustomization.frame.borderColor === 'none'
-          ? 'border-transparent'
-          : 'border-textMain/10';
+    : cardCustomization.frame.borderColor === 'element'
+      ? elementalTheme.borderClass
+      : cardCustomization.frame.borderColor === 'primary'
+        ? 'border-primary'
+        : cardCustomization.frame.borderColor === 'white'
+          ? 'border-white/30'
+          : cardCustomization.frame.borderColor === 'none'
+            ? 'border-transparent'
+            : 'border-textMain/10';
 
   const frameShadowClass =
     cardCustomization.frame.shadowIntensity === 'none'
@@ -160,8 +166,12 @@ export const ModCard = memo(function ModCard({
       : cardCustomization.frame.shadowIntensity === 'subtle'
         ? 'shadow-md'
         : cardCustomization.frame.shadowIntensity === 'intense'
-          ? 'shadow-2xl shadow-primary/20'
-          : 'shadow-xl';
+          ? cardCustomization.frame.elementalGlow
+            ? elementalTheme.glowShadowClass
+            : 'shadow-2xl shadow-primary/20'
+          : cardCustomization.frame.elementalGlow
+            ? elementalTheme.glowShadowClass
+            : 'shadow-xl';
 
   const sizeBytes: number | null = mod.total_size_bytes ?? null;
   const [showUpdaterModal, setShowUpdaterModal] = useState(false);
@@ -317,7 +327,11 @@ export const ModCard = memo(function ModCard({
         )}
       </AnimatePresence>
 
-      <div className="aspect-[4/5] bg-background flex items-center justify-center relative overflow-hidden">
+      <div
+        className={`${getAspectRatioClass(
+          cardCustomization.frame.aspectRatio
+        )} bg-background flex items-center justify-center relative overflow-hidden`}
+      >
         {mod.preview_url || character ? (
           <>
             <img
@@ -507,7 +521,13 @@ export const ModCard = memo(function ModCard({
             {mod.name.replace(/^(DISABLED_|DISABLED )/, '')}
           </h3>
           {cardCustomization.infoPanel.showCategorySubtitle && categoryName && (
-            <span className="text-[11px] font-semibold text-primary/80 block mt-1 truncate">
+            <span
+              className={`text-[11px] font-semibold block mt-1 truncate ${
+                cardCustomization.frame.elementalGlow
+                  ? elementalTheme.textColorClass
+                  : 'text-primary/80'
+              }`}
+            >
               {categoryName}
             </span>
           )}
@@ -523,7 +543,11 @@ export const ModCard = memo(function ModCard({
                   e.stopPropagation();
                   toggleFilterTag(tag);
                 }}
-                className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 cursor-pointer transition-colors"
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold cursor-pointer transition-colors ${
+                  cardCustomization.frame.elementalGlow
+                    ? elementalTheme.badgeBgClass
+                    : 'bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25'
+                }`}
                 title={t('filter_by_tag', `Filter by tag: {{tag}}`, { tag })}
               >
                 #{tag}
@@ -550,7 +574,11 @@ export const ModCard = memo(function ModCard({
               mod.is_enabled
                 ? 'bg-white/5 hover:bg-red-500/20 text-textMuted hover:text-red-400 border border-white/5 hover:border-red-500/30'
                 : `bg-primary text-white hover:bg-primary/80 ${
-                    cardCustomization.toggleButton.glowEffect ? 'shadow-lg shadow-primary/30' : ''
+                    cardCustomization.toggleButton.glowEffect
+                      ? cardCustomization.frame.elementalGlow
+                        ? elementalTheme.glowShadowClass
+                        : 'shadow-lg shadow-primary/30'
+                      : ''
                   }`
             } ${
               isFirstCard && highlightTargetId === 'first_mod_toggle'

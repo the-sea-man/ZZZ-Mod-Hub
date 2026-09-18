@@ -7,6 +7,7 @@ pub mod mods;
 pub mod warnings_scanner;
 
 pub(crate) mod community_tags;
+pub(crate) mod component_split;
 pub(crate) mod conflict_scanner;
 pub(crate) mod gamebanana;
 pub(crate) mod mod_splitter;
