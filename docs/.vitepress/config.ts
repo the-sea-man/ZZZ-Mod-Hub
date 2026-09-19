@@ -36,6 +36,7 @@ export default defineConfig({
           { text: 'Installing & Managing Mods', link: '/guides/mod-management' },
           { text: 'Category Folders & Search', link: '/guides/folders-and-categories' },
           { text: 'Profiles & Presets', link: '/guides/profiles' },
+          { text: 'In-Game HUD & Tools', link: '/guides/in-game-hud' },
           { text: '3D Mesh Viewer', link: '/guides/3d-viewer' },
           { text: '3-Mode Mod Splitter', link: '/guides/mod-splitter' },
           { text: 'Mod Fixer & Upgrades', link: '/guides/mod-fixer' },
@@ -70,9 +71,10 @@ export default defineConfig({
           ],
         },
         {
-          text: 'Advanced Tools',
+          text: 'In-Game & Advanced Tools',
           collapsed: false,
           items: [
+            { text: 'In-Game HUD & Tools', link: '/guides/in-game-hud' },
             { text: '3D Mesh Viewer', link: '/guides/3d-viewer' },
             { text: '3-Mode Mod Splitter', link: '/guides/mod-splitter' },
             { text: 'Mod Fixer Engine', link: '/guides/mod-fixer' },

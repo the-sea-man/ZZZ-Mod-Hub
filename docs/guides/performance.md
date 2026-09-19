@@ -24,10 +24,14 @@ Under **Settings > Performance**, you can switch between three tailored operatio
 
 ### 3. Potato / Low Power Mode
 
-- **Target Hardware:** Budget laptops, handheld PCs (Steam Deck, ROG Ally), or older machines running on battery.
+- **Target Hardware:** Budget laptops, older desktop PCs, systems with integrated graphics (Intel HD/UHD, AMD Radeon Vega), or systems running on battery power.
 - **File System Watcher:** Completely disabled. The app will never poll your disk in the background. Use the **Reload** button in the toolbar when you make external changes.
 - **Scanners:** On-demand only. Warning badges and conflict detections only run when you explicitly click **Scan** or use a fixer tool.
 - **3D Viewer Optimization:** Drops texture resolutions to half-size and enables simplified mesh rendering to minimize GPU VRAM usage.
+
+::: tip Platform Support
+ZZZ Mod Hub is built natively for 64-bit Windows (Windows 10 and Windows 11). It is not designed for handheld console operating systems (such as SteamOS or Linux-based handhelds) or mobile devices.
+:::
 
 ---
 
