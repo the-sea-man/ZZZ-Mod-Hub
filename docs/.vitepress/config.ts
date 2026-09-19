@@ -2,8 +2,7 @@ import { defineConfig } from 'vitepress';
 
 export default defineConfig({
   title: 'ZZZ Mod Hub',
-  description:
-    'The Modern Mod Manager for Zenless Zone Zero — User Guides & 3DMigoto Documentation',
+  description: 'The Modern Mod Manager for Zenless Zone Zero: User Guides & 3DMigoto Documentation',
   base: '/ZZZ-Mod-Hub/',
   cleanUrls: true,
   head: [
@@ -11,7 +10,7 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: '#ff7700' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:locale', content: 'en' }],
-    ['meta', { property: 'og:title', content: 'ZZZ Mod Hub — In-Depth Documentation' }],
+    ['meta', { property: 'og:title', content: 'ZZZ Mod Hub: Documentation & Guides' }],
     ['meta', { property: 'og:site_name', content: 'ZZZ Mod Hub' }],
     ['meta', { property: 'og:image', content: '/ZZZ-Mod-Hub/logo.png' }],
     [

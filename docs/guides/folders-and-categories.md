@@ -18,12 +18,12 @@ The left sidebar displays all available character entities in Zenless Zone Zero:
 
 You are not locked into standard character names. If you prefer grouping by factions, NPCs, weapons, or custom folders (e.g. `UI Mods`, `Global Shaders`, `Music`):
 
-1. Click the **Folder Manager** cog icon (`⚙`) in the sidebar header.
+1. Click the **Folder Manager** gear icon in the sidebar header.
 2. The **Custom Folder Management** dialog opens:
    - **Create Folder:** Type a new category name and click **Add**.
    - **Rename Folder:** Update folder names without breaking mod associations.
    - **Delete Folder:** Remove unused category directories.
-   - **Map to Character Entity:** Link your custom folder to an official character entity so auto-sorting and 3D previewing work seamlessly.
+   - **Map to Character Entity:** Link your custom folder to an official character entity so auto-sorting and 3D previewing work directly.
 
 ### Protected System Folders
 

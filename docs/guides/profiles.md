@@ -30,7 +30,7 @@ Instead of toggling 30 individual mods one by one, a profile remembers exactly w
 
 Previous mod managers often suffered from a nasty bug: if a mod folder was renamed with a `DISABLED_` prefix, swapping profiles could fail to recognize it or accidentally create duplicate entries.
 
-ZZZ Mod Hub features **Canonical Path Resolution**:
+ZZZ Mod Hub uses **Canonical Path Resolution**:
 
 - The manager strips prefixes and resolves the core identity of every mod folder.
 - Even if mods were renamed, disabled, or moved between categories, the profile engine tracks the true mod identity and applies your loadout cleanly without cross-character collisions.

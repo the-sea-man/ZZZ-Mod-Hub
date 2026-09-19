@@ -1,6 +1,6 @@
 # Customization & Extra Tools
 
-Make ZZZ Mod Hub truly your own. The app features deep visual personalization, a multi-language translation engine, audio synthesizer feedback, an in-game screenshot snapper, and gamified achievements.
+Make ZZZ Mod Hub truly your own. The app includes visual personalization, a multi-language translation engine, audio synthesizer feedback, an in-game screenshot snapper, and progress achievements.
 
 ---
 

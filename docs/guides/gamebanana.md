@@ -29,7 +29,7 @@ For any mod archive larger than 5MB, the manager splits the download stream into
 If the primary GameBanana download node times out, returns HTTP 500/503 errors, or fails integrity checks:
 
 - The downloader automatically catches the failure.
-- It switches to fallback Cloudflare mirror endpoints seamlessly without interrupting your download or prompting you with error dialogs.
+- It switches to fallback Cloudflare mirror endpoints automatically without interrupting your download or prompting you with error dialogs.
 
 ---
 

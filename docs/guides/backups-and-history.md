@@ -1,6 +1,6 @@
 # Backups & Operation History
 
-Modding can be unpredictable. An unexpected patch, an experimental split, or an accidental file deletion shouldn't ruin your library. ZZZ Mod Hub provides multi-layer recovery mechanisms: **Interactive Mod Backups** and **Dual-Track Operation History**.
+Modding can be unpredictable. An unexpected patch, an experimental split, or an accidental file deletion shouldn't ruin your library. ZZZ Mod Hub includes two recovery tools: **Interactive Mod Backups** and **Dual-Track Operation History**.
 
 ---
 
@@ -12,7 +12,7 @@ Whenever the manager modifies a mod (applying a patch fix, running a script repa
 
 When a backup exists for a mod, a **Rollback** badge appears on its card:
 
-1. Click the **Rollback** badge, or click the card menu cog (`⚙`) and select **Restore from Backup**.
+1. Click the **Rollback** badge, or click the card menu (`...`) and select **Restore from Backup**.
 2. The **Restore Backup Inspection Modal** opens:
    - **Timestamp:** Shows the exact date and time the backup was created.
    - **File Size Comparison:** Compares current files against backup originals (highlighting differences in bytes and file counts).

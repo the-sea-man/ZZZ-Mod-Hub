@@ -1,6 +1,6 @@
 # Installing & Managing Mods
 
-ZZZ Mod Hub streamlines the entire mod lifecycle from installation to in-game toggling.
+ZZZ Mod Hub organizes your mod library from installation to in-game toggling.
 
 ---
 
@@ -25,7 +25,7 @@ Click the **Install Mod** button (`+`) on the top toolbar:
 
 ### Method C: In-Manager Download from Discover
 
-Browse mods directly in the **Discover** tab and click **Install**. The manager downloads, verifies, and installs the mod in one smooth operation.
+Browse mods directly in the **Discover** tab and click **Install**. The manager downloads, verifies, and installs the mod automatically.
 
 ---
 
@@ -66,6 +66,6 @@ Every card in the library offers quick-action tools:
 
 - **Favorite (Star Icon):** Pin your favorite mods to the top of the category or filter by favorites using the filter chip.
 - **Mod Notes:** Click the notes icon on the card to write custom reminders (such as hotkey combinations like `[F8] Toggle Jacket`, author notes, or recommended settings).
-- **Custom Preview Image:** Right-click a card or open the cog menu (`⚙`) and select **Change Preview Image** to assign your own screenshot.
+- **Custom Preview Image:** Right-click a card or open the card menu (`...`) and select **Change Preview Image** to assign your own screenshot.
 - **Open in Explorer:** Jump straight to the physical mod folder on disk.
 - **Rollback Badge:** If you modified or fixed a mod, a rollback badge appears allowing you to restore the pre-fix backup at any time.

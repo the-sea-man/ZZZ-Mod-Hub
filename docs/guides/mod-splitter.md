@@ -16,9 +16,9 @@ Often you will download a composite mod pack containing multiple characters, or 
 
 ### Mode 1: Character Pack Decomposition
 
-Many mod creators bundle multiple characters together (e.g. `Cunning Hares Swimsuit Pack` containing Anby, Nicole, and Billy).
+Many mod creators bundle multiple characters together (e.g. a pack containing Anby, Nicole, and Billy).
 
-- **What it does:** Uses union-find graph clustering on buffer hashes to separate each character's meshes and textures into individual folders (`Mods/Anby Swimsuit`, `Mods/Nicole Swimsuit`, `Mods/Billy Swimsuit`).
+- **What it does:** Groups connected meshes and textures by buffer hash, then moves each character into its own folder (`Mods/Anby Swimsuit`, `Mods/Nicole Swimsuit`, `Mods/Billy Swimsuit`).
 - **Benefit:** You can enable Anby's outfit while keeping Billy vanilla, without having to manually edit scripts.
 
 ### Mode 2: Accessories & Toggle Isolation

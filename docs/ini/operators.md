@@ -29,7 +29,7 @@ This is just a list of operators allowed in GIMI and does not include any usage 
 
 GIMI has control structures as reserved words, including `if`, `else if`, `else`, and `endif`.
 The condition block starts with `if` and ends with `endif`. Nesting is supported.
-If you are new to programming, it is recommended to familiarize yourself with condition control syntax in other programming languages. This explanation will not delve into it extensively.
+If you are new to programming, check standard conditional syntax in other scripting languages. This guide focuses on 3DMigoto specifics.
 
 ```ini
 if time == $lest_date + 10.0
