@@ -2617,3 +2617,60 @@ drawindexed = 1626, 1626, 0
         assert_eq!(first_pass, second_pass, "Content must remain identical on second pass");
     }
 
+    /// A resource declaration whose file is missing, that nothing references, stops the whole
+    /// mod's texture overrides from taking effect. Two mods in the corpus carry them and
+    /// neither gets its textures applied; every mod without them does, including one using the
+    /// identical hash-keyed override style. Frame dumps pin it down: the component's
+    /// `ps-t3`/`ps-t5`/`ps-t6` hold textures byte-identical to a dump of the unmodded character.
+    ///
+    /// Both conditions must hold before anything is touched - that is what makes it safe.
+    #[test]
+    fn test_dead_resource_declarations_are_commented_out() {
+        let dir = std::env::temp_dir().join(format!(
+            "zzz_deadres_{}",
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("present.dds"), b"x").unwrap();
+
+        let ini = "[TextureOverrideThing]
+hash = deadbeef
+this = ResourceKept
+
+[ResourceKept]
+filename = present.dds
+
+[ResourceAlsoKept]
+filename = gone.dds
+
+[ResourceDead]
+filename = missing.dds
+";
+
+        // `ResourceAlsoKept` is referenced, so a missing file is the author's problem to fix -
+        // silently commenting it would turn a broken reference into a missing one.
+        let referenced = referenced_resource_names(&[ini.to_string()]);
+        assert!(referenced.contains("resourcekept"));
+
+        let mut refs = referenced.clone();
+        refs.insert("resourcealsokept".to_string());
+        let (out, n) = comment_out_dead_resource_sections(ini, &dir, &refs);
+        assert_eq!(n, 1, "only the unreferenced declaration with a missing file:
+{out}");
+        assert!(out.contains("; [ResourceDead]"), "dead section commented:
+{out}");
+        assert!(out.contains("; filename = missing.dds"), "its body commented too:
+{out}");
+        assert!(out.contains("[ResourceKept]"), "a resource whose file exists is untouched");
+        assert!(out.contains("[ResourceAlsoKept]"), "a referenced resource is untouched");
+        assert!(out.contains("DEAD RESOURCE"), "the reason is recorded in the file");
+
+        // Nothing to do when every declaration resolves.
+        let clean = "[ResourceKept]
+filename = present.dds
+";
+        let (_, none) = comment_out_dead_resource_sections(clean, &dir, &HashSet::new());
+        assert_eq!(none, 0, "a mod with no dead declarations is left alone");
+
+        let _ = fs::remove_dir_all(&dir);
+    }

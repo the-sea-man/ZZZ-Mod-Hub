@@ -219,7 +219,58 @@ pub fn detect_source_component(
         .iter()
         .find(|c| uses(c))
         .copied()
-        .or_else(|| uses(&rule.primary).then_some(rule.primary))
+        // A mod whose hashes are already modern is only a split candidate if it was migrated
+        // without being split. One authored against the post-split game, or already split,
+        // needs nothing - and splitting it again tears its mesh apart.
+        .or_else(|| {
+            (uses(&rule.primary) && !already_split(ini_content, rule)).then_some(rule.primary)
+        })
+}
+
+/// True when this INI already targets the post-split layout, so there is nothing to split.
+///
+/// The `primary` branch of `detect_source_component` exists for mods whose hashes a fixer
+/// migrated but whose geometry was never split - they render the split-off component's
+/// vertices at the wrong joints. It must not catch mods that are simply modern, and the two
+/// signals below are things only a post-split mod can carry:
+///
+/// - it binds the secondary component's buffers, which did not exist before the split;
+/// - its draw sections on the primary index buffer target a modern sub-draw offset (Jane's
+///   Hair `16986`), where a legacy mod names the legacy one (`33780`).
+///
+/// Both were needed: three mods in the corpus were mis-split, two caught by the first signal
+/// and one - authored from a modern frame dump, Hair only and no Arms section at all - by the
+/// second. Splitting them moved hair vertices into the Arms palette, where bones outside that
+/// palette are forced to index 0 and keep their weight, pinning geometry to the wrong joint:
+/// forehead hair on wrong bones, with polygons stretched towards the neck and hands.
+fn already_split(ini_content: &str, rule: &ComponentSplitRule) -> bool {
+    let sections = parse_ini_sections(ini_content);
+    let active: HashSet<String> = sections.iter().filter_map(|s| s.get_hash()).collect();
+
+    if active.contains(rule.secondary.ib)
+        || active.contains(rule.secondary.blend_vb)
+        || active.contains(rule.secondary.position_vb)
+    {
+        return true;
+    }
+
+    // Sub-draw offsets the split introduced. `0` is shared with the legacy layout and says
+    // nothing, so it is not evidence either way.
+    let modern_offsets: Vec<i64> = vanilla_subdraws(rule.primary.ib)
+        .unwrap_or(&[])
+        .iter()
+        .copied()
+        .filter(|o| *o != 0)
+        .collect();
+    if modern_offsets.is_empty() {
+        return false;
+    }
+    sections
+        .iter()
+        .filter(|s| s.get_hash().as_deref() == Some(rule.primary.ib))
+        .filter_map(|s| section_value(s, "match_first_index"))
+        .filter_map(|v| v.trim().parse::<i64>().ok())
+        .any(|o| modern_offsets.contains(&o))
 }
 
 impl ComponentSplitRule {
@@ -465,6 +516,33 @@ fn collect_draw_section(sec: &IniSectionData) -> LegacyDrawSection {
     LegacyDrawSection { match_first_index: mfi, lines, draws }
 }
 
+/// True when the component's own sections delegate to a command list the mod defines itself,
+/// so a binding we could not find may simply be hidden inside it.
+///
+/// This decides whether a failed analysis is blocking. When the component keeps its bindings
+/// in its own sections and we still found no vertex buffer, it is not a mesh replacement and
+/// the ordinary hash migration is fine. When it routes through `run = CommandList...`, the
+/// mesh is there and we cannot see it - and migrating anyway is never safe, because the fixer
+/// database sends this component's index, position and draw hashes to the *secondary* modern
+/// component while its texcoord goes to the *primary* one. An unsplit migration therefore
+/// lands the mesh in one component's bone palette with its UVs applied to the other, which is
+/// what rendered a mod in the corpus with broken bones and mixed textures.
+///
+/// The framework's own command lists do not count: every ZZMI mod runs those.
+fn delegates_to_mod_command_list(secs: &[&IniSectionData]) -> bool {
+    secs.iter().any(|s| {
+        s.lines.iter().any(|l| {
+            let clean = l.split(';').next().unwrap_or("").trim().to_lowercase();
+            let Some(rest) = clean.strip_prefix("run") else { return false };
+            let target = rest.trim().trim_start_matches('=').trim();
+            target.starts_with("commandlist")
+                && !target.contains("zzmi")
+                && target != "commandlistskintexture"
+                && target != "commandlistskin"
+        })
+    })
+}
+
 fn read_ib(path: &Path, format: &str) -> (Vec<u32>, usize) {
     let bytes = fs::read(path).unwrap_or_default();
     let size = if format.to_uppercase().contains("R16") { 2 } else { 4 };
@@ -547,6 +625,7 @@ fn dist2(a: [f64; 3], b: [f64; 3]) -> f64 {
 /// Returns `None` when every triangle lands on the same side, which is the common case and
 /// means the draw belongs wholly to one component - the caller then classifies it as a unit
 /// and keeps its index buffer intact.
+#[allow(unknown_lints, clippy::chunks_exact_to_as_chunks)]
 fn partition_draw_triangles(
     idx: &[u32],
     blend: &[u8],
@@ -717,10 +796,20 @@ pub fn apply_component_split(
         })
     };
 
-    let (vb2_name, _binding_hash) = find_binding("vb2")
-        .ok_or_else(|| SplitError::NotAnalysable("component binds no vb2".into()))?;
-    let (vb0_name, _) = find_binding("vb0")
-        .ok_or_else(|| SplitError::NotAnalysable("component binds no vb0".into()))?;
+    // A binding we cannot find is blocking only when the component hides it behind its own
+    // command list; see `delegates_to_mod_command_list`.
+    let hidden = delegates_to_mod_command_list(&legacy_secs);
+    let unfound = |slot: &str| -> SplitError {
+        if hidden {
+            SplitError::Unsupported(format!(
+                "component routes its bindings through `run = CommandList...`, so its {slot} cannot be resolved"
+            ))
+        } else {
+            SplitError::NotAnalysable(format!("component binds no {slot}"))
+        }
+    };
+    let (vb2_name, _binding_hash) = find_binding("vb2").ok_or_else(|| unfound("vb2"))?;
+    let (vb0_name, _) = find_binding("vb0").ok_or_else(|| unfound("vb0"))?;
     let vb1_name = find_binding("vb1").map(|(n, _)| n);
 
     let resolve = |name: &str| -> Result<ResourceDecl, SplitError> {
@@ -792,9 +881,7 @@ pub fn apply_component_split(
         .filter(|s| !s.draws.is_empty())
         .collect();
     if draw_sections.is_empty() {
-        return Err(SplitError::NotAnalysable(
-            "component has neither draw calls nor an ib binding".into(),
-        ));
+        return Err(unfound("draw calls"));
     }
 
     let mut ib_cache: HashMap<String, (Vec<u32>, usize)> = HashMap::new();

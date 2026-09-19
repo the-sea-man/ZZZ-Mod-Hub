@@ -871,3 +871,131 @@ fn test_every_split_draw_section_runs_the_texture_command_list() {
 
     let _ = fs::remove_dir_all(&dir);
 }
+
+/// `detect_source_component` also matches the modern hash set, for mods a fixer hash-migrated
+/// but never split - those render the split-off component's vertices at the wrong joints. That
+/// fallback must not catch mods which are simply *modern*, or the engine tears apart a mesh
+/// that was already correct.
+///
+/// Three mods in the corpus were mis-split this way. Their Hair blend buffers are in the
+/// modern palette, whose indices 4-25 are legitimate modern Hair bones - but the legacy
+/// palette reads 4-25 as Arms, so that geometry was classified into the Arms half and had its
+/// bone indices remapped through the wrong table. In game: forehead hair on wrong bones, with
+/// polygons stretched towards the neck and hands, because a bone outside the target palette is
+/// forced to index 0 and keeps its weight.
+#[test]
+fn test_modern_mods_are_not_split_again() {
+    let rule = &COMPONENT_SPLITS[0];
+    let p = rule.primary;
+    let s = rule.secondary;
+
+    // Caught by the secondary component: it did not exist before the split, so a mod binding
+    // it is already on the post-split layout.
+    let with_arms = format!(
+        "[TextureOverrideHairIB]\nhash = {}\nhandling = skip\n\
+         [TextureOverrideHairBlend]\nhash = {}\nvb2 = ResourceHairBlend\n\
+         [TextureOverrideArmsIB]\nhash = {}\nhandling = skip\n\
+         [TextureOverrideArmsBlend]\nhash = {}\nvb2 = ResourceArmsBlend\n",
+        p.ib, p.blend_vb, s.ib, s.blend_vb
+    );
+    assert!(
+        find_component_split(&with_arms, Some("JaneDoe")).is_none(),
+        "a mod that already binds the Arms component is already split"
+    );
+
+    // Caught by the sub-draw offset: `16986` only exists in the post-split layout. This mod
+    // has no Arms section at all, so the offset is the only signal.
+    let modern_offsets = format!(
+        "[TextureOverrideHairIB]\nhash = {}\nhandling = skip\n\
+         [TextureOverrideHairBlend]\nhash = {}\nvb2 = ResourceHairBlend\n\
+         [TextureOverrideHairA]\nhash = {}\nmatch_first_index = 0\nib = ResourceA\n\
+         drawindexed = 16986, 0, 0\n\
+         [TextureOverrideHairB]\nhash = {}\nmatch_first_index = 16986\nib = ResourceB\n\
+         drawindexed = 1572, 0, 0\n",
+        p.ib, p.blend_vb, p.ib, p.ib
+    );
+    assert!(
+        find_component_split(&modern_offsets, Some("JaneDoe")).is_none(),
+        "a mod drawing at the modern sub-draw offset was authored after the split"
+    );
+
+    // Still caught: modern hashes, but the legacy sub-draw offset and no Arms component - the
+    // hashes were migrated and the geometry never was. This one genuinely needs splitting.
+    let migrated_only = format!(
+        "[TextureOverrideHairIB]\nhash = {}\nhandling = skip\n\
+         [TextureOverrideHairBlend]\nhash = {}\nvb2 = ResourceHairBlend\n\
+         [TextureOverrideHairA]\nhash = {}\nmatch_first_index = 0\nib = ResourceA\n\
+         drawindexed = 16932, 0, 0\n\
+         [TextureOverrideHairB]\nhash = {}\nmatch_first_index = 33780\nib = ResourceB\n\
+         drawindexed = 1626, 0, 0\n",
+        p.ib, p.blend_vb, p.ib, p.ib
+    );
+    assert!(
+        find_component_split(&migrated_only, Some("JaneDoe")).is_some(),
+        "migrated-but-unsplit mods must still be detected:\n{migrated_only}"
+    );
+
+    // And a plain legacy mod is unaffected by any of this.
+    let dir = temp_dir("modernguard");
+    let legacy = make_fixture(&dir);
+    assert!(
+        find_component_split(&legacy, Some("JaneDoe")).is_some(),
+        "legacy mods are still detected"
+    );
+    let _ = fs::remove_dir_all(&dir);
+}
+
+/// A component that routes its bindings through its own command list cannot be analysed, and
+/// that failure has to be **blocking** so `apply_mod_fix` withholds the whole component's
+/// migration.
+///
+/// The fixer database sends this component's index, position and draw hashes to the
+/// *secondary* modern component ("Rerouted to Hands & Accessories") but its texcoord to the
+/// *primary* one. Migrating without splitting therefore lands the mesh in one component's bone
+/// palette with its UVs applied to the other - broken bones and mixed textures, which is
+/// exactly how a merged mod in the corpus rendered.
+///
+/// A component that keeps its bindings in its own sections and still has no vertex buffer is a
+/// different case: it is not a mesh replacement at all, so the ordinary migration is fine and
+/// the failure stays non-blocking.
+#[test]
+fn test_bindings_hidden_behind_a_mod_command_list_block_the_migration() {
+    let dir = temp_dir("cmdlist");
+    let rule = &COMPONENT_SPLITS[0];
+
+    // The real shape: hash sections delegate everything, and the bindings live in command
+    // lists the split does not resolve.
+    let delegated = "\
+[TextureOverrideJaneHairPosition]\r\nhash = 24323bf9\r\nrun = CommandListJaneHairPosition\r\n\
+[TextureOverrideJaneHairIB]\r\nhash = 7b16a708\r\nrun = CommandListJaneHairIB\r\n\
+[TextureOverrideJaneHairA]\r\nhash = 7b16a708\r\nmatch_first_index = 0\r\n\
+run = CommandListJaneHairA\r\n\
+[CommandListJaneHairPosition]\r\nvb0 = ResourceP\r\nvb2 = ResourceB\r\ndraw = 8125,0\r\n\
+[CommandListJaneHairA]\r\nib = ResourceIB\r\n";
+    assert!(
+        find_component_split(delegated, Some("JaneDoe")).is_some(),
+        "the component is still detected"
+    );
+    let err = apply_component_split(&dir, delegated, rule, &remap())
+        .expect_err("cannot be split through the indirection");
+    assert!(
+        err.is_blocking(),
+        "must block the migration, got a pass-through error: {err}"
+    );
+
+    // Same INI without the mod command lists: no vertex buffer at all, so this is not a mesh
+    // replacement and the ordinary migration must still be allowed through.
+    let texture_only = "\
+[TextureOverrideJaneHairIB]\r\nhash = 7b16a708\r\nhandling = skip\r\n\
+[TextureOverrideJaneHairA]\r\nhash = 7b16a708\r\nmatch_first_index = 0\r\n\
+run = CommandListSkinTexture\r\nib = ResourceIB\r\n\
+[TextureOverrideJaneHairBlend]\r\nhash = 8721477f\r\n";
+    let err = apply_component_split(&dir, texture_only, rule, &remap())
+        .expect_err("still cannot be split");
+    assert!(
+        !err.is_blocking(),
+        "a component with no mesh must not block its own hash migration: {err}"
+    );
+
+    let _ = fs::remove_dir_all(&dir);
+}

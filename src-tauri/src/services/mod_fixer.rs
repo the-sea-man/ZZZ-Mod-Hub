@@ -1153,7 +1153,7 @@ pub fn analyze_mod_for_fixes(mod_path: &Path, fixer_db: &FixerDatabase) -> ModFi
                         let needs_remap = if buf_path.exists() {
                             if let Ok(meta) = fs::metadata(&buf_path) {
                                 let len = meta.len() as usize;
-                                len > 0 && len % 36 == 0 && len % 48 != 0
+                                len > 0 && len.is_multiple_of(36) && !len.is_multiple_of(48)
                             } else {
                                 stride == 36
                             }
@@ -1568,7 +1568,7 @@ pub fn ensure_handling_skip_on_draw_sections(ini_content: &str) -> (String, usiz
         return (ini_content.to_string(), 0);
     }
 
-    inserts.sort_by(|a, b| b.0.cmp(&a.0));
+    inserts.sort_by_key(|b| std::cmp::Reverse(b.0));
     for (idx, text) in inserts {
         lines.insert(idx, text);
     }
@@ -1661,7 +1661,7 @@ pub fn is_jane_head_hijacked(ini_content: &str) -> bool {
     for sec in &sections {
         let sec_name = sec.header.to_lowercase();
         let is_head_sec = sec_name.contains("head") || sec_name.contains("hair");
-        let has_legacy_head_hash = sec.get_hash().as_deref().map_or(false, |h| {
+        let has_legacy_head_hash = sec.get_hash().as_deref().is_some_and(|h| {
             matches!(
                 h,
                 "9268a5af"
@@ -2081,6 +2081,100 @@ fn calc_format_chunk_size(chunk: &str) -> usize {
 }
 
 /// Update resource stride in INI text when a buffer format changes
+/// Comments out `[Resource...]` sections whose `filename` does not exist on disk and which
+/// nothing references.
+///
+/// A dead declaration looks harmless, but two mods in the corpus carry them and **neither
+/// gets its texture overrides applied**, while every mod without them does. Frame dumps make
+/// the failure exact: at every draw the component's `ps-t3`/`ps-t5`/`ps-t6` hold textures
+/// byte-identical to a dump of the unmodded character, even though `checktextureoverride`
+/// runs on those slots and the mod defines hash-keyed overrides for them. A mod using the
+/// identical override style with no dead declarations has all four slots replaced.
+///
+/// Both conditions are required before touching anything, which is what makes this safe:
+/// a declaration pointing at a missing file cannot be doing any work, and one nothing
+/// references cannot be depended on. The section is commented rather than deleted so the
+/// author's intent stays visible.
+fn comment_out_dead_resource_sections(
+    ini_content: &str,
+    ini_dir: &Path,
+    referenced: &HashSet<String>,
+) -> (String, usize) {
+    let sections = parse_ini_sections(ini_content);
+    let mut dead: HashSet<String> = HashSet::new();
+    for sec in &sections {
+        let header = sec.header.trim();
+        if !header.to_lowercase().starts_with("resource") {
+            continue;
+        }
+        if referenced.contains(&header.to_lowercase()) {
+            continue;
+        }
+        let Some(raw) = sec.lines.iter().find_map(|l| {
+            let clean = l.split(';').next().unwrap_or("").trim();
+            let (k, v) = clean.split_once('=')?;
+            k.trim().eq_ignore_ascii_case("filename").then(|| v.trim().to_string())
+        }) else {
+            continue;
+        };
+        let rel = raw.trim().trim_matches('"').replace('\\', "/");
+        let rel = rel.trim_start_matches("./");
+        if rel.is_empty() || ini_dir.join(rel).is_file() {
+            continue;
+        }
+        dead.insert(header.to_string());
+    }
+    if dead.is_empty() {
+        return (ini_content.to_string(), 0);
+    }
+
+    let mut out = String::with_capacity(ini_content.len() + dead.len() * 80);
+    let mut in_dead = false;
+    for line in ini_content.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with('[') && trimmed.ends_with(']') {
+            let name = trimmed[1..trimmed.len() - 1].trim();
+            in_dead = dead.contains(name);
+            if in_dead {
+                out.push_str(
+                    "; [ZZZMODMANAGER DEAD RESOURCE - FILE MISSING, NOTHING REFERENCES IT]\r\n",
+                );
+            }
+        }
+        if in_dead && !trimmed.is_empty() && !trimmed.starts_with(';') {
+            out.push_str("; ");
+        }
+        out.push_str(line.trim_end());
+        out.push_str("\r\n");
+    }
+    (out, dead.len())
+}
+
+/// Every resource name referenced by a value in these INIs, lower-cased.
+///
+/// Namespaced references (`ResourceFoo`, `\ns\ResourceFoo`, `ref ResourceFoo`) all reduce to
+/// the trailing name, so the comparison stays whole-name and never matches a prefix.
+fn referenced_resource_names(ini_contents: &[String]) -> HashSet<String> {
+    let mut out = HashSet::new();
+    for content in ini_contents {
+        for line in content.lines() {
+            let clean = line.split(';').next().unwrap_or("").trim();
+            let Some((key, value)) = clean.split_once('=') else { continue };
+            if key.trim().to_lowercase() == "filename" {
+                continue;
+            }
+            for token in value.split(|c: char| c.is_whitespace() || c == ',') {
+                let name = token.trim().trim_start_matches("ref").trim();
+                let name = name.rsplit(['\\', '/']).next().unwrap_or(name).trim();
+                if name.to_lowercase().starts_with("resource") {
+                    out.insert(name.to_lowercase());
+                }
+            }
+        }
+    }
+    out
+}
+
 pub fn update_resource_stride_in_ini(ini_content: &str, buf_filename: &str, new_stride: usize) -> (String, bool) {
     let mut lines: Vec<String> = ini_content.lines().map(|l| l.to_string()).collect();
     let mut section_ranges: Vec<(usize, usize)> = Vec::new();
@@ -3073,6 +3167,32 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
                             }
                         }
                 }
+            }
+        }
+
+        // A resource declaration whose file is missing, that nothing references, stops this
+        // mod's texture overrides from taking effect at all - see
+        // `comment_out_dead_resource_sections`. References are gathered across every INI in the
+        // mod, because one file's resource can be used from another.
+        {
+            let all_inis: Vec<String> = ini_files
+                .iter()
+                .filter_map(|p| fs::read_to_string(p).ok())
+                .chain(std::iter::once(new_content.clone()))
+                .collect();
+            let referenced = referenced_resource_names(&all_inis);
+            let (content_after_dead, dead_count) = comment_out_dead_resource_sections(
+                &new_content,
+                ini_path.parent().unwrap_or(mod_path),
+                &referenced,
+            );
+            if dead_count > 0 {
+                new_content = content_after_dead;
+                ini_changed = true;
+                actions_summary.push(format!(
+                    "Commented out {dead_count} dead resource declaration(s) - their file is \
+                     missing and nothing references them; they block texture overrides"
+                ));
             }
         }
 
