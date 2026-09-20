@@ -1,5 +1,6 @@
 //! Domain services and business engines.
 
+pub mod bind_simulator;
 pub mod install;
 pub mod mod_fixer;
 pub mod mod_viewer;

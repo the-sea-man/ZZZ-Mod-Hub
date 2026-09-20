@@ -23,6 +23,7 @@ enum Command {
     VerifyMod { dir: PathBuf, quality: String },
     FixMod { dir: PathBuf },
     CheckFixable { dir: PathBuf },
+    SimulateMod { dir: PathBuf },
     HealthCheck,
     Help,
 }
@@ -99,6 +100,7 @@ EXAMPLES:
     zmm-cli verify-mods "C:\Games\ZZZ\Mods"
     zmm-cli verify-mods "C:\Games\ZZZ\Mods" --json
     zmm-cli verify-mod  "fixtures/fixture_character_mod"
+    zmm-cli simulate-mod "path/to/ModFolder"
     zmm-cli health-check --db "src/characters.json"
 "#
     );
@@ -226,6 +228,14 @@ fn parse_cli_args() -> Result<CliConfig, String> {
                 return Err("check-fixable requires a mod path: zmm-cli check-fixable <MOD_DIR>".to_string());
             }
             Command::CheckFixable {
+                dir: PathBuf::from(&positional[1]),
+            }
+        }
+        "simulate-mod" | "simulatemod" | "simulate" => {
+            if positional.len() < 2 {
+                return Err("simulate-mod requires a mod path: zmm-cli simulate-mod <MOD_DIR>".to_string());
+            }
+            Command::SimulateMod {
                 dir: PathBuf::from(&positional[1]),
             }
         }
@@ -669,6 +679,123 @@ fn main() -> ExitCode {
         Command::VerifyMod { dir, quality } => execute_verify_mod(&dir, &quality, config.json),
         Command::CheckFixable { dir } => execute_check_fixable(&dir, &db_path, config.json),
         Command::FixMod { dir } => execute_fix_mod(&dir, &db_path, config.json),
+        Command::SimulateMod { dir } => execute_simulate_mod(&dir, config.json),
         Command::HealthCheck => execute_health_check(&db_path, config.json),
     }
+}
+
+/// Predict what 3DMigoto will bind at each draw the game issues, without launching the game.
+///
+/// The point of this command is that a wrong fix costs a second instead of a game launch, a frame
+/// dump and a human reading it back. Anything the simulator cannot evaluate prints as
+/// `UNRESOLVED` rather than being assumed - a silent wrong answer is what it exists to avoid.
+fn execute_simulate_mod(dir: &Path, json: bool) -> ExitCode {
+    use zzzmodmanager_tauri_lib::services::bind_simulator::{
+        simulate_with_shipped_baseline, Binding, Severity,
+    };
+
+    if !dir.is_dir() {
+        eprintln!("not a directory: {}", dir.display());
+        return ExitCode::from(2);
+    }
+    let report = match simulate_with_shipped_baseline(dir) {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("{e}");
+            return ExitCode::from(2);
+        }
+    };
+
+    if json {
+        match serde_json::to_string_pretty(&report) {
+            Ok(text) => println!("{text}"),
+            Err(e) => {
+                eprintln!("could not serialise the report: {e}");
+                return ExitCode::from(2);
+            }
+        }
+        // a mod that renders wrong is a failing exit code, so this is usable in a sweep
+        return ExitCode::from(u8::from(report.has_errors()));
+    }
+
+    let show = |b: &Binding| -> String {
+        match b {
+            Binding::Vanilla => "vanilla".to_string(),
+            Binding::Mod(r) => format!("MOD {r}"),
+            Binding::Unresolved(t) => format!("UNRESOLVED (behind {t})"),
+        }
+    };
+
+    println!("{}", "=".repeat(78));
+    println!(" Bind simulation - {}", report.mod_name);
+    println!("{}", "=".repeat(78));
+    println!(
+        "Agents touched:  {}",
+        if report.agents.is_empty() { "(none)".to_string() } else { report.agents.join(", ") }
+    );
+    println!(
+        "Components:      {} simulated, {} in the baseline this mod does not touch",
+        report.draws.len(),
+        report.untouched_components
+    );
+
+    if report.draws.is_empty() {
+        println!("\nThis mod binds nothing the baseline covers. Either it targets an Agent with no");
+        println!("frame dump yet, or it is not a mesh mod.");
+    }
+
+    let mut current = String::new();
+    for d in &report.draws {
+        let who = format!(
+            "{} {}",
+            d.agent.as_deref().unwrap_or("?"),
+            d.component.as_deref().unwrap_or(&d.ib_hash)
+        );
+        if who != current {
+            println!("\n{who}   (ib={})", d.ib_hash);
+            current = who;
+        }
+        let state = match (d.suppressed, d.replaced) {
+            (true, true) => "replaced",
+            (true, false) => "SUPPRESSED, NOTHING DRAWN",
+            (false, true) => "drawn alongside vanilla",
+            (false, false) => "untouched",
+        };
+        println!(
+            "  offset {:<8} {:>7} indices   {:<26} ib: {}",
+            d.first_index,
+            d.index_count,
+            state,
+            show(&d.ib)
+        );
+        for (role, b) in &d.buffers {
+            if !matches!(b, Binding::Vanilla) {
+                println!("      {:<14} {}", role, show(b));
+            }
+        }
+        let mod_textures: Vec<String> = d
+            .textures
+            .iter()
+            .filter(|(_, b)| !matches!(b, Binding::Vanilla))
+            .map(|(slot, b)| format!("{slot}={}", show(b)))
+            .collect();
+        if !mod_textures.is_empty() {
+            println!("      textures       {}", mod_textures.join("  "));
+        }
+    }
+
+    if report.findings.is_empty() {
+        println!("\nNo findings.");
+    } else {
+        println!("\nFindings ({}):", report.findings.len());
+        for f in &report.findings {
+            let tag = match f.severity {
+                Severity::Error => "ERROR  ",
+                Severity::Warning => "warning",
+            };
+            println!("  [{tag}] {} - {}", f.code, f.message);
+        }
+    }
+    println!("{}", "=".repeat(78));
+    ExitCode::from(u8::from(report.has_errors()))
 }

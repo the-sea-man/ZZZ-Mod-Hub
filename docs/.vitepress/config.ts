@@ -33,6 +33,7 @@ export default defineConfig({
       {
         text: 'User Guides',
         items: [
+          { text: 'Installation & System Setup', link: '/guides/installation-and-setup' },
           { text: 'Installing & Managing Mods', link: '/guides/mod-management' },
           { text: 'Category Folders & Search', link: '/guides/folders-and-categories' },
           { text: 'Profiles & Presets', link: '/guides/profiles' },
@@ -57,7 +58,8 @@ export default defineConfig({
           text: 'Getting Started',
           collapsed: false,
           items: [
-            { text: 'Quick Start & Setup', link: '/guides/getting-started' },
+            { text: 'Quick Start Guide', link: '/guides/getting-started' },
+            { text: 'Installation & System Setup', link: '/guides/installation-and-setup' },
             { text: 'Performance Modes', link: '/guides/performance' },
           ],
         },
