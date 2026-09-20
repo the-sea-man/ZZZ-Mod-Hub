@@ -921,3 +921,291 @@ hash = 046400d3
         let _ = fs::remove_dir_all(&temp_dir);
     }
 
+    #[test]
+    fn test_scan_external_folder_depth_1_flat() {
+        let unique_id = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+        let temp_root = std::env::temp_dir().join(format!("zzz_test_importer_d1_{}", unique_id));
+        let _ = fs::create_dir_all(&temp_root);
+
+        let mod_a = temp_root.join("ModA");
+        let mod_b = temp_root.join("ModB");
+        let _ = fs::create_dir_all(&mod_a);
+        let _ = fs::create_dir_all(&mod_b);
+        let _ = fs::write(mod_a.join("ModA.ini"), "[TextureOverrideA]\nhash=12345678\n");
+        let _ = fs::write(mod_b.join("ModB.ini"), "[TextureOverrideB]\nhash=87654321\n");
+
+        let result = scan_external_folder(&temp_root, None).expect("Scan should succeed");
+        assert_eq!(result.recommended_depth, 1, "Flat directory must recommend Depth 1");
+        assert_eq!(result.candidates.len(), 2, "Must discover both Depth 1 candidate mods");
+        for cand in &result.candidates {
+            assert!(cand.ini_count >= 1, "Each candidate should have at least 1 ini");
+            assert!(!cand.has_subdirs_with_mods, "Candidates should not have nested sub-mods");
+            assert!(!cand.is_likely_subcomponent, "Candidates should not be subcomponents");
+        }
+
+        let _ = fs::remove_dir_all(&temp_root);
+    }
+
+    #[test]
+    fn test_scan_external_folder_depth_2_categorized() {
+        let unique_id = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+        let temp_root = std::env::temp_dir().join(format!("zzz_test_importer_d2_{}", unique_id));
+        let _ = fs::create_dir_all(&temp_root);
+
+        let char_dir = temp_root.join("Playable Characters");
+        let mod_a = char_dir.join("Ellen_Maid");
+        let mod_b = char_dir.join("Jane_Police");
+        let _ = fs::create_dir_all(&mod_a);
+        let _ = fs::create_dir_all(&mod_b);
+        let _ = fs::write(mod_a.join("Ellen.ini"), "[TextureOverrideEllen]\nhash=11111111\n");
+        let _ = fs::write(mod_b.join("Jane.ini"), "[TextureOverrideJane]\nhash=22222222\n");
+
+        let result = scan_external_folder(&temp_root, None).expect("Scan should succeed");
+        assert_eq!(result.recommended_depth, 2, "Nested category structure must recommend Depth 2");
+        assert_eq!(result.candidates.len(), 2, "Must discover both candidate mods at Depth 2");
+
+        // Verify Depth 1 was flagged with shallow warnings
+        let d1_analysis = result.depth_analyses.iter().find(|d| d.depth == 1).unwrap();
+        assert!(d1_analysis.shallow_warning_count > 0, "Depth 1 must have shallow warning for container category");
+
+        let _ = fs::remove_dir_all(&temp_root);
+    }
+
+    #[test]
+    fn test_scan_external_folder_deep_warning_detection() {
+        let unique_id = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+        let temp_root = std::env::temp_dir().join(format!("zzz_test_importer_deep_{}", unique_id));
+        let _ = fs::create_dir_all(&temp_root);
+
+        let mod_dir = temp_root.join("Ellen_Outfit");
+        let tex_sub = mod_dir.join("textures");
+        let _ = fs::create_dir_all(&tex_sub);
+        let _ = fs::write(mod_dir.join("Ellen.ini"), "[TextureOverride]\nhash=12345678\n");
+        let _ = fs::write(tex_sub.join("diffuse.dds"), b"fake texture");
+
+        // When scanning at Depth 2 explicitly:
+        let result = scan_external_folder(&temp_root, Some(2)).expect("Scan should succeed");
+        let d2_analysis = result.depth_analyses.iter().find(|d| d.depth == 2).unwrap();
+        assert!(d2_analysis.deep_warning_count > 0, "Depth 2 must detect texture subfolder as deep warning");
+
+        let _ = fs::remove_dir_all(&temp_root);
+    }
+
+    #[test]
+    fn test_scan_external_folder_no_valid_mods_yields_zero_recommendation() {
+        let unique_id = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+        let temp_root = std::env::temp_dir().join(format!("zzz_test_importer_empty_{}", unique_id));
+        let _ = fs::create_dir_all(&temp_root);
+
+        // Create empty folders without any inis or buffers
+        let _ = fs::create_dir_all(temp_root.join("FolderA"));
+        let _ = fs::create_dir_all(temp_root.join("FolderB"));
+
+        let result = scan_external_folder(&temp_root, None).expect("Scan should succeed");
+        assert_eq!(result.recommended_depth, 0, "When no valid mods exist at any depth, recommended_depth must be 0");
+
+        let _ = fs::remove_dir_all(&temp_root);
+    }
+
+    #[test]
+    fn test_scan_external_folder_mod_with_suboptions_not_penalized_as_container() {
+        let unique_id = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+        let temp_root = std::env::temp_dir().join(format!("zzz_test_importer_subopt_{}", unique_id));
+        let _ = fs::create_dir_all(&temp_root);
+
+        // Mod folder directly has an ini, AND has subdirectories with toggle options
+        let mod_dir = temp_root.join("Nicole_Party_Dress");
+        let opt_dir = mod_dir.join("Options").join("No_Glasses");
+        let _ = fs::create_dir_all(&opt_dir);
+        let _ = fs::write(mod_dir.join("Nicole.ini"), "[TextureOverrideNicole]\nhash=33333333\n");
+        let _ = fs::write(opt_dir.join("GlassesToggle.ini"), "[Constants]\nglobal $glasses=0\n");
+
+        let result = scan_external_folder(&temp_root, None).expect("Scan should succeed");
+        assert_eq!(result.recommended_depth, 1, "Mod with sub-options must be recommended at Depth 1");
+        let d1_analysis = result.depth_analyses.iter().find(|d| d.depth == 1).unwrap();
+        assert_eq!(d1_analysis.valid_mod_count, 1, "Mod with sub-options must count as a valid mod");
+        assert_eq!(d1_analysis.shallow_warning_count, 0, "Mod with direct ini must not be penalized as a container");
+
+        let _ = fs::remove_dir_all(&temp_root);
+    }
+
+    #[test]
+    fn test_execute_external_import_copy_and_conflict_avoidance() {
+        let unique_id = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+        let temp_src = std::env::temp_dir().join(format!("zzz_test_import_src_{}", unique_id));
+        let temp_dest = std::env::temp_dir().join(format!("zzz_test_import_dest_{}", unique_id));
+        let _ = fs::create_dir_all(&temp_src);
+        let _ = fs::create_dir_all(&temp_dest);
+
+        // Create source mod
+        let src_mod = temp_src.join("Corin_Bunny");
+        let _ = fs::create_dir_all(&src_mod);
+        let _ = fs::write(src_mod.join("Corin.ini"), "[TextureOverrideCorin]\nhash=abcdef12\n");
+        let _ = fs::write(src_mod.join("CorinBody.buf"), b"vertex buffer data");
+
+        // Pre-create existing mod in Unassigned to induce collision
+        let unassigned_dir = temp_dest.join("Unassigned");
+        let _ = fs::create_dir_all(unassigned_dir.join("Corin_Bunny"));
+
+        let request = ExecuteImportRequest {
+            candidate_paths: vec![src_mod.to_string_lossy().to_string()],
+            destination_root: temp_dest.to_string_lossy().to_string(),
+            copy_mode: true,
+        };
+
+        let exec_result = execute_external_import(request).expect("Import execution should succeed");
+        assert_eq!(exec_result.success_count, 1, "Must report 1 success");
+        assert_eq!(exec_result.conflict_count, 1, "Must detect and record 1 conflict");
+
+        // Verify source files still exist (copy mode non-destructive guarantee)
+        assert!(src_mod.join("Corin.ini").exists(), "Source files must not be deleted in copy mode");
+
+        // Verify destination has the conflict-renamed folder and .zmm-meta.json
+        let dest_entries: Vec<String> = fs::read_dir(&unassigned_dir)
+            .unwrap()
+            .filter_map(Result::ok)
+            .map(|e| e.file_name().to_string_lossy().to_string())
+            .collect();
+        assert!(dest_entries.iter().any(|name| name.starts_with("DISABLED Corin_Bunny_conflict_")),
+            "Conflict folder must be created with DISABLED prefix and conflict hash");
+
+        let _ = fs::remove_dir_all(&temp_src);
+        let _ = fs::remove_dir_all(&temp_dest);
+    }
+
+    #[test]
+    fn test_execute_external_import_routes_to_playable_characters_and_migrates_orphan_unassigned() {
+        let unique_id = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+        let temp_src = std::env::temp_dir().join(format!("zzz_test_pc_src_{}", unique_id));
+        let temp_dest = std::env::temp_dir().join(format!("zzz_test_pc_dest_{}", unique_id));
+        let _ = fs::create_dir_all(&temp_src);
+        let pc_dir = temp_dest.join("Playable Characters");
+        let _ = fs::create_dir_all(&pc_dir);
+
+        // Pre-create an orphan mod in top-level Unassigned (e.g. from previous mistaken run)
+        let top_unassigned = temp_dest.join("Unassigned");
+        let orphan_mod = top_unassigned.join("Legacy_Mod");
+        let _ = fs::create_dir_all(&orphan_mod);
+        let _ = fs::write(orphan_mod.join("mod.ini"), "[TextureOverride]\nhash=12345678\n");
+
+        // Create new external candidate mod
+        let new_mod = temp_src.join("New_Billy_Skin");
+        let _ = fs::create_dir_all(&new_mod);
+        let _ = fs::write(new_mod.join("Billy.ini"), "[TextureOverride]\nhash=87654321\n");
+
+        let request = ExecuteImportRequest {
+            candidate_paths: vec![new_mod.to_string_lossy().to_string()],
+            destination_root: temp_dest.to_string_lossy().to_string(),
+            copy_mode: true,
+        };
+
+        let result = execute_external_import(request).expect("Import should succeed");
+        assert_eq!(result.success_count, 1);
+
+        // Verify the canonical Unassigned folder inside Playable Characters exists
+        let canonical_unassigned = pc_dir.join("Unassigned");
+        assert!(canonical_unassigned.exists(), "Canonical Unassigned must exist in Playable Characters");
+
+        // Verify new mod is in Playable Characters/Unassigned
+        assert!(canonical_unassigned.join("New_Billy_Skin").exists(), "New mod must be in canonical Unassigned");
+
+        // Verify orphan mod was migrated from top-level Unassigned to Playable Characters/Unassigned
+        assert!(canonical_unassigned.join("Legacy_Mod").exists(), "Orphan mod must be migrated to canonical Unassigned");
+        assert!(!top_unassigned.exists(), "Top-level orphan Unassigned folder must be cleaned up");
+
+        let _ = fs::remove_dir_all(&temp_src);
+        let _ = fs::remove_dir_all(&temp_dest);
+    }
+
+    #[test]
+    fn test_scan_external_folder_heterogeneous_xxmi_structure() {
+        let unique_id = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+        let temp_root = std::env::temp_dir().join(format!("zzz_test_xxmi_smart_{}", unique_id));
+        let _ = fs::create_dir_all(&temp_root);
+
+        // 1. Direct mod at depth 1
+        let caesar_dir = temp_root.join("DISABLED CaesarKing-BottomHeavy(NSFW)");
+        let _ = fs::create_dir_all(&caesar_dir);
+        let _ = fs::write(caesar_dir.join("CaesarBH.ini"), "[TextureOverrideCaesar]\nhash=11111111\n");
+        let _ = fs::write(caesar_dir.join("CaesarBody.buf"), b"buf data");
+
+        // 2. Category container at depth 1 with multiple child mods at depth 2
+        let belle_container = temp_root.join("Belle - Vibrant Store Manager");
+        let _ = fs::create_dir_all(&belle_container);
+        let _ = fs::write(belle_container.join("category.json"), r#"{"character_id":"belle"}"#);
+
+        // Child mod A: single-mod wrapper folder
+        let juicier_dir = belle_container.join("DISABLED Juicier Belle");
+        let juicier_inner = juicier_dir.join("Juicier Belle");
+        let _ = fs::create_dir_all(&juicier_inner);
+        let _ = fs::write(juicier_dir.join("Toggles.txt"), "Toggle info");
+        let _ = fs::write(juicier_inner.join("Belle.ini"), "[TextureOverrideBelle]\nhash=22222222\n");
+        let _ = fs::write(juicier_inner.join("BelleBody.buf"), b"buf data");
+
+        // Child mod B: single-mod wrapper folder with previews
+        let bakery_dir = belle_container.join("DISABLED bakery_belle_mod_nsfw_v12");
+        let bakery_inner = bakery_dir.join("Bakery-Belle NSFW");
+        let bakery_previews = bakery_dir.join("Previews");
+        let _ = fs::create_dir_all(&bakery_inner);
+        let _ = fs::create_dir_all(&bakery_previews);
+        let _ = fs::write(bakery_inner.join("BelleNSFW.ini"), "[TextureOverrideBelleNSFW]\nhash=33333333\n");
+        let _ = fs::write(bakery_previews.join("preview.png"), b"fake png");
+
+        // 3. Direct mod with component subfolders at depth 1
+        let mod1_dir = temp_root.join("Mod1");
+        let mod1_buffer = mod1_dir.join("Buffer");
+        let mod1_texture = mod1_dir.join("Texture");
+        let _ = fs::create_dir_all(&mod1_buffer);
+        let _ = fs::create_dir_all(&mod1_texture);
+        let _ = fs::write(mod1_dir.join("Belle.ini"), "[TextureOverrideMod1]\nhash=44444444\n");
+        let _ = fs::write(mod1_buffer.join("BelleBody.buf"), b"buffer");
+        let _ = fs::write(mod1_texture.join("BelleBody.dds"), b"dds");
+
+        // 4. Ignored system folder
+        let system_ui_dir = temp_root.join("zzzzzz_ZZZModManagerUI");
+        let _ = fs::create_dir_all(&system_ui_dir);
+        let _ = fs::write(system_ui_dir.join("zzzmanager_ui_test.ini"), "[Constants]\n");
+
+        // 5. Empty category folder (0 inis)
+        let empty_cat = temp_root.join("Aria - Crispy Delight");
+        let _ = fs::create_dir_all(&empty_cat);
+        let _ = fs::write(empty_cat.join("category.json"), r#"{"character_id":"aria"}"#);
+
+        // Run scan with default depth (None -> Smart)
+        let result = scan_external_folder(&temp_root, None).expect("Scan should succeed");
+
+        // Mixed layout with shallow warnings at depth 1 must recommend Smart (Depth 0)
+        assert_eq!(result.recommended_depth, 0, "Heterogeneous directory must recommend Depth 0 (Smart Auto-Detect)");
+
+        let candidate_names: Vec<String> = result.candidates.iter().map(|c| c.folder_name.clone()).collect();
+        assert!(candidate_names.contains(&"DISABLED CaesarKing-BottomHeavy(NSFW)".to_string()),
+            "Depth 0 must discover top-level Caesar King mod");
+        assert!(candidate_names.contains(&"DISABLED Juicier Belle".to_string()),
+            "Depth 0 must discover Juicier Belle inside container");
+        assert!(candidate_names.contains(&"DISABLED bakery_belle_mod_nsfw_v12".to_string()),
+            "Depth 0 must discover bakery belle inside container");
+        assert!(candidate_names.contains(&"Mod1".to_string()),
+            "Depth 0 must discover Mod1");
+
+        // Must NOT include container, system folder, empty folder, or subcomponents
+        assert!(!candidate_names.contains(&"Belle - Vibrant Store Manager".to_string()),
+            "Container folder must not be included as a mod");
+        assert!(!candidate_names.contains(&"zzzzzz_ZZZModManagerUI".to_string()),
+            "System UI manager must be excluded");
+        assert!(!candidate_names.contains(&"Aria - Crispy Delight".to_string()),
+            "Empty category folder must be excluded");
+        assert!(!candidate_names.contains(&"Buffer".to_string()),
+            "Subcomponents must not be included as mods");
+        assert!(!candidate_names.contains(&"Texture".to_string()),
+            "Subcomponents must not be included as mods");
+
+        // Verify aggregated metrics for single-mod wrapper
+        let juicier_cand = result.candidates.iter().find(|c| c.folder_name == "DISABLED Juicier Belle").unwrap();
+        assert_eq!(juicier_cand.ini_count, 1, "Wrapped mod should reflect aggregated INI count");
+        assert_eq!(juicier_cand.buf_count, 1, "Wrapped mod should reflect aggregated BUF count");
+
+        let _ = fs::remove_dir_all(&temp_root);
+    }
+
+
+

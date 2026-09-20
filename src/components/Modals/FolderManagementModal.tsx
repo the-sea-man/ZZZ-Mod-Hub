@@ -5,6 +5,7 @@ import {
   FolderTree,
   FolderCog,
   FolderOpen,
+  FolderDown,
   Sparkles,
   Trash2,
   Edit2,
@@ -31,6 +32,7 @@ export interface FolderManagementModalProps {
   rootPath: string;
   onRefresh: () => void | Promise<void>;
   onOpenMappingModal?: (category: CategoryInfo) => void;
+  onOpenImportMods?: () => void;
 }
 
 type FolderFilterTab = 'all' | 'canonical' | 'custom' | 'essential';
@@ -43,6 +45,7 @@ export function FolderManagementModal({
   rootPath,
   onRefresh,
   onOpenMappingModal,
+  onOpenImportMods,
 }: FolderManagementModalProps) {
   const { t } = useTranslation();
   const selectedCategory = useAppStore((s) => s.selectedCategory);
@@ -379,6 +382,18 @@ export function FolderManagementModal({
               )}
               <span>{t('generate_character_folders_btn', 'Generate Character Folders')}</span>
             </button>
+
+            {onOpenImportMods && (
+              <button
+                type="button"
+                onClick={onOpenImportMods}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface hover:bg-white/10 text-xs font-semibold text-textMuted hover:text-textMain border border-white/5 transition-colors cursor-pointer"
+                title={t('import_mods_external_btn', 'Import External Mods')}
+              >
+                <FolderDown size={14} className="text-primary" />
+                <span>{t('import_mods_external_btn', 'Import External Mods')}</span>
+              </button>
+            )}
           </div>
 
           <button

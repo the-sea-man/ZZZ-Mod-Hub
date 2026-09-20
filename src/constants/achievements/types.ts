@@ -1,3 +1,4 @@
+import type { SettingsCategory } from '../../store/slices/preferencesSlice';
 import type { FC } from 'react';
 import { type UserStats, type TutorialId, TUTORIALS_LIST } from '../../store/useAppStore';
 
@@ -9,7 +10,7 @@ export type AchievementCategory =
 
 export interface AchievementTarget {
   tab: 'library' | 'settings' | 'gamebanana' | 'achievements';
-  settingsTab?: 'general' | 'mod_management' | 'downloads' | 'appearance' | 'advanced' | 'about';
+  settingsTab?: SettingsCategory;
   highlightId?: string;
 }
 
@@ -28,12 +29,12 @@ export interface AchievementDef {
 }
 
 export const TUTORIAL_TARGET_MAP: Record<TutorialId, AchievementTarget> = {
-  post_setup: { tab: 'settings', settingsTab: 'general', highlightId: 'game_paths_settings' },
-  hud: { tab: 'settings', settingsTab: 'advanced', highlightId: 'overlay_settings' },
+  post_setup: { tab: 'settings', settingsTab: 'game_folders', highlightId: 'game_paths_settings' },
+  hud: { tab: 'settings', settingsTab: 'in_game', highlightId: 'overlay_settings' },
   randomize: { tab: 'library', highlightId: 'randomize_button' },
   quick_snapper: {
     tab: 'settings',
-    settingsTab: 'mod_management',
+    settingsTab: 'in_game',
     highlightId: 'quick_snapper_settings',
   },
   sync: { tab: 'library', highlightId: 'sync_cloud_db_btn' },

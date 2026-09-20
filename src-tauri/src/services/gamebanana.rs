@@ -367,6 +367,19 @@ pub async fn download_gb_mod(
 ) -> Result<(), AppError> {
     
     let d_id = download_id.clone();
+
+    if !crate::infra::one_click::is_allowed_domain(&download_url) {
+        let _ = app.emit(
+            "download-complete",
+            DownloadCompletePayload {
+                download_id: d_id,
+                status: "Error".to_string(),
+                results: None,
+                error: Some(format!("Untrusted download domain rejected: {download_url}")),
+            },
+        );
+        return Ok(());
+    }
     
     let task_guard = crate::task_manager::register_task(&d_id, "download");
     let cancel_token = task_guard.token();
@@ -376,19 +389,21 @@ pub async fn download_gb_mod(
         let mut attempts = 0;
         let mut last_error_msg = String::new();
         let mut download_success = false;
-        
         let temp_dir = std::env::temp_dir().join("zzzmodmanager_gb_downloads");
-        let safe_name = Path::new(&file_name)
+        let mut safe_name = Path::new(&file_name)
             .file_name()
             .unwrap_or_default()
             .to_string_lossy()
             .to_string();
-        let safe_name = if safe_name.is_empty() {
-            "download.zip".to_string()
+        if safe_name.is_empty() {
+            safe_name = "download.zip".to_string();
         } else {
-            crate::services::install::types::sanitize_path_component(&safe_name)
-        };
-        let temp_file_path = temp_dir.join(&safe_name);
+            safe_name = crate::services::install::types::sanitize_path_component(&safe_name);
+            if !safe_name.contains('.') {
+                safe_name.push_str(".zip");
+            }
+        }
+        let temp_file_path = temp_dir.join(format!("{}_{}", d_id, safe_name));
         
         let client = match reqwest::Client::builder()
             .user_agent("ZzzModManager/1.0")
@@ -443,7 +458,18 @@ pub async fn download_gb_mod(
                         if resp.status().is_redirection() {
                             if let Some(loc) = resp.headers().get(reqwest::header::LOCATION) {
                                 if let Ok(loc_str) = loc.to_str() {
-                                    current_url = loc_str.to_string();
+                                    let next_url = match reqwest::Url::parse(&current_url) {
+                                        Ok(base) => match base.join(loc_str) {
+                                            Ok(joined) => joined.to_string(),
+                                            Err(_) => loc_str.to_string(),
+                                        },
+                                        Err(_) => loc_str.to_string(),
+                                    };
+                                    if !crate::infra::one_click::is_allowed_domain(&next_url) {
+                                        tracing::warn!("Blocked redirect to untrusted domain: {next_url}");
+                                        break;
+                                    }
+                                    current_url = next_url;
                                     continue;
                                 }
                             }
@@ -497,7 +523,7 @@ pub async fn download_gb_mod(
                     let start = i * chunk_size;
                     let end = if i == num_chunks - 1 { total_size - 1 } else { (i + 1) * chunk_size - 1 };
                     
-                    let chunk_file_path = temp_dir.join(format!("{file_name}.part{i}"));
+                    let chunk_file_path = temp_dir.join(format!("{}_{}.part{}", d_id, safe_name, i));
                     chunk_files.push(chunk_file_path.clone());
                     
                     let c_client = client.clone();

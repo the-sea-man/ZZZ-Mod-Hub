@@ -15,6 +15,7 @@ import { BatchFixModal } from '../Modals/BatchFixModal';
 import { ModUpdaterModal } from '../Modals/ModUpdaterModal';
 import { FolderManagementModal } from '../Modals/FolderManagementModal';
 import { ProfilesModal } from '../Modals/ProfilesModal';
+import { ImportModsModal } from '../Modals/ImportModsModal';
 import { CategoryInfo, EntityDBInfo } from '../../types';
 import { LibraryModalsState } from '../../hooks/useLibraryModals';
 
@@ -60,6 +61,8 @@ export const LibraryModalsHost = memo(function LibraryModalsHost({
     setShowFolderManagement,
     showProfilesModal,
     setShowProfilesModal,
+    showImportModsModal,
+    setShowImportModsModal,
   } = modals;
 
   return (
@@ -161,11 +164,23 @@ export const LibraryModalsHost = memo(function LibraryModalsHost({
           rootPath={rootPath}
           onRefresh={onScanModsFolder}
           onOpenMappingModal={(cat) => setMappingCategory(cat)}
+          onOpenImportMods={() => {
+            setShowFolderManagement(false);
+            setShowImportModsModal(true);
+          }}
         />
       )}
 
       {showProfilesModal && (
         <ProfilesModal isOpen={true} onClose={() => setShowProfilesModal(false)} />
+      )}
+
+      {showImportModsModal && (
+        <ImportModsModal
+          isOpen={true}
+          onClose={() => setShowImportModsModal(false)}
+          onImportComplete={onScanModsFolder}
+        />
       )}
 
       {mappingCategory && (

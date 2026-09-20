@@ -4,6 +4,7 @@ pub mod types;
 pub mod extractor;
 pub mod classifier;
 pub mod tagger;
+pub mod importer;
 
 #[cfg(test)]
 mod tests;
@@ -12,6 +13,7 @@ pub use types::*;
 pub use extractor::*;
 pub use classifier::*;
 pub use tagger::*;
+pub use importer::*;
 
 use crate::error::AppError;
 use crate::models::{Confidence, InstallResult};
@@ -172,10 +174,23 @@ pub fn install_mods(
             continue;
         }
 
-        let archive_file_name = archive_path.file_stem()
-            .unwrap_or_default()
-            .to_string_lossy()
-            .to_string();
+        let archive_file_name = original_file_name
+            .as_deref()
+            .map(|orig| {
+                Path::new(orig)
+                    .file_stem()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string()
+            })
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(|| {
+                archive_path
+                    .file_stem()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string()
+            });
             
         let ext = archive_path.extension()
             .unwrap_or_default()
@@ -476,3 +491,29 @@ pub async fn auto_assign_mods(app: tauri::AppHandle, root_path: String) -> Resul
     .await
     .map_err(|e| AppError::Custom(e.to_string()))?
 }
+
+#[tauri::command]
+pub async fn scan_external_mod_folder(
+    folder_path: String,
+    depth: Option<usize>,
+) -> Result<ExternalFolderScanResult, AppError> {
+    let folder_path = crate::utils::expand_path(&folder_path);
+    tauri::async_runtime::spawn_blocking(move || {
+        let p = Path::new(&folder_path);
+        scan_external_folder(p, depth)
+    })
+    .await
+    .map_err(|e| AppError::Custom(e.to_string()))?
+}
+
+#[tauri::command]
+pub async fn execute_external_mod_import(
+    request: ExecuteImportRequest,
+) -> Result<ImportExecutionResult, AppError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        execute_external_import(request)
+    })
+    .await
+    .map_err(|e| AppError::Custom(e.to_string()))?
+}
+

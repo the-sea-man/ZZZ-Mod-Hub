@@ -166,7 +166,7 @@ export const MANAGEMENT_AND_TOOLS_ACHIEVEMENTS: AchievementDef[] = [
     getProgress: (s) => s.quickSnapsTaken,
     navigationTarget: {
       tab: 'settings',
-      settingsTab: 'mod_management',
+      settingsTab: 'in_game',
       highlightId: 'quick_snapper_settings',
     },
     steps: [
@@ -189,7 +189,7 @@ export const MANAGEMENT_AND_TOOLS_ACHIEVEMENTS: AchievementDef[] = [
       if (!whitelist || whitelist.length === 0) {
         return {
           tab: 'settings',
-          settingsTab: 'mod_management',
+          settingsTab: 'library',
           highlightId: 'randomizer_settings',
         };
       }

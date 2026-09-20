@@ -405,6 +405,72 @@ pub fn analyze_ini_script_integrity(content: &str, file_name: &str) -> Vec<ModWa
         }
     }
 
+    // 6. Texcoord buffer too narrow to hold the second UV set (wrong textures in-game)
+    //
+    // A ZZZ texcoord vertex is COLOR (unorm4, 4 bytes) + TEXCOORD (float2, 8) + TEXCOORD1
+    // (float2, 8) = 20 bytes; the game's own buffers add a 4-byte tail for 24. A buffer
+    // narrower than 20 has no room for TEXCOORD1, so whatever map the shader samples with the
+    // second UV set reads past the end of each record.
+    //
+    // Measured, not assumed: of 144 texcoord declarations across 40 mods in the corpus, 143 are
+    // 20 bytes or wider and render correctly. The single 12-byte mod renders one body part with
+    // another's texture, and its buffer decodes exactly as COLOR + one UV pair with nothing
+    // following. The missing UVs are not in the file, so this cannot be synthesised faithfully -
+    // copying the first set just puts the wrong layout on the second map.
+    //
+    // Scope, learned by getting it wrong: this is a vertex-layout fact and nothing more. A
+    // preview renderer that samples only the first UV set renders such a mod correctly, and the
+    // check says nothing about texture *binding* - if vanilla textures appear over a mod, that is
+    // a separate failure and this warning is not the explanation.
+    const MIN_TEXCOORD_STRIDE: u32 = 20;
+    let mut texcoord_resources: std::collections::HashSet<String> = std::collections::HashSet::new();
+    for section in &sections {
+        for line in &section.lines {
+            let l_trim = line.trim();
+            if l_trim.starts_with(';') || l_trim.starts_with('#') {
+                continue;
+            }
+            if let Some((k, v)) = l_trim.split_once('=') {
+                if k.trim().eq_ignore_ascii_case("vb1") {
+                    let name = v.trim().trim_start_matches("ref").trim();
+                    let name = name.rsplit(['\\', '/']).next().unwrap_or(name).trim();
+                    if name.to_lowercase().starts_with("resource") {
+                        texcoord_resources.insert(name.to_lowercase());
+                    }
+                }
+            }
+        }
+    }
+    for section in &sections {
+        if !texcoord_resources.contains(&section.name.to_lowercase()) {
+            continue;
+        }
+        let stride = section.lines.iter().find_map(|l| {
+            let t = l.trim();
+            if t.starts_with(';') || t.starts_with('#') {
+                return None;
+            }
+            let (k, v) = t.split_once('=')?;
+            k.trim()
+                .eq_ignore_ascii_case("stride")
+                .then(|| v.trim().parse::<u32>().ok())
+                .flatten()
+        });
+        if let Some(stride) = stride {
+            if stride < MIN_TEXCOORD_STRIDE {
+                warnings.push(ModWarning {
+                    rule_id: "texcoord_missing_second_uv".to_string(),
+                    level: "ini_issue".to_string(),
+                    message: format!(
+                        "Texcoord buffer '[{}]' in '{}' declares stride {}, below the {} bytes a ZZZ vertex needs for COLOR + TEXCOORD + TEXCOORD1. The second UV set is absent, so any map the shader samples with it reads past the end of each vertex. Note this is about the vertex layout only: a preview renderer that uses just the first UV set will still look correct, and it does not explain vanilla textures appearing over the mod.",
+                        section.name, file_name, stride, MIN_TEXCOORD_STRIDE
+                    ),
+                    details: None,
+                });
+            }
+        }
+    }
+
     warnings
 }
 

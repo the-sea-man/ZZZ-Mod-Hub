@@ -46,8 +46,9 @@ At the top of the mod library, the filter bar helps you quickly find what you ne
 - **Search All:** Type any term to search across mod titles, folder paths, and author notes.
 - **Active Only:** Filters out all disabled mods.
 - **Favorites Only:** Displays only starred mods.
-- **Needs Fix:** Shows mods with fixable blue warning badges.
+- **Needs Fix:** Shows mods with fixable Blue File badges.
 - **Has Backup:** Shows mods with active `.zmm-backup` directories available for rollback.
+- **Tag Chips:** Filter by automatic content tags (`Outfit`, `UI`, `Weapon`, `IN GAME MENU`, `NSFW`).
 
 ::: info Customizing Filter Chips
 If you find the filter chips too crowded, open **Settings > Mod Management** to hide or show specific filter chips based on your preference.

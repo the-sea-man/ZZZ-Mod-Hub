@@ -852,5 +852,51 @@ post $active = 0
         assert!(post_warnings.is_empty(), "All unconditional key warnings should be resolved: {:?}", post_warnings);
 
         let _ = fs::remove_dir_all(&temp_dir);
-    }
+    
 
+    /// A ZZZ texcoord vertex is COLOR (unorm4, 4) + TEXCOORD (float2, 8) + TEXCOORD1 (float2, 8)
+    /// = 20 bytes. Narrower than that and TEXCOORD1 is absent, so whatever map the shader
+    /// samples with the second UV set reads past the end of each record and body parts render
+    /// with each other's textures.
+    ///
+    /// Measured before adding: 143 of 144 texcoord declarations across a 40-mod corpus are 20 or
+    /// wider and render correctly; the single 12-byte mod shows exactly that symptom and its
+    /// buffer decodes as COLOR plus one UV pair with nothing following. The check must stay
+    /// silent on 20 and above or it would flag most of the corpus.
+    #[test]
+    fn test_texcoord_narrower_than_one_uv_set_is_flagged() {
+        let narrow = r#"[TextureOverrideJaneHairTexcoord]
+hash = fa617c9a
+vb1 = ResourceJaneHairTexcoord
+
+[ResourceJaneHairTexcoord]
+type = Buffer
+stride = 12
+filename = JaneHairTexcoord.buf
+"#;
+        let w = analyze_ini_script_integrity(narrow, "Jane.ini");
+        let hits: Vec<_> = w.iter().filter(|x| x.rule_id == "texcoord_missing_second_uv").collect();
+        assert_eq!(hits.len(), 1, "a 12-byte texcoord is flagged: {w:?}");
+        assert!(hits[0].message.contains("stride 12"), "states what it found");
+
+        // The two widths the corpus actually uses must stay silent.
+        for stride in [20, 24, 32] {
+            let ok = narrow.replace("stride = 12", &format!("stride = {stride}"));
+            let w = analyze_ini_script_integrity(&ok, "Jane.ini");
+            assert!(
+                !w.iter().any(|x| x.rule_id == "texcoord_missing_second_uv"),
+                "stride {stride} is a complete layout and must not be flagged: {w:?}"
+            );
+        }
+
+        // Only buffers actually bound to vb1 are texcoords; a same-named resource that nothing
+        // binds there is not this check's business.
+        let unbound = narrow.replace("vb1 = ResourceJaneHairTexcoord", "");
+        assert!(
+            !analyze_ini_script_integrity(&unbound, "Jane.ini")
+                .iter()
+                .any(|x| x.rule_id == "texcoord_missing_second_uv"),
+            "an unbound resource is not checked"
+        );
+    }
+}

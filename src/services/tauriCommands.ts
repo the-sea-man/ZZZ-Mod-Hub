@@ -16,6 +16,11 @@ import type {
   RollbackResult,
   ModBackupInfo,
   RestoreBackupResult,
+  OneClickPayload,
+  RemotePairPayload,
+  ExternalFolderScanResult,
+  ExecuteImportRequest,
+  ImportExecutionResult,
 } from '../types/ipc';
 
 /**
@@ -170,6 +175,13 @@ export const tauriCommands = {
     ) => invoke<string[]>('generate_character_folders', { rootPath, folders }),
 
     autoAssign: (rootPath: string) => invoke<string[]>('auto_assign_mods', { rootPath }),
+    scanExternalFolder: (folderPath: string, depth?: number) =>
+      invoke<ExternalFolderScanResult>('scan_external_mod_folder', {
+        folderPath,
+        depth: depth ?? null,
+      }),
+    executeExternalImport: (request: ExecuteImportRequest) =>
+      invoke<ImportExecutionResult>('execute_external_mod_import', { request }),
   },
 
   folders: {
@@ -277,8 +289,8 @@ export const tauriCommands = {
 
     fetchModsMulti: (params: any) => invoke<any>('fetch_gb_mods_multi', params),
 
-    fetchDetails: (itemType: string, itemId: number) =>
-      invoke<any>('fetch_gb_mod_details', { itemType, itemId }),
+    fetchDetails: (modId: number, modelName?: string) =>
+      invoke<any>('fetch_gb_mod_details', { modId, modelName: modelName ?? 'Mod' }),
 
     downloadMod: (url: string, modId: number, downloadId: string, filename?: string) =>
       invoke<void>('download_gb_mod', { url, modId, downloadId, filename }),
@@ -387,5 +399,19 @@ export const tauriCommands = {
 
     rollbackAlteration: (entryId: string) =>
       invoke<RollbackResult>('rollback_alteration', { entryId }),
+  },
+
+  oneClick: {
+    registerProtocol: () => invoke<void>('register_one_click_protocol'),
+    unregisterProtocol: () => invoke<void>('unregister_one_click_protocol'),
+    isRegistered: () => invoke<boolean>('is_one_click_protocol_registered'),
+    checkPending: () => invoke<OneClickPayload | null>('check_pending_one_click'),
+    checkPendingPair: () => invoke<RemotePairPayload | null>('check_pending_pair'),
+    pollRemoteQueue: (memberId: number, secretKey: string, alias?: string) =>
+      invoke<OneClickPayload[]>('poll_remote_install_queue', {
+        memberId,
+        secretKey,
+        alias,
+      }),
   },
 };

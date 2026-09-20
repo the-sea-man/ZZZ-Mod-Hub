@@ -14,6 +14,7 @@ export interface LibraryToolbarProps {
   isGeneratingFolders: boolean;
   onGenerateMissingFolders: () => void;
   onOpenFolderManagement?: () => void;
+  onOpenImportMods?: () => void;
   onOpenProfiles?: () => void;
   hasActiveProfile?: boolean;
   activeProfileName?: string | null;
@@ -72,6 +73,7 @@ export const LibraryToolbar = memo(function LibraryToolbar({
   isGeneratingFolders,
   onGenerateMissingFolders,
   onOpenFolderManagement,
+  onOpenImportMods,
   onOpenProfiles,
   hasActiveProfile,
   activeProfileName,
@@ -195,6 +197,32 @@ export const LibraryToolbar = memo(function LibraryToolbar({
             </span>
           </button>
 
+          {/* Quick Generate Folders Button */}
+          <button
+            type="button"
+            data-highlight-id="generate_folders_btn"
+            onClick={onGenerateMissingFolders}
+            disabled={isGeneratingFolders || !modsPath}
+            className={`px-3 py-2 rounded-xl font-bold text-xs shrink-0 transition-all border border-white/10 bg-surface-light hover:bg-white/10 text-textMain shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+              highlightTargetId === 'generate_folders_btn' ? 'highlight-target' : ''
+            }`}
+            title={t(
+              'generate_folders_tooltip',
+              'Automatically create default character folders for all playable characters.'
+            )}
+          >
+            {isGeneratingFolders ? (
+              <RefreshCw size={13} className="animate-spin text-primary shrink-0" />
+            ) : (
+              <FolderPlus size={13} className="text-primary shrink-0" />
+            )}
+            <span className="hidden sm:inline">
+              {isGeneratingFolders
+                ? t('generating_folders', 'Generating...')
+                : t('generate_folders', 'Generate Folders')}
+            </span>
+          </button>
+
           {/* Tools & Maintenance Dropdown Menu */}
           <LibraryToolsMenu
             modsPath={modsPath}
@@ -205,9 +233,8 @@ export const LibraryToolbar = memo(function LibraryToolbar({
             onOpenBatchFix={onOpenBatchFix}
             isAnalyzingMods={isAnalyzingMods}
             onRunManualAnalysis={onRunManualAnalysis}
-            isGeneratingFolders={isGeneratingFolders}
-            onGenerateMissingFolders={onGenerateMissingFolders}
             onOpenFolderManagement={onOpenFolderManagement}
+            onOpenImportMods={onOpenImportMods}
             performanceProfile={performanceProfile}
             onCyclePerformanceProfile={onCyclePerformanceProfile}
           />

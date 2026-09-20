@@ -6,12 +6,12 @@ import {
   ChevronDown,
   RefreshCw,
   ShieldAlert,
-  FolderPlus,
   FolderCog,
+  FolderDown,
   Zap,
 } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
-import { PerformanceProfile } from '../../store/useAppStore';
+import { useAppStore, PerformanceProfile } from '../../store/useAppStore';
 
 export interface LibraryToolsMenuProps {
   modsPath: string;
@@ -22,9 +22,8 @@ export interface LibraryToolsMenuProps {
   onOpenBatchFix: () => void;
   isAnalyzingMods: boolean;
   onRunManualAnalysis: () => void;
-  isGeneratingFolders: boolean;
-  onGenerateMissingFolders: () => void;
   onOpenFolderManagement?: () => void;
+  onOpenImportMods?: () => void;
   performanceProfile: PerformanceProfile;
   onCyclePerformanceProfile: () => void;
 }
@@ -38,21 +37,19 @@ export function LibraryToolsMenu({
   onOpenBatchFix,
   isAnalyzingMods,
   onRunManualAnalysis,
-  isGeneratingFolders,
-  onGenerateMissingFolders,
   onOpenFolderManagement,
+  onOpenImportMods,
   performanceProfile,
   onCyclePerformanceProfile,
 }: LibraryToolsMenuProps) {
   const { t } = useTranslation();
+  const externalModsSourcePath = useAppStore((s) => s.externalModsSourcePath);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const portalMenuRef = useRef<HTMLDivElement>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0, bottom: 0, right: 0 });
 
-  const isHighlighted =
-    !isMenuOpen &&
-    (highlightTargetId === 'check_updates_btn' || highlightTargetId === 'generate_folders_btn');
+  const isHighlighted = !isMenuOpen && highlightTargetId === 'check_updates_btn';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -260,25 +257,6 @@ export function LibraryToolsMenu({
                     {t('library_tools_folders')}
                   </div>
 
-                  <button
-                    data-highlight-id="generate_folders_btn"
-                    onClick={() => {
-                      onGenerateMissingFolders();
-                      setIsMenuOpen(false);
-                    }}
-                    disabled={isGeneratingFolders || !modsPath}
-                    className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-semibold text-textMain hover:bg-white/5 transition-all text-left disabled:opacity-50 ${
-                      highlightTargetId === 'generate_folders_btn' ? 'highlight-target' : ''
-                    }`}
-                  >
-                    {isGeneratingFolders ? (
-                      <RefreshCw className="animate-spin text-primary shrink-0" size={14} />
-                    ) : (
-                      <FolderPlus size={14} className="text-primary shrink-0" />
-                    )}
-                    <span className="truncate">{t('generate_folders')}</span>
-                  </button>
-
                   {onOpenFolderManagement && (
                     <button
                       onClick={() => {
@@ -289,6 +267,30 @@ export function LibraryToolsMenu({
                     >
                       <FolderCog size={14} className="text-primary shrink-0" />
                       <span className="truncate">{t('manage_folders')}</span>
+                    </button>
+                  )}
+
+                  {onOpenImportMods && (
+                    <button
+                      onClick={() => {
+                        onOpenImportMods();
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-xl text-xs font-semibold text-textMain hover:bg-white/5 transition-all text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FolderDown size={14} className="text-primary shrink-0" />
+                        <span className="truncate">
+                          {externalModsSourcePath
+                            ? t('import_mods_sync_external_btn', 'Sync External Mods')
+                            : t('import_mods_external_btn', 'Import External Mods')}
+                        </span>
+                      </div>
+                      {externalModsSourcePath && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-primary/20 text-primary border border-primary/30 shrink-0">
+                          {t('import_status_linked', 'Linked')}
+                        </span>
+                      )}
                     </button>
                   )}
 

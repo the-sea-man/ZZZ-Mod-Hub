@@ -90,7 +90,7 @@ export const BASICS_AND_COLLECTION_ACHIEVEMENTS: AchievementDef[] = [
       }
       return {
         tab: 'settings',
-        settingsTab: 'general',
+        settingsTab: 'help_about',
         highlightId: 'tutorial_settings',
       };
     },

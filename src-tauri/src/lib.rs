@@ -6,14 +6,14 @@ pub(crate) mod infra;
 pub use core::{error, models, utils};
 pub use services::{install, mod_fixer, mod_viewer, mods, warnings_scanner};
 pub(crate) use infra::{
-    fs_ops, game_ops, hotreload, hunting, ini_ops, logger, screenshot, state_tracker, task_manager,
-    thumbnail_cache, watcher,
+    fs_ops, game_ops, hotreload, hunting, ini_ops, logger, one_click, screenshot, state_tracker,
+    task_manager, thumbnail_cache, watcher,
 };
 pub(crate) use services::{
     community_tags, conflict_scanner, gamebanana, mod_splitter, sync, translator, ui_generator,
 };
 
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -24,15 +24,71 @@ pub fn run() {
             }
             app.manage(watcher::WatcherState::default());
             app.manage(hotreload::HotreloadState::default());
+            app.manage(one_click::OneClickState::new());
+
+            // Check cold-start arguments for 1-Click protocol links or Remote Install pairing
+            for arg in std::env::args() {
+                let lower = arg.to_ascii_lowercase();
+                if lower.starts_with("zzzmm:") || lower.starts_with("zzzmm://") {
+                    if let Ok(action) = one_click::parse_protocol_action(&arg) {
+                        let state = app.state::<one_click::OneClickState>();
+                        match action {
+                            one_click::OneClickProtocolAction::Install(payload) => {
+                                state.set_pending(Some(payload));
+                            }
+                            one_click::OneClickProtocolAction::Pair(pair_payload) => {
+                                state.set_pending_pair(Some(pair_payload));
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Auto-register protocol in Windows HKCU on startup unless explicitly disabled by user
+            #[cfg(target_os = "windows")]
+            {
+                let is_disabled = app
+                    .path()
+                    .app_data_dir()
+                    .ok()
+                    .map(|d| d.join("one_click_disabled").exists())
+                    .unwrap_or(false);
+                if !is_disabled {
+                    let _ = one_click::register_protocol();
+                }
+            }
+
             std::thread::spawn(|| {
                 utils::cleanup_legacy_installations();
             });
             Ok(())
         })
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.show();
+                let _ = window.unminimize();
                 let _ = window.set_focus();
+            }
+
+            for arg in args {
+                let lower = arg.to_ascii_lowercase();
+                if lower.starts_with("zzzmm:") || lower.starts_with("zzzmm://") {
+                    if let Ok(action) = one_click::parse_protocol_action(&arg) {
+                        let state = app.state::<one_click::OneClickState>();
+                        match action {
+                            one_click::OneClickProtocolAction::Install(payload) => {
+                                state.set_pending(Some(payload.clone()));
+                                let _ = app.emit("one-click-install-requested", payload);
+                            }
+                            one_click::OneClickProtocolAction::Pair(pair_payload) => {
+                                state.set_pending_pair(Some(pair_payload.clone()));
+                                let _ = app.emit("one-click-pair-requested", pair_payload);
+                            }
+                        }
+                        break;
+                    }
+                }
             }
         }))
         .plugin(tauri_plugin_window_state::Builder::default().build())
@@ -68,6 +124,8 @@ pub fn run() {
             install::install_mods,
             install::generate_character_folders,
             install::auto_assign_mods,
+            install::scan_external_mod_folder,
+            install::execute_external_mod_import,
             // fs_ops.rs — File system operations
             fs_ops::set_category_mapping,
             fs_ops::delete_mod,
@@ -150,7 +208,14 @@ pub fn run() {
             task_manager::cancel_tasks_by_prefix,
             task_manager::list_active_tasks,
             // translator.rs — Native translation request bypassing CORS
-            translator::translate_query
+            translator::translate_query,
+            // one_click.rs — 1-Click GameBanana installer protocol & Remote Install
+            one_click::register_one_click_protocol,
+            one_click::unregister_one_click_protocol,
+            one_click::is_one_click_protocol_registered,
+            one_click::check_pending_one_click,
+            one_click::check_pending_pair,
+            one_click::poll_remote_install_queue
         ])
 
         .run(tauri::generate_context!())

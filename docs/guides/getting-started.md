@@ -66,16 +66,18 @@ Before opening the manager, ensure you have your 3DMigoto or XXMI directory read
 ### Recommended Directory Structure
 
 ```text
-Games/
-├── ZenlessZoneZero/
-│   └── ZenlessZoneZero.exe
-└── 3DMigoto/ (or XXMI Launcher)
-    ├── 3DMigoto Loader.exe (or XXMI.exe)
-    ├── d3dx.ini
-    └── Mods/  <-- THIS IS YOUR MODS DIRECTORY
-        ├── Ellen/
-        ├── JaneDoe/
-        └── Unassigned/
+C:\Program Files\HoYoPlay\Game/
+                           ├── ZenlessZoneZero/
+                               └── ZenlessZoneZero.exe
+C:\Users\*YOURUSER*\AppData\Roaming\XXMI Launcher\Resources\Bin
+                                                            └── 3DMigoto/ (or XXMI Launcher)
+                                                               ├── 3DMigoto Loader.exe (or XXMI.exe)
+                                                               ├── d3dx.ini
+                                                               └── Mods/  <-- THIS IS YOUR MODS DIRECTORY
+                                                                  ├── Ellen/
+                                                                  ├── JaneDoe/
+                                                                  └── Unassigned/
+
 ```
 
 ### Folder Selection Rule
@@ -89,31 +91,46 @@ Always select the **`Mods`** directory itself.
 
 ---
 
-## The 3-Step Setup Wizard
+## The 4-Step Setup Wizard
 
 When you open the manager for the first time, the setup wizard guides you through the initial configuration:
 
-### Step 1: Welcome & Loader Verification
+### Step 1: Welcome, Language & Loader Verification
 
-Explains the prerequisite mod loader. If you do not have a loader installed, click **Get XXMI Launcher** to open the official release page.
+- Choose your display language. You can select one of the built-in native translations or an auto-translated pack from the Language Hub.
+- Explains the prerequisite mod loader. If you do not have a loader installed, click **Get XXMI Launcher** to open the official release page.
 
 ### Step 2: Selecting Your Mods Directory
 
 Click **Browse** and select your `Mods/` folder.
 
-- If XXMI is detected, the manager pre-fills the standard path automatically.
+- If XXMI is detected, the manager pre-fills the standard path automatically (`%appdata%\XXMI Launcher\ZZMI\Mods`).
 - The manager checks folder permissions to make sure files can be organized properly.
 
-### Step 3: Setup Complete
+### Step 3: Importing from Another Mod Manager (Optional)
 
-Confirms your configuration and opens the main Library view.
+If you are migrating from another tool:
+
+- Select your previous mods directory.
+- Choose whether to **Copy** or **Move** your mods. If you choose to copy, deactivate older versions in your previous tool to prevent duplicate files.
+- The multi-depth scanner detects nested folders automatically.
+- Any mods placed in `Unassigned` can be sorted with 1 click using **Auto-Sort**, which reads 3DMigoto buffer hashes to move them to their correct character folders.
+- If you are starting fresh, simply click **Skip** to continue.
+
+### Step 4: Setup Complete
+
+Confirms your configuration and opens the main Library view with your staged mods ready to play.
 
 ::: tip Configuring the Game Executable
 After setup, you can optionally link your game executable (`ZenlessZoneZero.exe`) in **Settings > General > Game Paths**. This enables:
 
 - 1-click **Launch Game** button in the header toolbar.
-- In-game detection to automatically trigger hot reloads (`F10`) when you toggle mods.
+- Direct game process detection.
   :::
+
+::: tip NSFW Content Filter
+If you use NSFW mods, remember to turn off the censor and thumbnail blur filters in **Settings > Mod Management** (they are enabled by default to keep browsing safe).
+:::
 
 ---
 
@@ -150,7 +167,7 @@ Here is a quick directory of the tools available in ZZZ Mod Hub:
 
 ### In-Game Tools & Visualization
 
-- [In-Game HUD & Quick Snapper](/guides/in-game-hud): Direct3D 11 in-game menu (`H`), F10 hot reload, and in-game screenshot snapper (`Ctrl + F11`).
+- [In-Game HUD & Quick Snapper](/guides/in-game-hud): Direct3D 11 in-game menu (`H`), F10 in-game reload, and in-game screenshot snapper (`Ctrl + F11`).
 - [3D Mesh Viewer](/guides/3d-viewer): Built-in WebGL viewer with multi-map PBR textures, camera presets, wireframe, and submesh isolation.
 - [3-Mode Mod Splitter](/guides/mod-splitter): Decompose character packs, isolate toggleable accessories, or split anatomical body parts.
 

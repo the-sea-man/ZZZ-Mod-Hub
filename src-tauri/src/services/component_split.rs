@@ -173,11 +173,22 @@ pub static VANILLA_SUBDRAWS: &[(&str, &[i64])] = &[
 ];
 
 /// The sub-draw offsets the game issues for `ib_hash`, if we have dumped that character.
-pub fn vanilla_subdraws(ib_hash: &str) -> Option<&'static [i64]> {
+///
+/// Prefers the measured baseline (`scripts/extract_vanilla_baseline.py` output), falling back to
+/// the table above. Adding an Agent is then a dump, not a code change. The two agree exactly for
+/// every Agent currently dumped - `test_baseline_covers_the_hardcoded_subdraw_table` holds them
+/// to that - so this lookup is behaviour-neutral today and only widens coverage later.
+pub fn vanilla_subdraws(ib_hash: &str) -> Option<Vec<i64>> {
+    if let Some(c) = crate::infra::vanilla_baseline::baselines().and_then(|b| b.by_ib(ib_hash)) {
+        let offsets = c.subdraw_offsets();
+        if !offsets.is_empty() {
+            return Some(offsets);
+        }
+    }
     VANILLA_SUBDRAWS
         .iter()
         .find(|(h, _)| h.eq_ignore_ascii_case(ib_hash))
-        .map(|(_, v)| *v)
+        .map(|(_, v)| v.to_vec())
 }
 
 /// Finds a split rule whose legacy component is present in this INI.
@@ -257,9 +268,8 @@ fn already_split(ini_content: &str, rule: &ComponentSplitRule) -> bool {
     // Sub-draw offsets the split introduced. `0` is shared with the legacy layout and says
     // nothing, so it is not evidence either way.
     let modern_offsets: Vec<i64> = vanilla_subdraws(rule.primary.ib)
-        .unwrap_or(&[])
-        .iter()
-        .copied()
+        .unwrap_or_default()
+        .into_iter()
         .filter(|o| *o != 0)
         .collect();
     if modern_offsets.is_empty() {
@@ -1005,7 +1015,14 @@ pub fn apply_component_split(
     let mut secondary_verts: Vec<u32> = Vec::new();
     let mut seen_p: HashSet<u32> = HashSet::new();
     let mut seen_s: HashSet<u32> = HashSet::new();
-    for (key, idx) in &indices_of {
+    // Draw order, not map order. This loop decides the compacted vertex order, which decides
+    // the bytes of every emitted position/blend/texcoord buffer and the value of every rebased
+    // index - so iterating the HashMap directly made the *binaries* differ between runs on
+    // identical input while the vertex counts stayed stable, which is exactly the kind of
+    // difference an INI-text comparison cannot see.
+    let mut ordered: Vec<(&(usize, usize), &Vec<u32>)> = indices_of.iter().collect();
+    ordered.sort_by_key(|(k, _)| **k);
+    for (key, idx) in ordered {
         let is_primary = verdict.get(key).copied().unwrap_or(true);
         for &v in idx {
             let (list, seen) = if is_primary {
@@ -1166,6 +1183,12 @@ pub fn apply_component_split(
         } else {
             (sl, rule.secondary, secondary_verts.len())
         };
+        // How many vertices the buffer this component binds actually holds. Compacting mode
+        // binds a slice of its own vertices; shared mode binds the mod's whole buffer and
+        // leaves indices unrebased, so there the limit is the source count. The blend buffer
+        // is the reliable measure of that - it is mandatory and has one record per vertex,
+        // while the position buffer can be runtime-built and read back empty.
+        let limit_verts = if compacting { verts } else { blend.len() / bstride };
         out.push_str(&format!(
             "\r\n; [ZZZMODMANAGER SPLIT LEGACY COMPONENT -> {label}]\r\n"
         ));
@@ -1222,8 +1245,12 @@ pub fn apply_component_split(
                         }
                         "vb2" => Some(format!("vb2 = Resource{ch}{label}SplitBlend")),
                         "draw" if compacting => Some(format!("draw = {verts},0")),
-                        "override_vertex_count" if compacting => {
-                            Some(format!("override_vertex_count = {verts}"))
+                        // Recomputed, because the split changes how many vertices this
+                        // component has. The companion `override_byte_stride` is deliberately
+                        // left alone: slicing copies whole records, so the authored stride is
+                        // still the truth after a split.
+                        "override_vertex_count" => {
+                            Some(format!("override_vertex_count = {limit_verts}"))
                         }
                         _ => None,
                     },
@@ -1235,6 +1262,32 @@ pub fn apply_component_split(
                         out.push_str(line.trim_end());
                         out.push_str("\r\n");
                     }
+                }
+            }
+
+            // The VertexLimitRaise section exists to tell the game how large this
+            // component's vertex buffer is, and the split *changes* that count - so it has to
+            // be stated even when the source section left it out. Inheriting the source's
+            // silence emitted a bare `hash = ...` for every component of every mod, while one
+            // mod in the corpus ends up with 42,242 vertices where vanilla holds 5,067.
+            if slot_kind == ComponentSlot::Draw {
+                let states = |key: &str| {
+                    sec.lines.iter().any(|l| {
+                        l.split(';')
+                            .next()
+                            .unwrap_or("")
+                            .split('=')
+                            .next()
+                            .unwrap_or("")
+                            .trim()
+                            .eq_ignore_ascii_case(key)
+                    })
+                };
+                if !states("override_vertex_count") {
+                    out.push_str(&format!("override_vertex_count = {limit_verts}\r\n"));
+                }
+                if !states("override_byte_stride") {
+                    out.push_str(&format!("override_byte_stride = {pstride}\r\n"));
                 }
             }
         }

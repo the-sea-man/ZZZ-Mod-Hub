@@ -6,6 +6,7 @@ import { dataDir, join } from '@tauri-apps/api/path';
 import {
   Sparkles,
   Folder,
+  FolderDown,
   AlertCircle,
   CheckCircle2,
   ExternalLink,
@@ -14,12 +15,37 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { useTranslation } from '../hooks/useTranslation';
+import { ImportModsModal } from '../components/Modals/ImportModsModal';
+import { safeGetInt } from '../utils/storage';
 
 export function SetupView() {
-  const [step, setStep] = useState(1);
+  const [step, setStepState] = useState(() => {
+    const saved = safeGetInt('setup_step', 1);
+    return saved >= 1 && saved <= 4 ? saved : 1;
+  });
 
-  const { modsPath, setModsPath, scanModsFolder, setSetupComplete } = useAppStore();
+  const setStep = (newStep: number | ((prev: number) => number)) => {
+    setStepState((prev) => {
+      const next = typeof newStep === 'function' ? newStep(prev) : newStep;
+      const clamped = Math.min(Math.max(next, 1), 4);
+      localStorage.setItem('setup_step', String(clamped));
+      return clamped;
+    });
+  };
+
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [stagedCount, setStagedCount] = useState(0);
+
+  const { modsPath, setModsPath, scanModsFolder, setSetupComplete, categories } = useAppStore();
   const { t } = useTranslation();
+
+  const totalModsCount = categories.reduce((sum, c) => sum + c.mods.length, 0);
+
+  useEffect(() => {
+    if (localStorage.getItem('setupComplete') !== 'true') {
+      localStorage.setItem('setupComplete', 'false');
+    }
+  }, []);
 
   useEffect(() => {
     if (!modsPath) {
@@ -50,7 +76,14 @@ export function SetupView() {
     });
   };
 
+  const handleImportComplete = async () => {
+    await scanModsFolder();
+    setStagedCount((prev) => prev + 1);
+  };
+
   const handleFinish = () => {
+    localStorage.removeItem('setup_step');
+    scanModsFolder();
     setSetupComplete(true);
   };
 
@@ -64,13 +97,13 @@ export function SetupView() {
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="glass-panel w-full max-w-2xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden relative z-10 flex flex-col min-h-[520px]"
+        className="glass-panel w-full max-w-2xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden relative z-10 flex flex-col min-h-[540px]"
       >
         <div className="absolute top-0 left-0 w-full h-1.5 bg-white/5">
           <motion.div
             className="h-full bg-gradient-to-r from-primary to-primary/80"
-            initial={{ width: '33%' }}
-            animate={{ width: `${(step / 3) * 100}%` }}
+            initial={{ width: '25%' }}
+            animate={{ width: `${(step / 4) * 100}%` }}
             transition={{ duration: 0.3 }}
           />
         </div>
@@ -79,10 +112,10 @@ export function SetupView() {
           {/* Header Progress */}
           <div className="flex items-center justify-between mb-6">
             <span className="text-xs font-bold uppercase tracking-wider text-primary">
-              {t('setup_step_indicator', { step })}
+              {t('setup_step_indicator', { step, total: 4 })}
             </span>
             <div className="flex gap-1.5">
-              {[1, 2, 3].map((i) => (
+              {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
                   className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
@@ -120,6 +153,12 @@ export function SetupView() {
                     <p className="text-base text-textMuted max-w-lg mx-auto leading-relaxed">
                       {t('setup_welcome_desc')}
                     </p>
+                    <p className="text-xs text-primary/80 mt-2 font-medium">
+                      {t(
+                        'setup_welcome_migration_note',
+                        'Switching from another mod manager? You can import your mods during setup or anytime later in Settings.'
+                      )}
+                    </p>
                   </div>
 
                   <div className="bg-surface/50 border border-white/5 rounded-2xl p-5 space-y-3">
@@ -132,7 +171,7 @@ export function SetupView() {
                     </p>
                     <button
                       onClick={openXxmiLink}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-semibold text-textMain transition-all"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-semibold text-textMain transition-all cursor-pointer"
                     >
                       <ExternalLink size={14} />
                       {t('setup_get_xxmi')}
@@ -196,7 +235,7 @@ export function SetupView() {
                       />
                       <button
                         onClick={handleBrowseFolder}
-                        className="px-6 bg-surface border border-white/10 text-textMain rounded-xl font-bold text-sm hover:bg-white/5 transition-all flex items-center gap-2 shrink-0"
+                        className="px-6 bg-surface border border-white/10 text-textMain rounded-xl font-bold text-sm hover:bg-white/5 transition-all flex items-center gap-2 shrink-0 cursor-pointer"
                       >
                         <Folder size={16} />
                         {t('setup_browse')}
@@ -209,6 +248,101 @@ export function SetupView() {
               {step === 3 && (
                 <motion.div
                   key="step3"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-6"
+                >
+                  <div className="flex items-center justify-center mb-2">
+                    <div className="p-4 rounded-2xl bg-primary/20 text-primary border border-primary/20 shadow-[0_0_30px_rgba(var(--color-primary-rgb),0.2)]">
+                      <FolderDown size={40} />
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <h1 className="text-3xl font-black text-textMain tracking-tight mb-3">
+                      {t('setup_migration_title', 'Import from External Folder?')}
+                    </h1>
+                    <p className="text-base text-textMuted max-w-lg mx-auto leading-relaxed">
+                      {t(
+                        'setup_migration_desc',
+                        'Already have mods in another directory? Link it now to import your existing mods into your library.'
+                      )}
+                    </p>
+                  </div>
+
+                  {totalModsCount > 0 || stagedCount > 0 ? (
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 space-y-3">
+                      <div className="flex items-center gap-2.5 text-emerald-300 font-bold text-sm">
+                        <CheckCircle2 size={18} />
+                        <span>
+                          {t('setup_migration_imported_title', 'Mods Staged in Library!')}
+                        </span>
+                      </div>
+                      <p className="text-xs text-emerald-300/80 leading-relaxed">
+                        {t(
+                          'setup_migration_imported_desc',
+                          '{{count}} mods are staged in your library and ready to use.',
+                          { count: totalModsCount }
+                        )}
+                      </p>
+                      <button
+                        onClick={() => setIsImportModalOpen(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-semibold text-textMain transition-all cursor-pointer"
+                      >
+                        <FolderDown size={14} />
+                        {t('setup_import_more', 'Import More Mods...')}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="bg-surface/50 border border-white/5 rounded-2xl p-5 space-y-4">
+                      <div className="flex items-start gap-2.5 text-primary text-xs font-semibold">
+                        <Sparkles size={16} className="shrink-0 mt-0.5 text-amber-400" />
+                        <span>
+                          {t(
+                            'setup_migration_tip',
+                            'Multi-depth scanning detects nested mod folders automatically.'
+                          )}
+                        </span>
+                      </div>
+                      <p className="text-xs text-textMuted leading-relaxed">
+                        {t(
+                          'setup_migration_card_desc',
+                          'Open the Importer to preview detected mods at various folder depths and import them directly into your library.'
+                        )}
+                      </p>
+                      <div>
+                        <button
+                          onClick={() => setIsImportModalOpen(true)}
+                          className="w-full sm:w-auto px-6 py-3 rounded-xl bg-primary text-white font-bold text-xs hover:bg-primary/80 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <FolderDown size={16} />
+                          {t('setup_open_importer_btn', 'Import from External Folder')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="text-center space-y-1">
+                    <p className="text-xs text-textMuted">
+                      {t(
+                        'setup_migration_skip_hint',
+                        "Starting fresh or don't have an external folder? Click Next below."
+                      )}
+                    </p>
+                    <p className="text-[11px] text-primary/80 font-medium">
+                      {t(
+                        'setup_migration_later_hint',
+                        'You can also link and import from another mod manager anytime later in Settings.'
+                      )}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 4 && (
+                <motion.div
+                  key="step4"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
@@ -225,7 +359,13 @@ export function SetupView() {
                       {t('setup_complete_title')}
                     </h1>
                     <p className="text-base text-textMuted max-w-lg mx-auto leading-relaxed">
-                      {t('setup_complete_desc')}
+                      {totalModsCount > 0
+                        ? t(
+                            'setup_complete_with_mods_desc',
+                            'Setup complete! {{count}} mods are staged in your library and ready to play.',
+                            { count: totalModsCount }
+                          )
+                        : t('setup_complete_desc')}
                     </p>
                   </div>
                 </motion.div>
@@ -238,7 +378,7 @@ export function SetupView() {
             {step > 1 ? (
               <button
                 onClick={() => setStep((s) => s - 1)}
-                className="px-5 py-2.5 rounded-xl border border-white/10 font-bold text-sm text-textMuted hover:text-textMain hover:bg-white/5 transition-all flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-xl border border-white/10 font-bold text-sm text-textMuted hover:text-textMain hover:bg-white/5 transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <ChevronLeft size={16} />
                 {t('setup_back')}
@@ -247,7 +387,7 @@ export function SetupView() {
               <div />
             )}
 
-            {step < 3 ? (
+            {step < 4 ? (
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => {
@@ -257,20 +397,22 @@ export function SetupView() {
                     setStep((s) => s + 1);
                   }}
                   disabled={step === 2 && !modsPath.trim()}
-                  className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-1.5 shadow-lg ${
+                  className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-1.5 shadow-lg cursor-pointer ${
                     step === 2 && !modsPath.trim()
                       ? 'bg-surface text-textMuted cursor-not-allowed opacity-50'
                       : 'bg-primary text-white hover:bg-primary/80 shadow-primary/20 hover:scale-105'
                   }`}
                 >
-                  {t('setup_next')}
+                  {step === 3 && totalModsCount === 0 && stagedCount === 0
+                    ? t('setup_skip', 'Skip')
+                    : t('setup_next')}
                   <ChevronRight size={16} />
                 </button>
               </div>
             ) : (
               <button
                 onClick={handleFinish}
-                className="px-8 py-3 rounded-xl bg-primary text-white font-bold text-sm hover:bg-primary/80 transition-all shadow-lg shadow-primary/20 hover:scale-105"
+                className="px-8 py-3 rounded-xl bg-primary text-white font-bold text-sm hover:bg-primary/80 transition-all shadow-lg shadow-primary/20 hover:scale-105 cursor-pointer"
               >
                 {t('setup_enter_app')}
               </button>
@@ -278,6 +420,15 @@ export function SetupView() {
           </div>
         </div>
       </motion.div>
+
+      {/* Portaled Import Mods Modal */}
+      {isImportModalOpen && (
+        <ImportModsModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onImportComplete={handleImportComplete}
+        />
+      )}
     </div>
   );
 }

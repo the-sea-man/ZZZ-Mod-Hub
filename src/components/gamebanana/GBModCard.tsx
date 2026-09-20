@@ -18,37 +18,35 @@ export const GBModCard = memo(function GBModCard({ mod, installedTags }: GBModCa
   const { t } = useTranslation();
   const setActiveModPreview = useAppStore(selectSetActiveModPreview);
   const blurNsfw = useAppStore(selectBlurNsfw);
-
   const [unblurredByUser, setUnblurredByUser] = useState(false);
-
-  if (!mod) return null;
-
-  const isNsfw = isNsfwMod(mod);
-  const isBlurred = blurNsfw && isNsfw && !unblurredByUser;
 
   // GameBanana v13 preview images can be in:
   // 1. _aPreviewContent.screenshots array (Mod/Multi, ProfilePage)
   // 2. _aPreviewContent.screenshot (Subfeed)
   // 3. _aPreviewMedia._aImages (legacy)
   // 4. localPreview
-  const screenshotObj = mod._aPreviewContent?.screenshots?.[0] || mod._aPreviewContent?.screenshot;
-
-  const previewImage = mod._aPreviewMedia?._aImages?.[0];
+  const screenshotObj =
+    mod?._aPreviewContent?.screenshots?.[0] || mod?._aPreviewContent?.screenshot;
+  const previewImage = mod?._aPreviewMedia?._aImages?.[0];
 
   const onlineImageUrl = screenshotObj
     ? `${screenshotObj._sBaseUrl}/${screenshotObj._sFile800 || screenshotObj._sFile530 || screenshotObj._sFile || screenshotObj._sFile220}`
     : previewImage
       ? `${previewImage._sBaseUrl}/${previewImage._sFile800 || previewImage._sFile530 || previewImage._sFile || previewImage._sFile220}`
-      : mod._sImageUrl || mod._sThumbnailUrl || null;
+      : mod?._sImageUrl || mod?._sThumbnailUrl || null;
 
   const defaultPlaceholder = 'https://via.placeholder.com/220x220?text=No+Image';
-  const initialImg = onlineImageUrl || mod.localPreview || defaultPlaceholder;
+  const initialImg = onlineImageUrl || mod?.localPreview || defaultPlaceholder;
   const [imgSrc, setImgSrc] = useState(initialImg);
 
   useEffect(() => {
-    setImgSrc(onlineImageUrl || mod.localPreview || defaultPlaceholder);
-  }, [onlineImageUrl, mod.localPreview]);
+    setImgSrc(onlineImageUrl || mod?.localPreview || defaultPlaceholder);
+  }, [onlineImageUrl, mod?.localPreview]);
 
+  if (!mod) return null;
+
+  const isNsfw = isNsfwMod(mod);
+  const isBlurred = blurNsfw && isNsfw && !unblurredByUser;
   const visibleTags = installedTags?.slice(0, 4);
 
   return (

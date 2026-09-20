@@ -6,8 +6,11 @@ pub(crate) mod hotreload;
 pub(crate) mod hunting;
 pub(crate) mod ini_ops;
 pub(crate) mod logger;
+pub(crate) mod one_click;
 pub(crate) mod screenshot;
 pub(crate) mod state_tracker;
 pub(crate) mod task_manager;
 pub(crate) mod thumbnail_cache;
+pub(crate) mod vanilla_baseline;
 pub(crate) mod watcher;
+

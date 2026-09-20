@@ -426,3 +426,62 @@ export interface RestoreBackupResult {
   remaining_backups_count: number;
   error?: string | null;
 }
+
+// ── GameBanana 1-Click Installer ──────────────────────────────────────────────
+
+export interface OneClickPayload {
+  download_url: string;
+  item_type: string;
+  item_id?: number | null;
+  file_id?: number | null;
+}
+
+export interface RemotePairPayload {
+  member_id: number;
+  secret_key: string;
+}
+
+// ── External Mod Importer ──────────────────────────────────────────────────
+
+export interface DepthAnalysis {
+  depth: number;
+  candidate_count: number;
+  valid_mod_count: number;
+  shallow_warning_count: number;
+  deep_warning_count: number;
+  sample_path: string;
+}
+
+export interface DiscoveredCandidateMod {
+  source_path: string;
+  folder_name: string;
+  relative_path: string;
+  depth: number;
+  ini_count: number;
+  buf_count: number;
+  dds_count: number;
+  total_size_bytes: number;
+  has_subdirs_with_mods: boolean;
+  is_likely_subcomponent: boolean;
+}
+
+export interface ExternalFolderScanResult {
+  root_path: string;
+  recommended_depth: number;
+  depth_analyses: DepthAnalysis[];
+  candidates: DiscoveredCandidateMod[];
+}
+
+export interface ExecuteImportRequest {
+  candidate_paths: string[];
+  destination_root: string;
+  copy_mode: boolean;
+}
+
+export interface ImportExecutionResult {
+  total_requested: number;
+  success_count: number;
+  failure_count: number;
+  conflict_count: number;
+  details: string[];
+}

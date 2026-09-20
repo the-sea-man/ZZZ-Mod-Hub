@@ -18,6 +18,7 @@ export function useLibraryModals() {
   const [activeUpdateModal, setActiveUpdateModal] = useState<UpdateAvailable | null>(null);
   const [showFolderManagement, setShowFolderManagement] = useState(false);
   const [showProfilesModal, setShowProfilesModal] = useState(false);
+  const [showImportModsModal, setShowImportModsModal] = useState(false);
 
   return {
     editingKeybinds,
@@ -46,6 +47,8 @@ export function useLibraryModals() {
     setShowFolderManagement,
     showProfilesModal,
     setShowProfilesModal,
+    showImportModsModal,
+    setShowImportModsModal,
   };
 }
 

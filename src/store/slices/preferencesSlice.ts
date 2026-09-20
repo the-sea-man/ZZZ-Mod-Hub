@@ -1,6 +1,7 @@
 import { StateCreator } from 'zustand';
 import type { AppState, PerformanceProfile } from './types';
 import { invoke } from '@tauri-apps/api/core';
+import { tauriCommands } from '../../services/tauriCommands';
 import {
   safeGetInt,
   safeGetBool,
@@ -15,18 +16,72 @@ import {
 } from '../../types/cardCustomization';
 
 export type SettingsCategory =
-  | 'general'
-  | 'mod_management'
+  // Setup
+  | 'game_folders'
+  | 'library'
   | 'downloads'
+  // Tools
+  | 'in_game'
+  | 'diagnostics'
+  // Look & feel
   | 'appearance'
-  | 'card_appearance'
+  | 'mod_cards'
+  // System
+  | 'performance'
   | 'advanced'
-  | 'about';
+  | 'help_about';
+
+export const SETTINGS_CATEGORIES: readonly SettingsCategory[] = [
+  'game_folders',
+  'library',
+  'downloads',
+  'in_game',
+  'diagnostics',
+  'appearance',
+  'mod_cards',
+  'performance',
+  'advanced',
+  'help_about',
+] as const;
+
+/** Tab ids used before the settings were reorganised, mapped to their new home. */
+const LEGACY_SETTINGS_CATEGORIES: Record<string, SettingsCategory> = {
+  general: 'game_folders',
+  mod_management: 'diagnostics',
+  card_appearance: 'mod_cards',
+  about: 'help_about',
+};
+
+/**
+ * Resolves a persisted tab id to a tab that actually exists.
+ *
+ * A stale id would otherwise fall through the render switch and show an empty
+ * settings pane, so unknown values resolve to the first tab.
+ */
+export function normalizeSettingsCategory(value: unknown): SettingsCategory {
+  if (typeof value !== 'string') return 'game_folders';
+  if ((SETTINGS_CATEGORIES as readonly string[]).includes(value)) {
+    return value as SettingsCategory;
+  }
+  return LEGACY_SETTINGS_CATEGORIES[value] ?? 'game_folders';
+}
 
 export interface PreferencesSlice {
   activeTab: 'library' | 'settings' | 'gamebanana' | 'achievements';
   addAvailableLanguage: (lang: { code: string; name: string }) => void;
   alwaysAutoAssign: boolean;
+  oneClickInstallerEnabled: boolean;
+  oneClickAutoInstall: boolean;
+  remoteInstallEnabled: boolean;
+  remoteInstallMemberId: number | null;
+  remoteInstallSecretKey: string | null;
+  remoteInstallPollOnStartup: boolean;
+  remoteInstallAlias: string;
+  setRemoteInstallCredentials: (memberId: number | null, secretKey: string | null) => void;
+  setRemoteInstallEnabled: (enabled: boolean) => void;
+  setRemoteInstallPollOnStartup: (enabled: boolean) => void;
+  setRemoteInstallAlias: (alias: string) => void;
+  unpairRemoteInstall: () => void;
   animationsEnabled: boolean;
   appOpacity: number;
   autoLaunchGame: boolean;
@@ -58,6 +113,10 @@ export interface PreferencesSlice {
   lowPerformanceMode: boolean;
   maxDownloadAttempts: number;
   modsPath: string;
+  externalModsSourcePath: string;
+  externalModsDefaultDepth: number;
+  setExternalModsSourcePath: (path: string) => void;
+  setExternalModsDefaultDepth: (depth: number) => void;
   navigateToAchievementTarget: (target: {
     tab: 'library' | 'settings' | 'gamebanana' | 'achievements';
     settingsTab?: SettingsCategory;
@@ -102,6 +161,8 @@ export interface PreferencesSlice {
   setLowPerformanceMode: (val: boolean) => void;
   setMaxDownloadAttempts: (attempts: number) => void;
   setModsPath: (path: string) => void;
+  setOneClickInstallerEnabled: (enabled: boolean) => void;
+  setOneClickAutoInstall: (enabled: boolean) => void;
   setNsfwFilterEnabled: (enabled: boolean) => void;
   setPrimaryColor: (color: string) => void;
   setSelectedElement: (val: string) => void;
@@ -272,6 +333,20 @@ export const createPreferencesSlice: StateCreator<AppState, [], [], PreferencesS
 
   alwaysAutoAssign: safeGetBool('alwaysAutoAssign', true),
 
+  oneClickInstallerEnabled: safeGetBool('oneClickInstallerEnabled', true),
+
+  oneClickAutoInstall: safeGetBool('oneClickAutoInstall', true),
+
+  remoteInstallEnabled: safeGetBool('remoteInstallEnabled', true),
+
+  remoteInstallMemberId: safeGetInt('remoteInstallMemberId', 0) || null,
+
+  remoteInstallSecretKey: safeGetString('remoteInstallSecretKey', '') || null,
+
+  remoteInstallPollOnStartup: safeGetBool('remoteInstallPollOnStartup', true),
+
+  remoteInstallAlias: safeGetString('remoteInstallAlias', 'ZzzModManager'),
+
   animationsEnabled: safeGetBool('animationsEnabled', true),
 
   appOpacity: safeGetInt('appOpacity', 50, 10, 100),
@@ -384,6 +459,10 @@ export const createPreferencesSlice: StateCreator<AppState, [], [], PreferencesS
   maxDownloadAttempts: safeGetInt('maxDownloadAttempts', 3, 1, 10),
 
   modsPath: safeGetString('mods_path', ''),
+
+  externalModsSourcePath: safeGetString('external_mods_source_path', ''),
+
+  externalModsDefaultDepth: safeGetInt('external_mods_default_depth', 2, 1, 4),
 
   navigateToAchievementTarget: ({ tab, settingsTab, highlightId }) => {
     if (tab === 'settings') {
@@ -603,6 +682,77 @@ export const createPreferencesSlice: StateCreator<AppState, [], [], PreferencesS
     set({ modsPath: path });
   },
 
+  setExternalModsSourcePath: (path: string) => {
+    localStorage.setItem('external_mods_source_path', path);
+    set({ externalModsSourcePath: path });
+  },
+
+  setExternalModsDefaultDepth: (depth: number) => {
+    const clamped = Math.min(Math.max(depth, 1), 4);
+    localStorage.setItem('external_mods_default_depth', String(clamped));
+    set({ externalModsDefaultDepth: clamped });
+  },
+
+  setOneClickInstallerEnabled: async (enabled: boolean) => {
+    localStorage.setItem('oneClickInstallerEnabled', enabled ? 'true' : 'false');
+    set({ oneClickInstallerEnabled: enabled });
+    try {
+      if (enabled) {
+        await tauriCommands.oneClick.registerProtocol();
+      } else {
+        await tauriCommands.oneClick.unregisterProtocol();
+      }
+    } catch (err) {
+      console.error('Failed to update protocol registration in registry:', err);
+    }
+  },
+
+  setOneClickAutoInstall: (enabled: boolean) => {
+    localStorage.setItem('oneClickAutoInstall', enabled ? 'true' : 'false');
+    set({ oneClickAutoInstall: enabled });
+  },
+
+  setRemoteInstallCredentials: (memberId: number | null, secretKey: string | null) => {
+    if (memberId !== null && memberId !== undefined) {
+      localStorage.setItem('remoteInstallMemberId', String(memberId));
+    } else {
+      localStorage.removeItem('remoteInstallMemberId');
+    }
+    if (secretKey) {
+      localStorage.setItem('remoteInstallSecretKey', secretKey);
+    } else {
+      localStorage.removeItem('remoteInstallSecretKey');
+    }
+    set({
+      remoteInstallMemberId: memberId,
+      remoteInstallSecretKey: secretKey,
+    });
+  },
+
+  setRemoteInstallEnabled: (enabled: boolean) => {
+    localStorage.setItem('remoteInstallEnabled', enabled ? 'true' : 'false');
+    set({ remoteInstallEnabled: enabled });
+  },
+
+  setRemoteInstallPollOnStartup: (enabled: boolean) => {
+    localStorage.setItem('remoteInstallPollOnStartup', enabled ? 'true' : 'false');
+    set({ remoteInstallPollOnStartup: enabled });
+  },
+
+  setRemoteInstallAlias: (alias: string) => {
+    localStorage.setItem('remoteInstallAlias', alias);
+    set({ remoteInstallAlias: alias });
+  },
+
+  unpairRemoteInstall: () => {
+    localStorage.removeItem('remoteInstallMemberId');
+    localStorage.removeItem('remoteInstallSecretKey');
+    set({
+      remoteInstallMemberId: null,
+      remoteInstallSecretKey: null,
+    });
+  },
+
   setNsfwFilterEnabled: (enabled: boolean) => {
     localStorage.setItem('nsfwFilterEnabled', enabled ? 'true' : 'false');
     set({ nsfwFilterEnabled: enabled });
@@ -752,9 +902,21 @@ export const createPreferencesSlice: StateCreator<AppState, [], [], PreferencesS
     set({ winrarPath: path });
   },
 
-  settingsActiveTab: (sessionStorage.getItem('settingsTab') as any) || 'general',
+  settingsActiveTab: normalizeSettingsCategory(sessionStorage.getItem('settingsTab')),
 
-  setupComplete: safeGetBool('setupComplete', false) || !!safeGetString('mods_path', ''),
+  setupComplete: (() => {
+    const stored = localStorage.getItem('setupComplete');
+    if (stored !== null) {
+      return stored === 'true';
+    }
+    // Backward compatibility (Principle 14): only legacy installations before setupComplete existed
+    // will have mods_path present while setupComplete is null.
+    if (localStorage.getItem('mods_path')) {
+      localStorage.setItem('setupComplete', 'true');
+      return true;
+    }
+    return false;
+  })(),
 
   showApiDebugUrl: safeGetBool('showApiDebugUrl', false),
 

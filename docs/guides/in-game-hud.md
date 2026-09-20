@@ -25,7 +25,7 @@ You can change the menu hotkey from <kbd>H</kbd> to any key of your choice in **
 
 ### How It Works Behind the Scenes
 
-The manager inspects your installed mods and generates a lightweight 3DMigoto configuration file (`zzzmodmanager_ui.ini`) along with custom vertex buffers and texture font atlases.
+The manager inspects your installed mods and generates a lightweight 3DMigoto configuration file (`zzzmanager_ui_<mod>.ini`, inside a `zzzzzz_ZZZModManagerUI` folder in your Mods directory) along with the shaders and texture atlases it draws with.
 
 - Zero external overlay hooks or third-party DLL injections.
 - Renders entirely through 3DMigoto Direct3D 11 shaders for stable performance.
@@ -33,17 +33,13 @@ The manager inspects your installed mods and generates a lightweight 3DMigoto co
 
 ---
 
-## Automatic Hot Reload (<kbd>F10</kbd>)
+## In-Game Hot Reload (<kbd>F10</kbd>)
 
-Whenever you enable, disable, or install a mod in ZZZ Mod Hub while the game is running:
+Whenever you enable, disable, or install a mod in ZZZ Mod Hub, 3DMigoto needs to reload its internal cache to apply the changes:
 
-1. The manager detects the active `ZenlessZoneZero.exe` window.
-2. It sends an automatic <kbd>F10</kbd> reload command to 3DMigoto.
-3. Your mod updates on screen immediately without requiring you to alt-tab and press <kbd>F10</kbd> manually.
-
-::: info Manual Reload
-You can always press <kbd>F10</kbd> manually on your keyboard while in-game to force 3DMigoto to reload its cache and scripts.
-:::
+1. Click into or alt-tab to the active **Zenless Zone Zero** game window.
+2. Press <kbd>F10</kbd> on your keyboard.
+3. 3DMigoto reloads its active shaders and textures instantly on screen, without restarting the game.
 
 ---
 
@@ -74,4 +70,4 @@ If you have collected dozens of outfits, skins, and weapon mods, the **Outfit Ra
    - Choose whether to include only **Favorited Mods** or your whole library.
 3. Click **Roll Loadout**.
 4. The manager randomly selects and enables one mod per character while disabling conflicting alternatives.
-5. If the game is running, <kbd>F10</kbd> sends automatically to show your new loadout.
+5. Return to the game window and press <kbd>F10</kbd> to load your new outfit combination.

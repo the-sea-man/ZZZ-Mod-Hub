@@ -2506,6 +2506,14 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
         };
 
         let active_hashes = extract_hashes_from_ini(&content);
+        // Rust seeds its hasher per process, so iterating the set directly makes the order of
+        // emitted sections and of buffer tasks differ between runs on identical input. Sort once
+        // and iterate that: byte-stable output is what lets a golden comparison be a release gate.
+        let ordered_hashes: Vec<&String> = {
+            let mut v: Vec<&String> = active_hashes.iter().collect();
+            v.sort();
+            v
+        };
         let mut new_content = content.clone();
         let mut ini_changed = false;
 
@@ -2681,7 +2689,7 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
         type BufTask = (String, String, Vec<String>, Vec<String>, usize);
         let mut buf_tasks: Vec<BufTask> = Vec::new();
 
-        for hash in &active_hashes {
+        for hash in ordered_hashes.iter().copied() {
             // A component that needs a split but did not get one must keep its legacy
             // hashes: migrating them would split the component across two modern targets.
             if split_required_but_failed.is_some_and(|r| r.legacy_contains(hash)) {
@@ -3033,7 +3041,7 @@ pub fn apply_mod_fix(mod_path: &Path, fixer_db: &FixerDatabase) -> Result<ModFix
         }
 
         // 3. Ensure Universal Face 3.1 -> 3.2 texcoord format upgrade if not already queued
-        for h in &active_hashes {
+        for h in ordered_hashes.iter().copied() {
             if let Some((old_h, new_h, _char_name)) = find_universal_face_rule(h) {
                 let mut vb1_bufs = find_referenced_buffers(&content, old_h, "vb1");
                 if vb1_bufs.is_empty() {

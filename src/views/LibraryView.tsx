@@ -434,6 +434,7 @@ export function LibraryView() {
         isGeneratingFolders={isGeneratingFolders}
         onGenerateMissingFolders={handleGenerateMissingFolders}
         onOpenFolderManagement={() => modals.setShowFolderManagement(true)}
+        onOpenImportMods={() => modals.setShowImportModsModal(true)}
         onOpenProfiles={() => modals.setShowProfilesModal(true)}
         hasActiveProfile={!!activeProfile}
         activeProfileName={activeProfile?.name ?? null}

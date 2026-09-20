@@ -8,19 +8,19 @@ Common questions, warning badge explanations, and solutions for typical issues w
 
 When inspecting cards or categories, you may see colored badges:
 
-### 1. Blue Wrench Badge (Outdated Script / Patch Fix Available)
+### 1. Blue File Badge (Outdated Script / Patch Fix Available)
 
-- **What it means:** The mod's `.ini` script has syntax bugs (such as missing texture definitions, missing conditions, or outdated vertex strides).
-- **What to do:** Click the **Fix** button on the card. The manager automatically rewrites the script, remaps buffers if needed, and backs up your original files.
+- **What it means:** The mod's `.ini` script has syntax bugs or outdated vertex strides from an older game patch. (Not critical)
+- **What to do:** Click the **Upgrade** button on the card. The manager automatically rewrites the script, remaps buffers if needed, and backs up your original files into `.zmm-backup/`.
 
-### 2. Yellow Shield Badge (Multi-Entity / Shared Base Hashes)
+### 2. Yellow Person Badge (Multi-Entity / Shared Base Hashes)
 
-- **What it means:** The character has multiple skins in the game (for instance, Belle or Caesar) and some 3DMigoto buffer hashes are shared between versions.
-- **What to do:** This is purely informational. No fix is needed unless you have two active mods installed that replace the exact same skin variant at the same time.
+- **What it means:** The character has multiple skins in the game (for instance, Belle or Caesar) and some 3DMigoto buffer hashes are shared between versions. (Not critical)
+- **What to do:** This is purely informational. No action is needed unless you have two active mods installed that replace the exact same skin variant at the same time.
 
-### 3. Red Hazard Badge (Hash Collision Conflict)
+### 3. Red Shield Badge (Mesh Collision Conflict)
 
-- **What it means:** Two or more active mods are trying to replace the exact same 3D mesh at the same time.
+- **What it means:** Two or more active mods are trying to replace the exact same 3D character body part at the same time. (Critical)
 - **What to do:** In 3DMigoto, only one mod can override a given mesh at once. Disable one of the conflicting mods, or use the conflict resolver to choose which mod takes precedence.
 
 ---

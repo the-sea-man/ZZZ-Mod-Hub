@@ -51,12 +51,13 @@ export const createStatsAchievementsSlice: StateCreator<
   [],
   StatsAchievementsSlice
 > = (set, get) => ({
-  activeTutorial: null,
+  activeTutorial: (safeGetString('activeTutorial', '') || null) as TutorialId | null,
 
   clearTutorials: () => {
     localStorage.removeItem('tutorialsSeen');
     localStorage.removeItem('hasSeenAllAchievementsConfetti');
-    set({ tutorialsSeen: {}, hasSeenAllAchievementsConfetti: false });
+    localStorage.removeItem('activeTutorial');
+    set({ tutorialsSeen: {}, hasSeenAllAchievementsConfetti: false, activeTutorial: null });
   },
 
   executeQuickSnap: async () => {
@@ -298,7 +299,14 @@ export const createStatsAchievementsSlice: StateCreator<
 
   readNotifications: safeGetJSON<string[]>('readNotifications', []),
 
-  setActiveTutorial: (id) => set({ activeTutorial: id }),
+  setActiveTutorial: (id) => {
+    if (id) {
+      localStorage.setItem('activeTutorial', id);
+    } else {
+      localStorage.removeItem('activeTutorial');
+    }
+    set({ activeTutorial: id });
+  },
 
   setHasSeenAllAchievementsConfetti: (val) => {
     localStorage.setItem('hasSeenAllAchievementsConfetti', val ? 'true' : 'false');

@@ -547,10 +547,10 @@ fn test_suppression_is_scoped_to_the_subdraws_we_replace() {
     }
     assert_eq!(
         vanilla_subdraws("3275b812"),
-        Some(&[0i64, 16986][..]),
+        Some(vec![0i64, 16986]),
         "Jane hair's dumped sub-draw offsets"
     );
-    assert_eq!(vanilla_subdraws("ef86fc9f"), Some(&[0i64, 7152, 9012][..]), "Jane face has three");
+    assert_eq!(vanilla_subdraws("ef86fc9f"), Some(vec![0i64, 7152, 9012]), "Jane face has three");
     assert_eq!(vanilla_subdraws("deadbeef"), None, "undumped characters fall back");
     let _ = fs::remove_dir_all(&dir);
 }
@@ -996,6 +996,118 @@ run = CommandListSkinTexture\r\nib = ResourceIB\r\n\
         !err.is_blocking(),
         "a component with no mesh must not block its own hash migration: {err}"
     );
+
+    let _ = fs::remove_dir_all(&dir);
+}
+
+/// `VertexLimitRaise` tells the game how large this component's vertex buffer is, and the
+/// split changes that, so the count has to be stated even when the source section omitted it.
+/// Leaving it out emitted a bare `hash = ...` for every component of every mod, while one mod
+/// in the corpus ends up with 42,242 vertices where vanilla holds 5,067.
+///
+/// The value differs by mode and getting it backwards would clamp a buffer: compacting mode
+/// binds the component's own slice, shared mode binds the mod's whole buffer with indices left
+/// unrebased. The stride is NOT recomputed - slicing copies whole records, so an authored
+/// stride stays true.
+#[test]
+fn test_vertex_limit_raise_states_the_count_for_the_buffer_it_binds() {
+    // Compacting: each component states its own sliced vertex count.
+    let dir = temp_dir("vlrcompact");
+    let ini = make_fixture(&dir);
+    let rule = find_component_split(&ini, Some("JaneDoe")).unwrap();
+    let out = apply_component_split(&dir, &ini, rule, &remap()).unwrap();
+    let vlr = vlr_counts(&out.new_ini);
+    assert_eq!(
+        vlr,
+        vec![out.primary_vertices, out.secondary_vertices],
+        "each component states its own slice:
+{}",
+        out.new_ini
+    );
+    assert!(out.new_ini.contains("override_byte_stride"), "stride stated too");
+    let _ = fs::remove_dir_all(&dir);
+
+    // Shared: both components bind the mod's whole 100-vertex buffer, so both state 100.
+    // Stating the component's own count here would clamp the buffer and drop geometry.
+    let dir = temp_dir("vlrshared");
+    let ini = make_fixture(&dir).replace(
+        "[TextureOverrideJaneHairTexcoord]
+hash = acec29f8
+vb1 = ResourceJaneHairTexcoord
+",
+        "",
+    );
+    let rule = find_component_split(&ini, Some("JaneDoe")).unwrap();
+    let out = apply_component_split(&dir, &ini, rule, &remap()).unwrap();
+    assert!(!out.new_ini.contains("SplitPosition"), "shared mode keeps the mod's buffers");
+    assert_eq!(
+        vlr_counts(&out.new_ini),
+        vec![100, 100],
+        "shared mode states the source count, not the component's:
+{}",
+        out.new_ini
+    );
+    let _ = fs::remove_dir_all(&dir);
+}
+
+/// The `override_vertex_count` of each emitted VertexLimitRaise section, in order.
+fn vlr_counts(ini: &str) -> Vec<usize> {
+    let mut out = Vec::new();
+    let mut in_vlr = false;
+    for line in ini.lines() {
+        let t = line.trim();
+        if t.starts_with('[') {
+            in_vlr = t.contains("SplitVertexLimitRaise");
+        } else if in_vlr {
+            if let Some(v) = t.strip_prefix("override_vertex_count") {
+                if let Ok(n) = v.trim_start_matches([' ', '=']).trim().parse::<usize>() {
+                    out.push(n);
+                }
+            }
+        }
+    }
+    out
+}
+
+/// The compacted vertex order is draw order, and must not come from a `HashMap`.
+///
+/// This order decides the bytes of every emitted position/blend/texcoord buffer and the value of
+/// every rebased index. Taking it from map iteration made the *binaries* differ between runs on
+/// identical input while the vertex counts stayed stable - a difference no INI-text comparison can
+/// see, and which would make golden-output testing meaningless.
+///
+/// The fixture writes each source vertex id into the first four bytes of its position record, so
+/// the emitted order is read back directly rather than inferred.
+#[test]
+fn test_compacted_vertex_order_follows_draw_order() {
+    let dir = temp_dir("vertorder");
+    let ini = make_fixture(&dir);
+    let rule = find_component_split(&ini, Some("JaneDoe")).unwrap();
+    let out = apply_component_split(&dir, &ini, rule, &remap()).unwrap();
+    let m = dir.join("Meshes");
+
+    let markers = |file: &str| -> Vec<u32> {
+        fs::read(m.join(file))
+            .unwrap()
+            .chunks(40)
+            .map(|c| u32::from_le_bytes(c[..4].try_into().unwrap()))
+            .collect()
+    };
+
+    // Draw order is (section, draw): HairA draw 0 = verts 0..59 (Arms), HairA draw 1 = 60..99
+    // (Hair), then HairB = 90..99 which Hair has already taken.
+    assert_eq!(
+        markers("JaneDoeHairSplitPosition.buf"),
+        (60..100).collect::<Vec<u32>>(),
+        "hair vertices appear in the order its draws reference them"
+    );
+    assert_eq!(
+        markers("JaneDoeArmsSplitPosition.buf"),
+        (0..60).collect::<Vec<u32>>(),
+        "arms vertices likewise"
+    );
+    assert_eq!(out.primary_vertices, 40);
+    assert_eq!(out.secondary_vertices, 60);
 
     let _ = fs::remove_dir_all(&dir);
 }

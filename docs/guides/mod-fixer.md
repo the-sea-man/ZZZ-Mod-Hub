@@ -24,9 +24,9 @@ Game updates alter internal Direct3D 11 rendering structures:
 
 ### Method 1: Single Mod Fix
 
-When a mod has an outdated structure, a **blue wrench badge** appears on its card:
+When a mod has an outdated structure, a **Blue File** badge appears on its card:
 
-1. Click the **Fix** button on the card.
+1. Click the yellow/blue **Upgrade** button on the card.
 2. The **Mod Fixer Inspection Modal** opens:
    - Displays which game versions the mod is migrating from and to (e.g. `v1.0 -> v3.2`).
    - Details the hash remappings and buffer transformations that will be performed.
@@ -50,9 +50,9 @@ ZZZ Mod Hub uses a 3-tier color system on mod cards so you always know what acti
 
 | Badge                                                 | Meaning                        | Action Needed                                                                                                                                                               |
 | :---------------------------------------------------- | :----------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| <span class="badge badge-blue">Blue Wrench</span>     | **Script / Version Outdated**  | Safe to fix. Click **Fix** to update the mod to the latest game patch.                                                                                                      |
-| <span class="badge badge-yellow">Yellow Shield</span> | **Shared Entity / Multi-Skin** | Informational. Mod belongs to a character with multiple skins (e.g. Belle or Caesar) sharing base hashes. No action needed unless conflicting with another active skin mod. |
-| <span class="badge badge-red">Red Hazard</span>       | **Hash Collision Conflict**    | Two active mods are trying to replace the exact same body part at the same time. Disable one mod or resolve via the conflict dialog.                                        |
+| <span class="badge badge-blue">Blue File</span>       | **Script / Version Outdated**  | Safe to fix. Click the **Upgrade** button to update the mod to the latest game patch. (Not critical)                                                                        |
+| <span class="badge badge-yellow">Yellow Person</span> | **Shared Entity / Multi-Skin** | Informational. Mod belongs to a character with multiple skins (e.g. Belle or Caesar) sharing base hashes. No action needed unless conflicting with another active skin mod. |
+| <span class="badge badge-red">Red Shield</span>       | **Mesh Collision Conflict**    | Two active mods are trying to replace the exact same body part at the same time. Disable one mod or resolve via the conflict dialog. (Critical)                             |
 
 ---
 

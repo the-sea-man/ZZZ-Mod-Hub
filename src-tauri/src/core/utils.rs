@@ -180,6 +180,44 @@ pub fn safe_copy_file(from: &Path, to: &Path) -> std::io::Result<u64> {
     }
 }
 
+/// Safely copies a directory tree recursively to a destination path, using safe_copy_file for files.
+/// Returns the total number of bytes copied.
+pub fn copy_dir_recursive(from: &Path, to: &Path) -> std::io::Result<u64> {
+    if !to.exists() {
+        fs::create_dir_all(to)?;
+    }
+    let mut total_bytes = 0u64;
+    for entry in fs::read_dir(from)?.filter_map(Result::ok) {
+        let entry_path = entry.path();
+        let file_name = entry.file_name();
+        let dest_path = to.join(file_name);
+
+        if entry_path.is_dir() {
+            total_bytes += copy_dir_recursive(&entry_path, &dest_path)?;
+        } else if entry_path.is_file() {
+            if let Some(parent) = dest_path.parent() {
+                if !parent.exists() {
+                    fs::create_dir_all(parent)?;
+                }
+            }
+            total_bytes += safe_copy_file(&entry_path, &dest_path)?;
+        }
+    }
+    Ok(total_bytes)
+}
+
+/// Safely moves a directory to a new location.
+/// Attempts fast safe_rename first; if that fails (e.g. cross-volume / cross-drive),
+/// performs copy_dir_recursive and then removes the source directory.
+pub fn safe_move_dir(from: &Path, to: &Path) -> std::io::Result<()> {
+    if safe_rename(from, to).is_ok() {
+        return Ok(());
+    }
+    copy_dir_recursive(from, to)?;
+    safe_remove_dir_all(from)
+}
+
+
 
 /// Helper to recursively find .ini files with a depth limit
 pub fn find_ini_files(dir: &Path, out: &mut Vec<PathBuf>, depth: u8, max_depth: u8) {

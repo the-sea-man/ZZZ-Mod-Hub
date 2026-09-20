@@ -93,7 +93,7 @@ export const CUSTOMIZATION_AND_SECRETS_ACHIEVEMENTS: AchievementDef[] = [
         : 0,
     navigationTarget: {
       tab: 'settings',
-      settingsTab: 'appearance',
+      settingsTab: 'library',
       highlightId: 'character_filter_settings',
     },
     steps: [
@@ -114,7 +114,7 @@ export const CUSTOMIZATION_AND_SECRETS_ACHIEVEMENTS: AchievementDef[] = [
     getProgress: () => (localStorage.getItem('hud_enabled') === 'true' ? 1 : 0),
     navigationTarget: {
       tab: 'settings',
-      settingsTab: 'advanced',
+      settingsTab: 'in_game',
       highlightId: 'overlay_settings',
     },
     steps: [
@@ -133,7 +133,7 @@ export const CUSTOMIZATION_AND_SECRETS_ACHIEVEMENTS: AchievementDef[] = [
     getProgress: (s) => s.hotReloadsTriggered,
     navigationTarget: {
       tab: 'settings',
-      settingsTab: 'general',
+      settingsTab: 'game_folders',
       highlightId: 'game_paths_settings',
     },
     steps: [
@@ -176,7 +176,7 @@ export const CUSTOMIZATION_AND_SECRETS_ACHIEVEMENTS: AchievementDef[] = [
     },
     navigationTarget: {
       tab: 'settings',
-      settingsTab: 'general',
+      settingsTab: 'game_folders',
       highlightId: 'game_paths_settings',
     },
     steps: [

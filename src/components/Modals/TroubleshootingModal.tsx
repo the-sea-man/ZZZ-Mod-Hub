@@ -20,10 +20,10 @@ import {
 } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from '../../hooks/useTranslation';
+import type { SettingsCategory } from '../../store/slices/preferencesSlice';
 import { useAppStore } from '../../store/useAppStore';
 
-type SettingsTabType =
-  'general' | 'mod_management' | 'downloads' | 'appearance' | 'advanced' | 'about';
+type SettingsTabType = SettingsCategory;
 
 interface TroubleshootingModalProps {
   isOpen: boolean;
@@ -392,7 +392,7 @@ export const TroubleshootingModal: React.FC<TroubleshootingModalProps> = ({ isOp
           labelDefault: 'Open Mod Health Settings',
           icon: Sliders,
           action: ({ navigate }) => {
-            navigate('settings', 'mod_management');
+            navigate('settings', 'diagnostics');
             onClose();
           },
         },

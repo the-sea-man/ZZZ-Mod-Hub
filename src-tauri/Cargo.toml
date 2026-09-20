@@ -59,6 +59,9 @@ half = "2.4"
 rayon = "1.10"
 image_dds = "0.7.2"
 
+[target.'cfg(windows)'.dependencies]
+winreg = "0.55"
+
 [profile.release]
 panic = "abort"
 codegen-units = 1

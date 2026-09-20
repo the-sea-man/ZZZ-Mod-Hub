@@ -11,6 +11,7 @@ import { AchievementToastManager } from './components/AchievementToastManager';
 import { useKonamiCode } from './hooks/useKonamiCode';
 import { useQuickSnapperHotkey } from './hooks/useQuickSnapperHotkey';
 import { useAppKeyboardShortcuts } from './hooks/useAppKeyboardShortcuts';
+import { useOneClickInstaller } from './hooks/useOneClickInstaller';
 import { useAppStore } from './store/useAppStore';
 import { useDownloadStore } from './store/useDownloadStore';
 import { useTranslation } from './hooks/useTranslation';
@@ -136,6 +137,7 @@ function App() {
 
   useKonamiCode();
   useQuickSnapperHotkey();
+  useOneClickInstaller();
   useAppKeyboardShortcuts({
     onToggleFeatureGuide: () => setShowFeatureGuide((prev) => !prev),
   });
@@ -147,7 +149,7 @@ function App() {
     };
     document.addEventListener('contextmenu', handleContextMenu);
 
-    if (modsPath && !tutorialsSeen.post_setup) {
+    if (setupComplete && modsPath && !tutorialsSeen.post_setup) {
       setActiveTutorial('post_setup');
     }
     loadCachedLibrary();
@@ -155,7 +157,7 @@ function App() {
     checkAppUpdates();
     fetchCachedDatabase();
     fetchNotifications();
-    if (modsPath) {
+    if (setupComplete && modsPath) {
       const { startupScanEnabled, autoCheckUpdates, performanceProfile } = useAppStore.getState();
       const hasCategories = useAppStore.getState().categories.length > 0;
       // In lowest mode ('low'), skip startup scan for instant cached boot (< 50ms).
@@ -177,7 +179,7 @@ function App() {
 
     const { autoLaunchGame, gameExePath, launchGame } = useAppStore.getState();
     let autoLaunchTimer: ReturnType<typeof setTimeout> | null = null;
-    if (autoLaunchGame && gameExePath) {
+    if (setupComplete && autoLaunchGame && gameExePath) {
       autoLaunchTimer = setTimeout(() => {
         launchGame().catch(console.error);
       }, 3000);
@@ -187,7 +189,7 @@ function App() {
       if (autoLaunchTimer) clearTimeout(autoLaunchTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modsPath]);
+  }, [modsPath, setupComplete]);
 
   // Periodic Mod Updates Checker (GameBanana) — Every 60 minutes when enabled and not in low profile
   useEffect(() => {

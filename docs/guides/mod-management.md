@@ -37,7 +37,7 @@ Click the toggle switch on any mod card.
 
 - **Enabled:** The mod folder is in standard naming format (e.g. `Ellen Maid Dress`).
 - **Disabled:** The manager renames the folder with a `DISABLED_` prefix (e.g. `DISABLED_Ellen Maid Dress`). 3DMigoto ignores folders with this prefix, disabling the mod in-game.
-- **Hotkey Synchronization:** If the game is running, the manager automatically sends an `F10` keypress to reload 3DMigoto without requiring you to alt-tab and press it manually.
+- **In-Game Reload:** While playing the game, press <kbd>F10</kbd> on your keyboard to reload 3DMigoto and display your updated mods.
 
 ### Batch Operations
 
@@ -57,6 +57,20 @@ If a broken mod crashes your game or causes visual glitches during combat:
 ::: warning Undoing Disable All
 The Undo action restores your previous configuration only if no new mods were added or folders altered in the meantime.
 :::
+
+---
+
+## Automatic Mod Tagging
+
+When you install or scan mods, the manager automatically inspects their files and assigns tags based on their contents:
+
+- **`Outfit`**: Changes character outfits, clothing models, or complete skins.
+- **`UI`**: Modifies user interface textures, icons, HUD elements, or custom banners.
+- **`Weapon`**: Replaces character weapons, combat props, or gear meshes.
+- **`IN GAME MENU`**: Mods equipped with interactive in-game menu support.
+- **`NSFW`**: Content tagged with adult or explicit themes (respects your safety blur settings in **Settings > Mod Management**).
+
+You can filter your library by these tags using the search filter chips at the top of your library.
 
 ---
 
