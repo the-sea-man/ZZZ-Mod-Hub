@@ -121,6 +121,10 @@ If you skipped the initial import or have additional mod archives on another dri
   </div>
 </div>
 
+::: tip Looking for the Complete Initial Setup Walkthrough?
+This video demonstrates accessing the import tool through Settings if you skipped it during first installation. Because this clip cuts straight to the Settings menu, if you want to see the complete setup flow from the very beginning (including the full first-time setup wizard and initial folder selection), check out [Importing during first-time setup](#_1-importing-during-first-time-setup) above or the [Getting Started — Initial Setup Guide](./getting-started.md#step-2-first-time-setup-wizard) where the complete walkthrough video is shown.
+:::
+
 ---
 
 ## Directory hierarchy & loader paths
