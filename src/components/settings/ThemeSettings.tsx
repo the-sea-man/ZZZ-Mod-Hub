@@ -76,7 +76,14 @@ export function ThemeSettings() {
     >
       <div className="p-8 pb-4 border-b border-textMain/5">
         <h2 className="text-xl font-bold text-textMain flex items-center gap-3">
-          <Palette size={28} className="text-primary" /> {t('settings_customization_title')}
+          <div className="relative inline-flex items-center justify-center">
+            <Palette size={28} className="text-primary" />
+            <Globe
+              size={13}
+              className="absolute -bottom-1 -right-1 text-primary bg-background/90 rounded-full p-[0.5px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+            />
+          </div>
+          <span>{t('settings_customization_title')}</span>
         </h2>
         <p className="text-sm text-textMuted mt-2">{t('settings_customization_desc')}</p>
       </div>

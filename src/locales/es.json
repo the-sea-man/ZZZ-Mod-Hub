@@ -362,6 +362,8 @@
   "settings.image_prompt_no": "No, omitir imágenes (ahorrar espacio)",
   "settings_download_images": "Descargar imágenes de alta calidad",
   "settings_download_images_desc": "Descargue automáticamente retratos de personajes enriquecidos y recursos de interfaz de usuario durante la sincronización de la base de datos.",
+  "settings_fallback_gb_previews": "Vistas previas en línea para mods sin imagen",
+  "settings_fallback_gb_previews_desc": "Cuando un mod no incluya su propia imagen, obtiene la vista previa principal de GameBanana.",
   "settings_always_auto_assign": "Asignar siempre modificaciones automáticamente",
   "settings_always_auto_assign_desc": "Omita el modal del selector de categoría si el mod se puede identificar automáticamente.",
   "settings_max_download_attempts": "Intentos de descarga máximos",

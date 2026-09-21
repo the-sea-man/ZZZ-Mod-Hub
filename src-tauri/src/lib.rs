@@ -168,6 +168,7 @@ pub fn run() {
             gamebanana::open_url,
             gamebanana::check_mod_updates,
             gamebanana::fetch_mod_updates_v13,
+            gamebanana::download_mod_preview,
             // screenshot.rs - Screen capture
             screenshot::take_and_crop_screenshot,
             // conflict_scanner.rs - Hash conflict scanning

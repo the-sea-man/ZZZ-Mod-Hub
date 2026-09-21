@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useAppStore, type AppStore } from '../../store/useAppStore';
 import { EyeOff, Eye, Heart, Coins } from 'lucide-react';
 import { isNsfwMod } from '../../utils';
+import { getGbPreviewUrl } from '../../utils/gbPreviewUrl';
 import { useTranslation } from '../../hooks/useTranslation';
 
 interface GBModCardProps {
@@ -25,15 +26,7 @@ export const GBModCard = memo(function GBModCard({ mod, installedTags }: GBModCa
   // 2. _aPreviewContent.screenshot (Subfeed)
   // 3. _aPreviewMedia._aImages (legacy)
   // 4. localPreview
-  const screenshotObj =
-    mod?._aPreviewContent?.screenshots?.[0] || mod?._aPreviewContent?.screenshot;
-  const previewImage = mod?._aPreviewMedia?._aImages?.[0];
-
-  const onlineImageUrl = screenshotObj
-    ? `${screenshotObj._sBaseUrl}/${screenshotObj._sFile800 || screenshotObj._sFile530 || screenshotObj._sFile || screenshotObj._sFile220}`
-    : previewImage
-      ? `${previewImage._sBaseUrl}/${previewImage._sFile800 || previewImage._sFile530 || previewImage._sFile || previewImage._sFile220}`
-      : mod?._sImageUrl || mod?._sThumbnailUrl || null;
+  const onlineImageUrl = getGbPreviewUrl(mod);
 
   const defaultPlaceholder = 'https://via.placeholder.com/220x220?text=No+Image';
   const initialImg = onlineImageUrl || mod?.localPreview || defaultPlaceholder;

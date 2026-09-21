@@ -73,6 +73,9 @@ export const tauriCommands = {
     setPreviewImage: (modPath: string, imagePath: string) =>
       invoke<string>('set_mod_preview_image', { modPath, imagePath }),
 
+    downloadPreview: (modPath: string, imageUrl: string) =>
+      invoke<string>('download_mod_preview', { modPath, imageUrl }),
+
     getMetadata: (modPath: string) => invoke<any>('get_mod_metadata', { modPath }),
 
     getKeybinds: (modPath: string) => invoke<KeybindInfo[]>('get_mod_keybinds', { modPath }),

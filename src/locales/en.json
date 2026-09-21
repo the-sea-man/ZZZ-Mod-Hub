@@ -331,6 +331,8 @@
   "settings.image_prompt_no": "No, Skip Images (Save Space)",
   "settings_download_images": "Download High-Quality Images",
   "settings_download_images_desc": "Automatically download rich character portraits and UI assets during database sync.",
+  "settings_fallback_gb_previews": "Online Previews for Mods Without Images",
+  "settings_fallback_gb_previews_desc": "When a mod does not include its own image, fetch the main preview from GameBanana.",
   "settings_always_auto_assign": "Always Auto-Assign Mods",
   "settings_always_auto_assign_desc": "Skip the category picker modal if the mod can be automatically identified.",
   "settings_max_download_attempts": "Max Download Attempts",

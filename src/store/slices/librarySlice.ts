@@ -319,6 +319,10 @@ export const createLibrarySlice: StateCreator<AppState, [], [], LibrarySlice> = 
           taskId: 'scan:active',
         });
         set({ categories: res, isLoadingLibrary: false });
+        if (get().fallbackGbPreviews) {
+          const allMods = res.flatMap((c) => c.mods);
+          get().fetchMissingGbPreviews(allMods).catch(console.error);
+        }
         const isLowPerf = get().performanceProfile === 'low';
         if (!isLowPerf && get().autoConflictDetectionEnabled) {
           await get().refreshHashAnalysis();

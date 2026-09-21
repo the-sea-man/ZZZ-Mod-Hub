@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { gbImageUrl } from '../../utils/gbPreviewUrl';
 import { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { invoke } from '@tauri-apps/api/core';
@@ -160,7 +161,7 @@ export function GameBananaModModal({ mod, onClose }: GameBananaModModalProps) {
   let currentImage = '';
 
   if (currentImgObj) {
-    currentImage = `${currentImgObj._sBaseUrl}/${currentImgObj._sFile800 || currentImgObj._sFile530 || currentImgObj._sFile}`;
+    currentImage = gbImageUrl(currentImgObj) || PLACEHOLDER_NO_IMAGE;
   } else {
     currentImage = mod?._sImageUrl || mod?._sThumbnailUrl || PLACEHOLDER_NO_IMAGE;
   }

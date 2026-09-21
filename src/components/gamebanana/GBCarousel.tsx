@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getGbPreviewUrl } from '../../utils/gbPreviewUrl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Eye, Heart, Trophy } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
@@ -36,16 +37,8 @@ export function GBCarousel({ mods }: GBCarouselProps) {
   if (!currentMod) return null;
 
   // Resolve high quality image
-  const screenshot =
-    currentMod._aPreviewContent?.screenshot || currentMod._aPreviewContent?.screenshots?.[0];
-  const previewImage = currentMod._aPreviewMedia?._aImages?.[0];
-  const imageUrl = screenshot
-    ? `${screenshot._sBaseUrl}/${screenshot._sFile800 || screenshot._sFile530 || screenshot._sFile}`
-    : previewImage
-      ? `${previewImage._sBaseUrl}/${previewImage._sFile800 || previewImage._sFile530 || previewImage._sFile}`
-      : currentMod._sImageUrl ||
-        currentMod._sThumbnailUrl ||
-        'https://via.placeholder.com/800x400?text=No+Image';
+  const imageUrl =
+    getGbPreviewUrl(currentMod) || 'https://via.placeholder.com/800x400?text=No+Image';
 
   const isNsfw = isNsfwMod(currentMod) && blurNsfw;
 

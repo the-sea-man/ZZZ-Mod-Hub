@@ -168,6 +168,32 @@ describe('preferencesSlice', () => {
     expect(useAppStore.getState().activeTutorial).toBeNull();
     expect(localStorage.getItem('activeTutorial')).toBeNull();
   });
+
+  it('manages fallbackGbPreviews preference and gbPreviewCache', () => {
+    // 1. Initial state must default to disabled
+    useAppStore.getState().setFallbackGbPreviews(false);
+    expect(useAppStore.getState().fallbackGbPreviews).toBe(false);
+    expect(localStorage.getItem('fallbackGbPreviews')).toBe('false');
+
+    // 2. Toggle to enabled
+    useAppStore.getState().setFallbackGbPreviews(true);
+    expect(useAppStore.getState().fallbackGbPreviews).toBe(true);
+    expect(localStorage.getItem('fallbackGbPreviews')).toBe('true');
+
+    // 3. Set preview URLs in cache
+    useAppStore.getState().setGbPreviewUrls({ 12345: 'https://gamebanana.com/image1.jpg' });
+    expect(useAppStore.getState().gbPreviewCache[12345]).toBe('https://gamebanana.com/image1.jpg');
+
+    // 4. Merge additional URLs without overwriting previous ones
+    useAppStore.getState().setGbPreviewUrls({ 67890: 'https://gamebanana.com/image2.jpg' });
+    expect(useAppStore.getState().gbPreviewCache[12345]).toBe('https://gamebanana.com/image1.jpg');
+    expect(useAppStore.getState().gbPreviewCache[67890]).toBe('https://gamebanana.com/image2.jpg');
+
+    // 5. Toggle back to disabled
+    useAppStore.getState().setFallbackGbPreviews(false);
+    expect(useAppStore.getState().fallbackGbPreviews).toBe(false);
+    expect(localStorage.getItem('fallbackGbPreviews')).toBe('false');
+  });
 });
 
 describe('normalizeSettingsCategory', () => {

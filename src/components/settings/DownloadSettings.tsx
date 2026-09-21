@@ -29,6 +29,8 @@ export function DownloadSettings() {
     setAlwaysAutoAssign,
     downloadImages,
     setDownloadImages,
+    fallbackGbPreviews,
+    setFallbackGbPreviews,
     oneClickInstallerEnabled,
     oneClickAutoInstall,
     setOneClickInstallerEnabled,
@@ -399,6 +401,25 @@ export function DownloadSettings() {
           <div
             className={`w-4 h-4 rounded-full bg-white transition-transform ${
               downloadImages !== false ? 'translate-x-6' : 'translate-x-0'
+            }`}
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
+        <div>
+          <h3 className="font-bold text-textMain">{t('settings_fallback_gb_previews')}</h3>
+          <p className="text-xs text-textMuted mt-0.5">{t('settings_fallback_gb_previews_desc')}</p>
+        </div>
+        <div
+          onClick={() => setFallbackGbPreviews(!fallbackGbPreviews)}
+          className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors ${
+            fallbackGbPreviews ? 'bg-primary' : 'bg-white/20'
+          }`}
+        >
+          <div
+            className={`w-4 h-4 rounded-full bg-white transition-transform ${
+              fallbackGbPreviews ? 'translate-x-6' : 'translate-x-0'
             }`}
           />
         </div>

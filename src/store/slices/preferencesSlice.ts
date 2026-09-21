@@ -1,6 +1,26 @@
 import { StateCreator } from 'zustand';
 import type { AppState, PerformanceProfile } from './types';
+import type { ModInfo } from '../../types';
 import { invoke } from '@tauri-apps/api/core';
+import { getGbPreviewUrl, type GbPreviewSource } from '../../utils/gbPreviewUrl';
+
+/**
+ * GameBanana ids already asked about this session - hits, misses and failures.
+ *
+ * The fallback runs on every library change, including every mod toggle. Hits
+ * land in the persisted cache, but a mod page with no screenshot (or one that
+ * errored) has nothing to cache, so without this it is re-requested on every
+ * toggle. Kept in memory rather than persisted so a screenshot the author adds
+ * later is still picked up on the next launch.
+ */
+const gbPreviewAttemptedThisSession = new Set<number>();
+const gbPreviewDownloadingFolders = new Set<string>();
+
+/** Test hook: forget the session so each test starts clean. */
+export function resetGbPreviewSession(): void {
+  gbPreviewAttemptedThisSession.clear();
+  gbPreviewDownloadingFolders.clear();
+}
 import { tauriCommands } from '../../services/tauriCommands';
 import {
   safeGetInt,
@@ -100,6 +120,11 @@ export interface PreferencesSlice {
   defaultDiscoverCharacter: string;
   downloadImages: boolean | null;
   downloadRetryInterval: number;
+  fallbackGbPreviews: boolean;
+  setFallbackGbPreviews: (val: boolean) => void;
+  gbPreviewCache: Record<number, string>;
+  setGbPreviewUrls: (urls: Record<number, string>) => void;
+  fetchMissingGbPreviews: (mods: ModInfo[]) => Promise<void>;
   experimentalFeaturesEnabled: boolean;
   gameExePath: string;
   gameIsRunning: boolean;
@@ -431,6 +456,10 @@ export const createPreferencesSlice: StateCreator<AppState, [], [], PreferencesS
 
   downloadRetryInterval: safeGetInt('downloadRetryInterval', 2, 1, 60),
 
+  fallbackGbPreviews: safeGetBool('fallbackGbPreviews', false),
+
+  gbPreviewCache: safeGetJSON<Record<number, string>>('gb_preview_cache', {}),
+
   experimentalFeaturesEnabled: safeGetBool('experimental_features_enabled', false),
 
   gameExePath: safeGetString(
@@ -606,6 +635,132 @@ export const createPreferencesSlice: StateCreator<AppState, [], [], PreferencesS
   setDownloadImages: (val: boolean) => {
     localStorage.setItem('downloadImages', val.toString());
     set({ downloadImages: val });
+  },
+
+  setFallbackGbPreviews: (val: boolean) => {
+    localStorage.setItem('fallbackGbPreviews', val ? 'true' : 'false');
+    set({ fallbackGbPreviews: val });
+    if (val) {
+      const allMods = get().categories?.flatMap((c) => c.mods) || [];
+      get().fetchMissingGbPreviews(allMods).catch(console.error);
+    }
+  },
+
+  setGbPreviewUrls: (urls: Record<number, string>) => {
+    const merged = { ...get().gbPreviewCache, ...urls };
+    safeSetJSON('gb_preview_cache', merged);
+    set({ gbPreviewCache: merged });
+  },
+
+  fetchMissingGbPreviews: async (mods: ModInfo[]) => {
+    if (!get().fallbackGbPreviews) return;
+    const currentCache = get().gbPreviewCache;
+    const missingIds: number[] = [];
+    const modsToDownload: { mod: ModInfo; imageUrl: string }[] = [];
+
+    for (const mod of mods) {
+      // A mod's own preview always wins, so never ask GameBanana about it.
+      if (mod.preview_url || !mod.meta?.gb_mod_id) continue;
+      const id = mod.meta.gb_mod_id;
+      const modPath = mod.full_path || (mod as any).path;
+      const cachedUrl = currentCache[id];
+
+      if (cachedUrl) {
+        if (modPath && !gbPreviewDownloadingFolders.has(modPath)) {
+          modsToDownload.push({ mod, imageUrl: cachedUrl });
+        }
+        continue;
+      }
+
+      if (gbPreviewAttemptedThisSession.has(id) || missingIds.includes(id)) {
+        continue;
+      }
+      missingIds.push(id);
+    }
+
+    if (missingIds.length > 0) {
+      // Mark before the request, so a burst of library changes while it is in
+      // flight does not send duplicates, and a miss or a failure is not retried
+      // until the next launch.
+      for (const id of missingIds) gbPreviewAttemptedThisSession.add(id);
+
+      try {
+        const results = await invoke<GbPreviewSource[]>('fetch_gb_mods_multi', { ids: missingIds });
+        if (Array.isArray(results) && results.length > 0) {
+          const newEntries: Record<number, string> = {};
+          for (const item of results) {
+            const rowId = item?._idRow;
+            if (!rowId) continue;
+            const onlineImageUrl = getGbPreviewUrl(item);
+            if (onlineImageUrl) {
+              newEntries[rowId] = onlineImageUrl;
+            }
+          }
+
+          if (Object.keys(newEntries).length > 0) {
+            const merged = { ...get().gbPreviewCache, ...newEntries };
+            safeSetJSON('gb_preview_cache', merged);
+            set({ gbPreviewCache: merged });
+
+            for (const mod of mods) {
+              if (mod.preview_url || !mod.meta?.gb_mod_id) continue;
+              const id = mod.meta.gb_mod_id;
+              const url = newEntries[id];
+              const modPath = mod.full_path || (mod as any).path;
+              if (url && modPath && !gbPreviewDownloadingFolders.has(modPath)) {
+                modsToDownload.push({ mod, imageUrl: url });
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch fallback GameBanana previews:', err);
+      }
+    }
+
+    // When the mod definitely doesn't have a preview, download the image directly into the mod folder
+    if (modsToDownload.length > 0) {
+      const newlySavedPaths: Record<string, string> = {};
+      await Promise.all(
+        modsToDownload.map(async ({ mod, imageUrl }) => {
+          const modPath = mod.full_path || (mod as any).path;
+          if (!modPath) return;
+          gbPreviewDownloadingFolders.add(modPath);
+          try {
+            const localPath = await invoke<string>('download_mod_preview', {
+              modPath,
+              imageUrl,
+            });
+            if (localPath) {
+              newlySavedPaths[modPath.replace(/\\/g, '/')] = localPath;
+            }
+          } catch (dlErr) {
+            console.warn(`Failed to download preview into ${modPath}:`, dlErr);
+          } finally {
+            gbPreviewDownloadingFolders.delete(modPath);
+          }
+        })
+      );
+
+      if (Object.keys(newlySavedPaths).length > 0) {
+        const updatedCategories = (get().categories || []).map((cat) => ({
+          ...cat,
+          mods: cat.mods.map((m) => {
+            const normPath = (m.full_path || (m as any).path || '').replace(/\\/g, '/');
+            const savedLocalPath = newlySavedPaths[normPath];
+            if (savedLocalPath) {
+              return {
+                ...m,
+                preview_url: savedLocalPath,
+                thumbnail_url: undefined,
+              };
+            }
+            return m;
+          }),
+        }));
+        set({ categories: updatedCategories });
+      }
+    }
   },
 
   setDownloadRetryInterval: (seconds: number) => {

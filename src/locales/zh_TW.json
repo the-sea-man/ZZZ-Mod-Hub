@@ -1062,6 +1062,8 @@
   "settings.image_prompt_no": "否，跳過圖片（節省空間）",
   "settings_download_images": "下載高畫質圖片",
   "settings_download_images_desc": "在資料庫同步過程中自動下載精美角色立繪與 UI 資產。",
+  "settings_fallback_gb_previews": "無圖模組的線上預覽",
+  "settings_fallback_gb_previews_desc": "當模組未包含自身預覽圖時，從 GameBanana 取得主預覽圖。",
   "settings_always_auto_assign": "總是自動分配 Mod",
   "settings_always_auto_assign_desc": "若 Mod 能夠被自動識別，則跳過分類選擇彈窗。",
   "rank_rookie_proxy": "見習繩匠",

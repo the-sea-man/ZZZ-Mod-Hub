@@ -376,6 +376,8 @@
   "settings.image_prompt_no": "ไม่ ข้ามภาพ (ประหยัดพื้นที่)",
   "settings_download_images": "ดาวน์โหลดภาพคุณภาพสูง",
   "settings_download_images_desc": "ดาวน์โหลดรูปภาพตัวละครที่หลากหลายและเนื้อหา UI โดยอัตโนมัติระหว่างการซิงค์ฐานข้อมูล",
+  "settings_fallback_gb_previews": "ดูตัวอย่างออนไลน์สำหรับม็อดที่ไม่มีรูปภาพ",
+  "settings_fallback_gb_previews_desc": "เมื่อม็อดไม่มีรูปภาพของตัวเอง จะดึงภาพตัวอย่างหลักจาก GameBanana",
   "settings_always_auto_assign": "กำหนด Mods อัตโนมัติเสมอ",
   "settings_always_auto_assign_desc": "ข้ามโมดอลตัวเลือกหมวดหมู่หากสามารถระบุม็อดได้โดยอัตโนมัติ",
   "settings_max_download_attempts": "ความพยายามในการดาวน์โหลดสูงสุด",

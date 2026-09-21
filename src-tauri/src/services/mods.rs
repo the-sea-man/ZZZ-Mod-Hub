@@ -599,7 +599,8 @@ pub fn scan_single_mod_dir(mod_path: &Path) -> ModDirScanResult {
 
                     let is_preview = fname_lower == "preview.png"
                         || fname_lower == "preview.jpg"
-                        || fname_lower == "preview.jpeg";
+                        || fname_lower == "preview.jpeg"
+                        || fname_lower == "preview.webp";
 
                     if is_preview {
                         let path_str = entry.path().to_string_lossy().replace('\\', "/");

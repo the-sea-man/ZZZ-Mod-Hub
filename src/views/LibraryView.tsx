@@ -95,6 +95,8 @@ const selectAvailableUpdates = (s: AppStore) => s.availableUpdates;
 const selectIsLoadingLibrary = (s: AppStore) => s.isLoadingLibrary;
 const selectProfiles = (s: AppStore) => s.profiles;
 const selectActiveProfileId = (s: AppStore) => s.activeProfileId;
+const selectFallbackGbPreviews = (s: AppStore) => s.fallbackGbPreviews;
+const selectFetchMissingGbPreviews = (s: AppStore) => s.fetchMissingGbPreviews;
 
 export function LibraryView() {
   const { t } = useTranslation();
@@ -164,6 +166,17 @@ export function LibraryView() {
   const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
   const [hasDismissedUpdatesBanner, setHasDismissedUpdatesBanner] = useState(false);
+
+  const fallbackGbPreviews = useAppStore(selectFallbackGbPreviews);
+  const fetchMissingGbPreviews = useAppStore(selectFetchMissingGbPreviews);
+
+  // Auto-fetch missing GameBanana preview images when fallbackGbPreviews is enabled
+  useEffect(() => {
+    if (fallbackGbPreviews && categories.length > 0) {
+      const allMods = categories.flatMap((c) => c.mods);
+      fetchMissingGbPreviews(allMods).catch(console.error);
+    }
+  }, [fallbackGbPreviews, categories, fetchMissingGbPreviews]);
 
   // Tab safety check
   useEffect(() => {

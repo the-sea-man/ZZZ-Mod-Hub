@@ -1062,6 +1062,8 @@
   "settings.image_prompt_no": "否，跳过图片（节省空间）",
   "settings_download_images": "下载高清图片",
   "settings_download_images_desc": "在数据库同步过程中自动下载精美角色立绘与 UI 资产。",
+  "settings_fallback_gb_previews": "无图模组的在线预览",
+  "settings_fallback_gb_previews_desc": "当模组未包含自身预览图时，从 GameBanana 获取主预览图。",
   "settings_always_auto_assign": "总是自动分配 Mod",
   "settings_always_auto_assign_desc": "若 Mod 能够被自动识别，则跳过分类选择弹窗。",
   "rank_rookie_proxy": "见习绳匠",

@@ -33,6 +33,21 @@ If the primary GameBanana download node times out, returns HTTP 500/503 errors, 
 
 ---
 
+## Preview images for mods without one
+
+Many GameBanana uploads do not include a `preview.png`, so their library cards show the character's default art instead of the mod. The app can show the mod's first GameBanana screenshot on those cards.
+
+Turn it on in **Settings > Downloads > Online Previews for Mods Without Images**. It is off by default because it contacts GameBanana.
+
+What to expect:
+
+- **It only covers mods you downloaded through the app.** Those remember their GameBanana page. A mod you installed from an archive on your drive has no link back to GameBanana, so it keeps the character art.
+- **A mod's own preview always wins.** If the mod folder has a `preview.png` or `preview.jpg`, that is what you see.
+- **The image loads from GameBanana, it is not saved.** You need to be online to see it. Offline, the card falls back to the character art.
+- **Each mod is checked once per session.** Mods with no screenshot on GameBanana are not asked about again until you restart the app.
+
+To give a mod a permanent image of your own, use [Quick Snapper](./in-game-hud.md) or the image cropper from the mod card menu. That saves a real `preview.png` into the mod folder.
+
 ## One-Click mod updates
 
 Mod authors frequently release updates to fix bugs, add new color variants, or support new game patches.

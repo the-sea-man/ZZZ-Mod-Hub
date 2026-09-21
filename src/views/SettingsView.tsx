@@ -27,6 +27,7 @@ import {
   Gamepad2,
   Stethoscope,
   Palette,
+  Globe,
   LayoutTemplate,
   Gauge,
   Beaker,
@@ -104,7 +105,15 @@ export function SettingsView() {
         {
           id: 'appearance',
           label: t('settings_appearance', 'Appearance'),
-          icon: <Palette size={20} />,
+          icon: (
+            <span className="relative inline-flex items-center justify-center w-5 h-5">
+              <Palette size={20} />
+              <Globe
+                size={11}
+                className="absolute -bottom-1 -right-1 text-primary bg-background/90 rounded-full p-[0.5px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+              />
+            </span>
+          ),
         },
         {
           id: 'mod_cards',

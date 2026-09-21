@@ -224,6 +224,7 @@ export function exportFullBackup(): string {
     'hotreloadEnabled',
     'alwaysAutoAssign',
     'downloadImages',
+    'fallbackGbPreviews',
     'ignoredMods',
     'favoriteCategories',
     'categoryIcons',

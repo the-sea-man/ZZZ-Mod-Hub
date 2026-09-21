@@ -881,6 +881,88 @@ pub async fn fetch_mod_updates_v13(mod_id: u64, page: Option<u32>, per_page: Opt
     Ok(response)
 }
 
+/// Downloads a mod preview image from a remote URL directly into the mod directory.
+/// Strictly respects existing previews: if the mod already has a preview image, it returns the existing path without overwriting.
+#[tauri::command]
+pub async fn download_mod_preview(
+    mod_path: String,
+    image_url: String,
+) -> Result<String, AppError> {
+    let mod_path_expanded = crate::utils::expand_path(&mod_path);
+    let m_path = Path::new(&mod_path_expanded);
+    if !m_path.exists() || !m_path.is_dir() {
+        return Err(AppError::Custom("Mod directory does not exist".into()));
+    }
+
+    // 1. Check if mod already has any local preview (strict local precedence)
+    for e in ["png", "jpg", "jpeg", "webp"] {
+        let existing = m_path.join(format!("preview.{}", e));
+        if existing.exists() {
+            return Ok(existing.to_string_lossy().replace('\\', "/"));
+        }
+    }
+
+    // 2. Validate URL scheme
+    let parsed_url = reqwest::Url::parse(&image_url)
+        .map_err(|e| AppError::Custom(format!("Invalid preview image URL: {}", e)))?;
+    if parsed_url.scheme() != "http" && parsed_url.scheme() != "https" {
+        return Err(AppError::Custom("Invalid preview image URL scheme: only HTTP and HTTPS are allowed".into()));
+    }
+
+    // 3. Download image
+    let client = reqwest::Client::builder()
+        .user_agent("ZzzModManager/1.0")
+        .timeout(Duration::from_secs(15))
+        .build()?;
+
+    let resp = client.get(parsed_url).send().await?;
+    if !resp.status().is_success() {
+        return Err(AppError::Custom(format!(
+            "Failed to download preview image: HTTP {}",
+            resp.status()
+        )));
+    }
+
+    let content_type = resp
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|h| h.to_str().ok())
+        .unwrap_or("")
+        .to_lowercase();
+
+    let ext = if content_type.contains("jpeg")
+        || image_url.to_lowercase().ends_with(".jpg")
+        || image_url.to_lowercase().ends_with(".jpeg")
+    {
+        "jpg"
+    } else if content_type.contains("webp") || image_url.to_lowercase().ends_with(".webp") {
+        "webp"
+    } else {
+        "png"
+    };
+
+    let bytes = resp.bytes().await?;
+    if bytes.is_empty() {
+        return Err(AppError::Custom("Downloaded image is empty".into()));
+    }
+
+    // 4. Atomic write using temporary file + rename
+    let target_path = m_path.join(format!("preview.{}", ext));
+    let tmp_path = m_path.join(format!("preview.{}.tmp", ext));
+
+    if let Err(e) = tokio::fs::write(&tmp_path, &bytes).await {
+        let _ = tokio::fs::remove_file(&tmp_path).await;
+        return Err(AppError::Io(e));
+    }
+
+    if let Err(e) = tokio::fs::rename(&tmp_path, &target_path).await {
+        let _ = tokio::fs::remove_file(&tmp_path).await;
+        return Err(AppError::Io(e));
+    }
+
+    Ok(target_path.to_string_lossy().replace('\\', "/"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -919,6 +1001,63 @@ mod tests {
     fn test_score_search_relevance_description_fallback() {
         let score_desc = score_search_relevance("Unrelated Title", "This mod adds a police uniform for Jane", "police uniform");
         assert_eq!(score_desc, 200);
+    }
+
+    #[tokio::test]
+    async fn test_download_mod_preview_preserves_existing() {
+        let unique_id = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let temp_dir = std::env::temp_dir().join(format!("zmm_test_preview_{}", unique_id));
+        std::fs::create_dir_all(&temp_dir).unwrap();
+
+        let existing_preview = temp_dir.join("preview.png");
+        std::fs::write(&existing_preview, b"existing_preview_data").unwrap();
+
+        // Calling download_mod_preview on a directory with an existing preview should NOT download or overwrite
+        let res = download_mod_preview(
+            temp_dir.to_string_lossy().to_string(),
+            "https://invalid.domain.that.does.not.exist/preview.png".to_string(),
+        ).await;
+
+        assert!(res.is_ok());
+        let returned_path = res.unwrap();
+        assert!(returned_path.ends_with("preview.png"));
+
+        // Content must remain untouched
+        let content = std::fs::read(&existing_preview).unwrap();
+        assert_eq!(content, b"existing_preview_data");
+
+        let _ = std::fs::remove_dir_all(&temp_dir);
+    }
+
+    #[tokio::test]
+    async fn test_download_mod_preview_invalid_directory() {
+        let res = download_mod_preview(
+            "C:/non_existent_folder_path_12345/mod".to_string(),
+            "https://example.com/preview.png".to_string(),
+        ).await;
+
+        assert!(res.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_download_mod_preview_invalid_url() {
+        let unique_id = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let temp_dir = std::env::temp_dir().join(format!("zmm_test_preview_url_{}", unique_id));
+        std::fs::create_dir_all(&temp_dir).unwrap();
+
+        let res = download_mod_preview(
+            temp_dir.to_string_lossy().to_string(),
+            "ftp://invalid-scheme/image.png".to_string(),
+        ).await;
+
+        assert!(res.is_err());
+        let _ = std::fs::remove_dir_all(&temp_dir);
     }
 }
 

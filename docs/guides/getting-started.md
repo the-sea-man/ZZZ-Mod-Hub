@@ -93,7 +93,7 @@ Settings is split into four groups in the left sidebar. If you are looking for s
 
 - **Game & Folders**: your mods folder, the game executable, hot reload, and the database URL.
 - **Library**: the randomizer whitelist and which filter chips appear above your mods.
-- **Downloads**: download behaviour, the Discover feed, and the adult content filters.
+- **Downloads**: download behaviour, online preview images for mods without one, the Discover feed, and the adult content filters.
 
 **Tools**
 

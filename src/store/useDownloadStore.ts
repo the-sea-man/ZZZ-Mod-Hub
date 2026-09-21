@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
 import { useAppStore } from './useAppStore';
 import { playInstallSuccessSound } from '../utils/audio';
+import { getGbPreviewUrl } from '../utils/gbPreviewUrl';
 import type { DownloadProgressEvent, DownloadCompleteEvent, InstallResult } from '../types/ipc';
 
 export interface DownloadPayload {
@@ -81,6 +82,17 @@ export const useDownloadStore = create<DownloadManagerStore>((set, get) => ({
         },
       },
     }));
+
+    // Seed GameBanana preview image cache if modData has image
+    const gbModId = payload.gbModId ?? payload.modData?._idRow;
+    if (gbModId && payload.modData) {
+      // The mod page is already in hand, so seeding here saves the library a
+      // GameBanana round trip for every freshly downloaded mod.
+      const onlineImageUrl = getGbPreviewUrl(payload.modData);
+      if (onlineImageUrl) {
+        useAppStore.getState().setGbPreviewUrls({ [gbModId]: onlineImageUrl });
+      }
+    }
 
     // 2. Invoke Rust backend
     const { maxDownloadAttempts, downloadRetryInterval } = useAppStore.getState();

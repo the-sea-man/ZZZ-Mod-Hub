@@ -362,6 +362,8 @@
   "settings.image_prompt_no": "아니요, 이미지 건너뛰기(공간 절약)",
   "settings_download_images": "Download High-Quality Images",
   "settings_download_images_desc": "데이터베이스 동기화 중에 풍부한 캐릭터 초상화와 UI 자산을 자동으로 다운로드합니다.",
+  "settings_fallback_gb_previews": "이미지가 없는 모드의 온라인 미리보기",
+  "settings_fallback_gb_previews_desc": "모드에 자체 이미지가 포함되어 있지 않은 경우 GameBanana에서 기본 미리보기를 가져옵니다.",
   "settings_always_auto_assign": "항상 모드 자동 할당",
   "settings_always_auto_assign_desc": "Skip the category picker modal if the mod can be automatically identified.",
   "settings_max_download_attempts": "최대 다운로드 시도 횟수",

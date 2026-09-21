@@ -69,6 +69,8 @@ const selectSetModNote = (s: AppStore) => s.setModNote;
 const selectGetFilteredWarnings = (s: AppStore) => s.getFilteredWarnings;
 const selectToggleFilterTag = (s: AppStore) => s.toggleFilterTag;
 const selectCheckOrPromptExperimental = (s: AppStore) => s.checkOrPromptExperimental;
+const selectFallbackGbPreviews = (s: AppStore) => s.fallbackGbPreviews;
+const selectGbPreviewCache = (s: AppStore) => s.gbPreviewCache;
 
 const EMPTY_STR_ARRAY: string[] = [];
 
@@ -102,6 +104,8 @@ export const ModCard = memo(function ModCard({
   const getFilteredWarnings = useAppStore(selectGetFilteredWarnings);
   const toggleFilterTag = useAppStore(selectToggleFilterTag);
   const checkOrPromptExperimental = useAppStore(selectCheckOrPromptExperimental);
+  const fallbackGbPreviews = useAppStore(selectFallbackGbPreviews);
+  const gbPreviewCache = useAppStore(selectGbPreviewCache);
   const cardCustomization =
     useAppStore((s) => s.cardCustomization) || DEFAULT_MOD_CARD_CUSTOMIZATION;
 
@@ -332,33 +336,44 @@ export const ModCard = memo(function ModCard({
           cardCustomization.frame.aspectRatio
         )} bg-background flex items-center justify-center relative overflow-hidden`}
       >
-        {mod.preview_url || character ? (
-          <>
-            <img
-              src={getImageUrl(
-                mod.thumbnail_url || mod.preview_url || skin?.image_url || character?.image_url
-              )}
-              alt={skin?.name || character?.name || mod.name}
-              loading="lazy"
-              decoding="async"
-              className={`absolute h-full w-auto max-w-none left-1/2 -translate-x-1/2 object-cover opacity-90 ${
-                cardCustomization.imageOverlay.imageHoverZoom ? 'group-hover:scale-105' : ''
-              } transition-transform duration-75`}
-            />
-            <div
-              className="absolute inset-0 pointer-events-none transition-all"
-              style={{
-                background: `linear-gradient(to top, rgba(0,0,0,${
-                  cardCustomization.imageOverlay.darkeningGradient / 100
-                }) 0%, rgba(0,0,0,${
-                  (cardCustomization.imageOverlay.darkeningGradient * 0.4) / 100
-                }) 55%, transparent 100%)`,
-              }}
-            />
-          </>
-        ) : (
-          <Package size={64} className="opacity-10 text-white" />
-        )}
+        {(() => {
+          const gbFallbackUrl =
+            fallbackGbPreviews && !mod.preview_url && mod.meta?.gb_mod_id
+              ? gbPreviewCache[mod.meta.gb_mod_id]
+              : undefined;
+          const displayImageSrc =
+            mod.thumbnail_url ||
+            mod.preview_url ||
+            gbFallbackUrl ||
+            skin?.image_url ||
+            character?.image_url;
+
+          return mod.preview_url || gbFallbackUrl || character ? (
+            <>
+              <img
+                src={getImageUrl(displayImageSrc)}
+                alt={skin?.name || character?.name || mod.name}
+                loading="lazy"
+                decoding="async"
+                className={`absolute h-full w-auto max-w-none left-1/2 -translate-x-1/2 object-cover opacity-90 ${
+                  cardCustomization.imageOverlay.imageHoverZoom ? 'group-hover:scale-105' : ''
+                } transition-transform duration-75`}
+              />
+              <div
+                className="absolute inset-0 pointer-events-none transition-all"
+                style={{
+                  background: `linear-gradient(to top, rgba(0,0,0,${
+                    cardCustomization.imageOverlay.darkeningGradient / 100
+                  }) 0%, rgba(0,0,0,${
+                    (cardCustomization.imageOverlay.darkeningGradient * 0.4) / 100
+                  }) 55%, transparent 100%)`,
+                }}
+              />
+            </>
+          ) : (
+            <Package size={64} className="opacity-10 text-white" />
+          );
+        })()}
 
         {/* Badges & Warning Icons */}
         <ModCardBadges

@@ -362,6 +362,8 @@
   "settings.image_prompt_no": "いいえ、画像をスキップします (スペースを節約します)",
   "settings_download_images": "高品質の画像をダウンロードする",
   "settings_download_images_desc": "データベースの同期中に、豊富なキャラクターのポートレートと UI アセットを自動的にダウンロードします。",
+  "settings_fallback_gb_previews": "画像のないモッズのオンラインプレビュー",
+  "settings_fallback_gb_previews_desc": "モッドに画像が含まれていない場合、GameBananaからメインプレビューを取得します。",
   "settings_always_auto_assign": "常に Mod を自動割り当て",
   "settings_always_auto_assign_desc": "MOD が自動的に識別できる場合は、カテゴリ ピッカー モーダルをスキップします。",
   "settings_max_download_attempts": "最大ダウンロード試行回数",
