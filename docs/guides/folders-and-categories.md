@@ -37,6 +37,10 @@ If an imported archive has non-standard naming, ambiguous author folders, or was
   </div>
 </div>
 
+::: tip Run Auto-Sort After Every Migration
+Whenever you import mods from another mod manager or copy an existing mod library, any unrecognized or loose folders will appear here in `Unassigned/`. Simply click **Auto-Sort** to let the manager identify and distribute every mod to its correct character folder automatically based on buffer hashes.
+:::
+
 ---
 
 ## Custom folder manager (status)

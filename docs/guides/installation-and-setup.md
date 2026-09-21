@@ -105,6 +105,10 @@ During the initial setup wizard (Step 3), the manager detects if you want to imp
   </div>
 </div>
 
+::: tip Remember to Auto-Sort after initial setup
+Any imported mods with non-standard naming or loose directories will land safely in `Unassigned/`. Once setup finishes, navigate to **Unassigned** in your sidebar and click **Auto-Sort** to let the manager check their buffer hashes and place them into their matching character folders!
+:::
+
 ### 2. Importing after setup (Settings menu)
 
 If you skipped the initial import or have additional mod archives on another drive that you want to bring in later, you do not need to re-run the wizard:
@@ -112,6 +116,7 @@ If you skipped the initial import or have additional mod archives on another dri
 1. Open **Settings > Game & Folders**.
 2. Click the **Import Mods** button under the migration section.
 3. Select your external mod directory, choose **Copy** or **Move**, and confirm. The exact same migration pipeline executes in the background.
+4. **Run Auto-Sort:** After importing, click into the **Unassigned** category in the left sidebar and press **Auto-Sort**. The manager will inspect all 3DMigoto buffer hashes inside any loose mod folders and distribute them straight to the correct agent folders.
 
 <div class="guide-video-wrapper">
   <video controls playsinline class="guide-video" src="/videos/partial-import-after-setup.mp4"></video>

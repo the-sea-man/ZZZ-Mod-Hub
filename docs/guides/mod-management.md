@@ -31,6 +31,10 @@ Browse mods directly in the **Discover** tab and click **Install**. The manager 
 
 If you have mod folders from another manager or an external backup drive, open **Settings > Game & Folders** and click **Import Mods**. You can choose to Copy or Move them with full hash verification. (See [Importing after setup](./installation-and-setup.md#_2-importing-after-setup-settings-menu) for a full video walkthrough).
 
+::: tip Remember to Auto-Sort after importing
+Any imported folders lacking clear character naming will land safely in `Unassigned/`. Always click into the **Unassigned** category in your sidebar and hit **Auto-Sort** immediately after an import to sort them automatically by their 3DMigoto buffer hashes.
+:::
+
 ---
 
 ## Auto-Sorting Unassigned mods

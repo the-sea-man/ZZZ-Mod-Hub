@@ -74,6 +74,10 @@ If you are switching from another mod manager, the wizard allows migrating all y
 
 Click **Enter App** to open your mod library.
 
+::: tip Remember to Auto-Sort after importing
+Any mods with ambiguous archive names or loose folders will be placed safely into `Unassigned/` during import. Once you enter the app, simply open **Unassigned** in the left sidebar and click **Auto-Sort**: the manager reads every mod's 3DMigoto buffer hashes and routes them automatically to their correct character folders!
+:::
+
 ---
 
 ## Step 3: sync the database & generate folders
