@@ -1,11 +1,11 @@
 {
-  "version": "1.2.6",
-  "notes": "ZZZ Mod Hub v1.2.6: Quick hotfix addressing automated build environment stubs and backend Clippy lints.",
-  "pub_date": "2026-09-17T11:10:04Z",
+  "version": "1.2.7",
+  "notes": "ZZZ Mod Hub v1.2.7: GameBanana 1-Click Install, interactive documentation hub, mod fix validation, and UI polish.",
+  "pub_date": "2026-09-21T02:43:05Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQlJVaEFTeUwxUWRNR1BDbDY3Q290UjNZeEN3NVY5WXM1Wk9tSFlaOXJnN1g2cUIxV0JEdmlIR1puNCtsOUx5YjUyQXJxdC9naUZVM3IrclNYQ09FM0FBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5NjQzNDAyCWZpbGU6WlpaIE1vZCBIdWJfMS4yLjZfeDY0LXNldHVwLmV4ZQpnem54cjBudDBSemJyTFpsa1cyRnp6NGhPem82SmxtUmZDbmNHMFRkM3lxUEVHZUhKaWRXdE4zN2ROZTJNOEVaTERiL1lITm5vd2h5Q0dKNDZrZStEUT09Cg==",
-      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v1.2.6/ZZZ.Mod.Hub_1.2.6_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQlFlSEJ6QW05UVlMSXlnMTdPUTlOUXBWTnQ2eUxNN09zbnlKcXhXSXpPNzQ1NlhzYkFyZEEwUTQ3bXZ5MEdzLzlpa0lQczIydDFKUzdCK1RxRjNPTXdnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5OTU4NTgyCWZpbGU6WlpaIE1vZCBIdWJfMS4yLjdfeDY0LXNldHVwLmV4ZQpsSjIwZnNtUmYxMkVuVVV2Z2szNk1MKzB3L0d0VGd4dUtsbk4vWmg5ZXluWllyVjM1UlkrenQ0R3QxQ2Z4QXdHMVJjbktqZS9vMVYvSXlKZzdXb1hDdz09Cg==",
+      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v1.2.7/ZZZ.Mod.Hub_1.2.7_x64-setup.exe"
     }
   }
 }
