@@ -11,6 +11,14 @@ Get up and running with **ZZZ Mod Hub** in 5 minutes. This step-by-step walkthro
 2. Run the Windows installer (`setup.exe` or `.msi`) or extract the portable `.zip` to any folder.
 3. Launch **ZZZ Mod Hub**.
 
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/install-mod-manager.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Downloading and installing ZZZ Mod Hub</span>
+  </div>
+</div>
+
 ::: tip SmartScreen Prompt
 If Windows SmartScreen appears on first launch, click **More info** and then click **Run anyway**. For technical details on certificates and runtime dependencies, see the [Installation & System Setup](/guides/installation-and-setup) guide.
 :::
@@ -23,8 +31,17 @@ When you open the manager for the first time, a 4-step wizard guides you through
 
 ### 1. Choose your language & verify loader
 
-- Select your preferred interface language. If your language is not in the native list, choose an auto-translated language pack from the right-hand menu. You can change this anytime later in Settings.
+- Select your preferred interface language from the 9 native translations (English, Spanish, Japanese, Korean, Portuguese-BR, Russian, Thai, Simplified Chinese, Traditional Chinese).
+- **Non-Supported Languages:** If your language is not in the default list, open the **Language Hub** menu on the right. You can choose from over 50 real-time machine-translated packs or import community `.json` translations. While machine translations may have minor phrasing quirks, they allow full navigation in your native tongue. You can switch languages at any time later in **Settings > Appearance**.
 - Make sure you have **3DMigoto** or the **XXMI Launcher** installed. If you do not have a loader yet, click **Get XXMI Launcher** to download it.
+
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/language-selection.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Selecting native and auto-translated languages in Language Hub</span>
+  </div>
+</div>
 
 ### 2. Select your mods directory
 
@@ -36,12 +53,22 @@ Click **Browse** and select your `Mods/` directory.
 
 ### 3. Import from another mod manager (optional)
 
-If you are switching from another mod manager:
+If you are switching from another mod manager, the wizard allows migrating all your existing mods right during initial setup:
 
 - Select your previous mods folder.
-- Choose whether to **Copy** or **Move** your mods. If you choose to copy, remember to disable or remove the old copies in your previous tool so you do not have duplicates.
-- If any mods end up in `Unassigned`, open that folder and click **Auto-Sort**. The manager reads 3DMigoto buffer hashes to move them into their matching character folders automatically.
+- Choose whether to **Copy** or **Move** your mods:
+  - **Copy:** Safer for first-time trials; leaves your previous manager's files untouched. Remember to disable or remove the old copies in your previous tool once you confirm everything works to prevent duplicate loading collisions.
+  - **Move:** Moves the files directly, freeing up disk space immediately and preventing duplicate mod folders from conflicting.
+- Any mods with recognized buffer hashes are routed automatically to their character folders; any ambiguous or loose archives go into `Unassigned/` for quick 1-click sorting.
 - If you are new to modding or starting fresh, click **Skip** to continue.
+
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/import-during-first-install.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Importing existing mods during the first-time setup wizard</span>
+  </div>
+</div>
 
 ### 4. Finish setup
 
@@ -51,9 +78,18 @@ Click **Enter App** to open your mod library.
 
 ## Step 3: sync the database & generate folders
 
-1. On your first launch, the manager will prompt you to sync the character database.
-2. Clicking **Sync Database** downloads the latest character definitions and 3DMigoto buffer hashes. This ensures new characters and skin variants are recognized.
-3. Click **Generate Character Folders** to create clean folders for every current Zenless Zone Zero agent.
+On finishing the setup wizard, initialize your environment:
+
+1. Click **Sync Database** to download the latest character definitions and 3DMigoto buffer hashes directly from the repository. This ensures new patch characters, skins, and weapon hashes are recognized.
+2. Click **Generate Character Folders** to automatically populate your `Mods/` directory with clean canonical folders for every Zenless Zone Zero agent.
+
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/sync-and-create-folders.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Syncing the character database and generating folders</span>
+  </div>
+</div>
 
 ---
 

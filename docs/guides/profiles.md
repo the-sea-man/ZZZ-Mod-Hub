@@ -24,6 +24,21 @@ Instead of toggling 30 individual mods one by one, a profile remembers exactly w
    - **Apply Profile:** Select any saved preset from the list and click **Load**. All mods will automatically switch to the saved state.
    - **Active Badge:** The currently loaded profile name is displayed directly on the library toolbar.
 
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/presets-experiment.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Creating, switching, and experimenting with preset configurations</span>
+  </div>
+</div>
+
+### Lock system integration
+
+If you have specific core mods (like global UI overhauls, sound replacers, or a favorite main weapon) that you want active in _all_ presets:
+
+- Click the **Lock icon** on that mod's card.
+- The preset engine recognizes locked mods and preserves their state when swapping profiles. You never have to manually re-enable your foundational mods after switching from a casual outfit to combat armor.
+
 ---
 
 ## Hardened canonical path matching

@@ -71,11 +71,24 @@ ZZZ Mod Hub includes a procedural Web Audio synthesizer:
 
 ## In-Game Quick Snapper (screenshots)
 
-Want custom preview thumbnails for your mods?
+Want custom preview thumbnails for your mods? The **Quick Snapper** lets you capture, crop, and assign custom 360x450 mod thumbnails directly from live gameplay:
 
-- Press your configured hotkey while in-game (default: `Ctrl + F11`).
-- The manager captures the game screen and lets you crop a 360x450 mod thumbnail.
-- Select which mod to assign the thumbnail to, and it updates immediately in your library.
+- **Automated Cycling Queue:** It specifically filters and cycles through _deactivated mods without an existing preview image_.
+- **Rapid Multi-Mod Studio Workflow:**
+  1. Open the character category in ZZZ Mod Hub.
+  2. Position your character in a clean in-game setting with good lighting.
+  3. Trigger the Quick Picture session.
+  4. Switch to the game window and press <kbd>F10</kbd> to render the mod.
+  5. _If the model appears broken or in a bind-pose upon loading, quickly switch characters back and forth in-game to force the game engine to bind the meshes._
+  6. Press <kbd>Ctrl + F11</kbd> to capture: it automatically crops to 360x450, saves `preview.png` into the mod folder, updates the card thumbnail, disables that mod, and enables the next one in queue.
+
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/quick-snap.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Capturing custom mod thumbnails in rapid succession with Quick Snapper</span>
+  </div>
+</div>
 
 ---
 

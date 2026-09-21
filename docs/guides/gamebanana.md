@@ -16,6 +16,25 @@ Click the **Discover** tab in the main navigation sidebar to browse mods:
 
 ---
 
+## Browsing & installing mods
+
+When you find a mod you want to try, installing it takes a single click:
+
+1. Click **Install** directly on the mod card, or open the preview modal to view author screenshots and description notes.
+2. The manager begins downloading the archive in the background.
+3. **Download History Panel (Bottom-Left Sidebar):** Look at the bottom-left corner of the manager window. An expandable download drawer shows your active and recent downloads:
+   - Real-time download speed (e.g. `12.4 MB/s`) and progress bar.
+   - Target destination folder (automatically resolved by buffer hash, e.g. `Mods/JaneDoe/`).
+   - Quick navigation buttons: click the card icon to jump directly to the newly installed mod in your library, or the folder icon to open it in Windows Explorer.
+
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/install-mod-gamebanana.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Downloading a mod from Discover and inspecting the download history panel</span>
+  </div>
+</div>
+
 ## High-Speed & resilient downloads
 
 GameBanana file servers can occasionally suffer from rate limits, slow speeds, or dead mirror links. ZZZ Mod Hub includes built-in network protections:

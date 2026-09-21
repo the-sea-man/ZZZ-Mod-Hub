@@ -25,7 +25,36 @@ Click the **Install Mod** button (`+`) on the top toolbar:
 
 ### Method c: in-manager download from Discover
 
-Browse mods directly in the **Discover** tab and click **Install**. The manager downloads, verifies, and installs the mod automatically.
+Browse mods directly in the **Discover** tab and click **Install**. The manager downloads, verifies, and installs the mod automatically into the correct character folder.
+
+### Method d: importing existing folders
+
+If you have mod folders from another manager or an external backup drive, open **Settings > Game & Folders** and click **Import Mods**. You can choose to Copy or Move them with full hash verification.
+
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/partial-import-after-setup.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Importing mods from another folder in Settings</span>
+  </div>
+</div>
+
+---
+
+## Auto-Sorting Unassigned mods
+
+If a mod archive is missing clear naming or contains unusual subfolder structures, the manager places it safely into `Unassigned/`:
+
+- Open the `Unassigned` category in the sidebar.
+- Click **Auto-Sort**: the manager parses all `.ini` files inside every unassigned mod folder, checks 3DMigoto buffer hashes against the canonical character database, and moves each mod to its matching agent folder automatically.
+
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/auto-sort.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Auto-sorting unassigned mods using buffer hashes</span>
+  </div>
+</div>
 
 ---
 
@@ -39,12 +68,27 @@ Click the toggle switch on any mod card.
 - **Disabled:** The manager renames the folder with a `DISABLED_` prefix (e.g. `DISABLED_Ellen Maid Dress`). 3DMigoto ignores folders with this prefix, disabling the mod in-game.
 - **In-Game Reload:** While playing the game, press <kbd>F10</kbd> on your keyboard to reload 3DMigoto and display your updated mods.
 
-### Batch operations
+### Batch operations & Shift multi-selection
 
-Hold `Ctrl` and click multiple mod cards, or use the **Select All** checkbox in the category header.
+When managing dozens of mods, use the batch selection system:
 
-- A floating action bar appears at the bottom of the screen.
-- You can **Enable All**, **Disable All**, **Move to Category**, or **Delete** selected mods in bulk.
+- **Single Selection:** Click the selection checkbox on any mod card.
+- **Range Selection with Shift:** Click the first mod's checkbox, hold <kbd>Shift</kbd>, and click another mod. The manager instantly selects every mod in between!
+- **Select All:** Click the checkbox in the category header toolbar to select all visible mods in that category.
+- **Batch Actions Bar:** A floating toolbar appears at the bottom offering:
+  - **Enable All:** Activates all selected mods simultaneously.
+  - **Disable All:** Deactivates all selected mods simultaneously.
+  - **Move to Category:** Moves selected mods to another character or custom folder.
+  - **Add / Remove Tags:** Batch tag mods with custom labels.
+  - **Delete:** Batch removes selected mods (with safety prompt).
+
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/batch-actions.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Batch selecting mods with Shift-click and bulk operations</span>
+  </div>
+</div>
 
 ### Emergency "Disable all" button
 
@@ -57,6 +101,38 @@ If a broken mod crashes your game or causes visual glitches during combat:
 ::: warning Undoing Disable All
 The Undo action restores your previous configuration only if no new mods were added or folders altered in the meantime.
 :::
+
+---
+
+## Favorites, Locks, and the Randomizer
+
+ZZZ Mod Hub includes a comprehensive outfit curation and randomization engine:
+
+### 1. Starring favorites
+
+Click the **Star icon** on any mod card to mark it as a favorite. Starred mods can be filtered in 1 click using the **Favorites** filter chip at the top of your library.
+
+### 2. The lock system
+
+Click the **Lock icon** on a mod card to lock its current state (active or disabled):
+
+- **Protected from Accidental Toggles:** Locked mods are immune to bulk operations like "Disable All" or batch toggles.
+- **Immune to Randomization & Presets:** When switching profiles or running the outfit randomizer, locked mods stay strictly in their designated state.
+
+### 3. Randomizer & bias system
+
+Click the **Randomizer** button (dice icon) in the character header to select a random active mod:
+
+- **Randomizer Bias Slider:** In **Settings > Library**, you can adjust the **Favorite Bias Slider**. Setting a high bias gives starred favorite mods a significantly higher probability of being chosen, while still allowing occasional surprises from your broader collection.
+- **Category Whitelist:** You can choose which specific character categories participate in random cycling so your main team's appearance is preserved.
+
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/full-favorite-system.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Starred favorites, locking mods, and configuring the randomizer bias</span>
+  </div>
+</div>
 
 ---
 

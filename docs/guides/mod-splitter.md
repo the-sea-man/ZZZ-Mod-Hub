@@ -10,6 +10,14 @@ Often you will download a composite mod pack containing multiple characters, or 
 2. Click the **Advanced** button on a mod card.
 3. In the advanced tools sidebar, click **Split Mod**.
 
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/3d-split-mod.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Decomposing a mod into independent components with the 3-Mode Splitter</span>
+  </div>
+</div>
+
 ---
 
 ## The 3 dedicated split modes

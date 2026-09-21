@@ -33,6 +33,14 @@ You can download the latest version from the official GitHub repository:
 
 ### 1. Windows installer (`.msi` or `setup.exe`) (recommended)
 
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/install-mod-manager.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Downloading and installing the desktop application</span>
+  </div>
+</div>
+
 - Installs to your local user application folder (`%LOCALAPPDATA%\Programs\zzzmodmanager`).
 - Automatically registers Start Menu shortcuts and desktop icons.
 - Includes automatic update checks when a new release is published.
@@ -58,6 +66,60 @@ To run the application:
 2. Click **Run anyway**.
 
 All source code is open and verified on [GitHub](https://github.com/the-sea-man/ZZZ-Mod-Hub).
+
+---
+
+## Interface language & Language Hub
+
+During setup, you can select your interface language. ZZZ Mod Hub provides 9 built-in native translations (English, Spanish, Japanese, Korean, Brazilian Portuguese, Russian, Thai, Simplified Chinese, Traditional Chinese).
+
+If your language is not yet officially translated, click the **Language Hub** menu on the right. You can select from over 50 automated translations or import custom community translation files. Language preferences can be changed at any time in **Settings > Appearance**.
+
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/language-selection.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Selecting non-supported languages in Language Hub</span>
+  </div>
+</div>
+
+---
+
+## Migrating from another mod manager
+
+If you already have a mod collection managed by another tool (such as generic mod managers or manual folder setups), you can import your entire library without losing your files or having to re-download anything.
+
+### 1. Importing during first-time setup
+
+During the initial setup wizard (Step 3), the manager detects if you want to import an existing folder:
+
+- Select your previous manager's `Mods/` directory.
+- Select **Copy** (leaves old folders intact) or **Move** (transfers files directly to save disk space).
+- The manager indexes each mod, checks 3DMigoto hashes, and sorts recognized characters automatically while keeping unrecognized folders safe in `Unassigned/`.
+
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/import-during-first-install.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Importing mods during the initial setup wizard</span>
+  </div>
+</div>
+
+### 2. Importing after setup (Settings menu)
+
+If you skipped the initial import or have additional mod archives on another drive that you want to bring in later, you do not need to re-run the wizard:
+
+1. Open **Settings > Game & Folders**.
+2. Click the **Import Mods** button under the migration section.
+3. Select your external mod directory, choose **Copy** or **Move**, and confirm. The exact same migration pipeline executes in the background.
+
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/partial-import-after-setup.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Accessing the import tool from Settings after initial setup</span>
+  </div>
+</div>
 
 ---
 
