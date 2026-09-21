@@ -4,11 +4,11 @@ Modding can be unpredictable. An unexpected patch, an experimental split, or an 
 
 ---
 
-## Interactive Mod Backups
+## Interactive mod backups
 
 Whenever the manager modifies a mod (applying a patch fix, running a script repair, or remapping vertex buffers), it automatically archives the untouched originals into a `.zmm-backup/` subfolder.
 
-### How to Restore a Mod from Backup
+### How to restore a mod from backup
 
 When a backup exists for a mod, a **Rollback** badge appears on its card:
 
@@ -17,7 +17,7 @@ When a backup exists for a mod, a **Rollback** badge appears on its card:
    - **Timestamp:** Shows the exact date and time the backup was created.
    - **File Size Comparison:** Compares current files against backup originals (highlighting differences in bytes and file counts).
    - **Selective Rollback:** Choose to restore specific files (e.g. only the `.ini` script while keeping new textures) or restore the entire directory.
-3. Click **Restore Files**. The original files are swapped back into place immediately.
+3. Click **Restore Settings Backup**. The original files are swapped back into place immediately.
 
 ::: tip Non-Destructive Safety
 Restoring a backup does not delete your backup archive. If you change your mind, you can re-apply fixes or switch back at any time.
@@ -27,9 +27,9 @@ Restoring a backup does not delete your backup archive. If you change your mind,
 
 ## Dual-Track Operation History
 
-Under **Settings > Operation History**, the manager maintains two dedicated, thread-safe logs:
+Under **Settings > Advanced > Operation History**, the manager maintains two dedicated, thread-safe logs:
 
-### 1. Alterations Log (`alterations.log` / `.jsonl`)
+### 1. Alterations log (`alterations.log` / `.jsonl`)
 
 Records every filesystem change made through the manager:
 
@@ -38,7 +38,7 @@ Records every filesystem change made through the manager:
 - Enabled/disabled toggles
 - Patch fixes and split operations
 
-### 2. Errors Log (`errors.log` / `.jsonl`)
+### 2. Errors log (`errors.log` / `.jsonl`)
 
 Captures detailed diagnostic context:
 
@@ -49,7 +49,7 @@ Captures detailed diagnostic context:
 
 ---
 
-## 1-Click Operation Rollback
+## 1-Click operation rollback
 
 In the **Operation History** panel:
 

@@ -1,10 +1,10 @@
-# Presets & Profiles
+# Presets & profiles
 
 Mod profiles allow you to save entire loadouts of active mods and switch between them in seconds.
 
 ---
 
-## Why Use Profiles?
+## Why use profiles?
 
 Zenless Zone Zero players often want different visual styles depending on their mood:
 
@@ -16,9 +16,9 @@ Instead of toggling 30 individual mods one by one, a profile remembers exactly w
 
 ---
 
-## Creating and Applying Profiles
+## Creating and applying profiles
 
-1. In the top library toolbar, click the **Presets / Profiles** button.
+1. In the top library toolbar, click the **Presets** button.
 2. The **Mod Profiles** modal opens:
    - **Save Current Loadout as Profile:** Enter a name (e.g. `Hollow Zero Outfit Set`) and click **Save**.
    - **Apply Profile:** Select any saved preset from the list and click **Load**. All mods will automatically switch to the saved state.
@@ -26,7 +26,7 @@ Instead of toggling 30 individual mods one by one, a profile remembers exactly w
 
 ---
 
-## Hardened Canonical Path Matching
+## Hardened canonical path matching
 
 Previous mod managers often suffered from a nasty bug: if a mod folder was renamed with a `DISABLED_` prefix, swapping profiles could fail to recognize it or accidentally create duplicate entries.
 
@@ -37,7 +37,7 @@ ZZZ Mod Hub uses **Canonical Path Resolution**:
 
 ---
 
-## Sharing Profiles via Clipboard
+## Sharing profiles via clipboard
 
 You can share your presets with friends or backup your configurations:
 

@@ -1,10 +1,10 @@
-# Quick Start Guide
+# Quick start guide
 
 Get up and running with **ZZZ Mod Hub** in 5 minutes. This step-by-step walkthrough covers downloading the manager, completing the setup wizard, installing your first mod, and launching the game.
 
 ---
 
-## Step 1: Download & Launch
+## Step 1: download & launch
 
 1. Download the latest version from the official GitHub release page:
    - **[Download ZZZ Mod Hub on GitHub Releases](https://github.com/the-sea-man/ZZZ-Mod-Hub/releases)**
@@ -17,16 +17,16 @@ If Windows SmartScreen appears on first launch, click **More info** and then cli
 
 ---
 
-## Step 2: First-Time Setup Wizard
+## Step 2: first-time Setup Wizard
 
 When you open the manager for the first time, a 4-step wizard guides you through your initial setup:
 
-### 1. Choose Your Language & Verify Loader
+### 1. Choose your language & verify loader
 
 - Select your preferred interface language. If your language is not in the native list, choose an auto-translated language pack from the right-hand menu. You can change this anytime later in Settings.
 - Make sure you have **3DMigoto** or the **XXMI Launcher** installed. If you do not have a loader yet, click **Get XXMI Launcher** to download it.
 
-### 2. Select Your Mods Directory
+### 2. Select your mods directory
 
 Click **Browse** and select your `Mods/` directory.
 
@@ -34,7 +34,7 @@ Click **Browse** and select your `Mods/` directory.
   `%appdata%\XXMI Launcher\ZZMI\Mods`
 - Always select the `Mods` folder itself, rather than the game root or a single mod folder.
 
-### 3. Import from Another Mod Manager (Optional)
+### 3. Import from another mod manager (optional)
 
 If you are switching from another mod manager:
 
@@ -43,13 +43,13 @@ If you are switching from another mod manager:
 - If any mods end up in `Unassigned`, open that folder and click **Auto-Sort**. The manager reads 3DMigoto buffer hashes to move them into their matching character folders automatically.
 - If you are new to modding or starting fresh, click **Skip** to continue.
 
-### 4. Finish Setup
+### 4. Finish setup
 
 Click **Enter App** to open your mod library.
 
 ---
 
-## Step 3: Sync the Database & Generate Folders
+## Step 3: sync the database & generate folders
 
 1. On your first launch, the manager will prompt you to sync the character database.
 2. Clicking **Sync Database** downloads the latest character definitions and 3DMigoto buffer hashes. This ensures new characters and skin variants are recognized.
@@ -57,7 +57,7 @@ Click **Enter App** to open your mod library.
 
 ---
 
-## Step 4: Install Your First Mod
+## Step 4: install your first mod
 
 You can install mods using any of these three methods:
 
@@ -68,7 +68,7 @@ You can install mods using any of these three methods:
 3. **Discover Tab:**
    Click the **Discover** tab in the sidebar to browse trending GameBanana mods. Click **Install** on any mod to download and unpack it automatically.
 
-### Strict Buffer Hash Sorting
+### Strict buffer hash sorting
 
 You do not need to figure out which character folder a mod belongs to. The manager reads internal 3DMigoto buffer hashes (`ib`, `vb`) directly from the `.ini` files:
 
@@ -77,7 +77,7 @@ You do not need to figure out which character folder a mod belongs to. The manag
 
 ---
 
-## Step 5: Enable Mods & Play
+## Step 5: enable mods & play
 
 1. Find your mod in the character category and click the **toggle switch** on the card to enable it.
 2. Launch the game through your 3DMigoto loader or XXMI Launcher (or use the 1-click **Launch Game** button in the manager if configured).
@@ -85,16 +85,44 @@ You do not need to figure out which character folder a mod belongs to. The manag
 
 ---
 
-## Helpful Tips for New Users
+## Finding your way around Settings
 
-- **NSFW Mods:** If you install adult or NSFW mods, turn off the censor and thumbnail blur filters in **Settings > Mod Management** (they are enabled by default for safe browsing).
+Settings is split into four groups in the left sidebar. If you are looking for something specific, this is where it lives:
+
+**Setup**
+
+- **Game & Folders**: your mods folder, the game executable, hot reload, and the database URL.
+- **Library**: the randomizer whitelist and which filter chips appear above your mods.
+- **Downloads**: download behaviour, the Discover feed, and the adult content filters.
+
+**Tools**
+
+- **In-Game**: the in-game overlay menu and the Quick Snapper screenshot hotkey.
+- **Diagnostics**: the mod health scanner, conflict detection rules, and the hash sniffer.
+
+**Look & Feel**
+
+- **Appearance**: theme, accent colour, wallpaper, interface language, and sound effects.
+- **Mod Cards**: the card designer, card size, and grid density.
+
+**System**
+
+- **Performance**: performance profiles, the file watcher, animations, and blur.
+- **Advanced**: experimental features, configuration backup and restore, operation history, and the danger zone.
+- **Help & About**: replay the tutorials, check your version, and read the credits.
+
+Each setting only lives in one place. If you change animations or blur, you do that in Performance; if you change card size, you do that in Mod Cards.
+
+## Helpful tips for new users
+
+- **NSFW Mods:** If you install adult or NSFW mods, turn off the censor and thumbnail blur filters in **Settings > Downloads** (they are enabled by default for safe browsing).
 - **Outdated Mods (Blue File Badge):** If an older mod shows a Blue File badge after a game patch, click the **Upgrade** button on the card to update byte strides and vertex buffers automatically.
 - **In-Game Menu (<kbd>H</kbd>):** Press <kbd>H</kbd> in-game to open the Direct3D 11 mod menu and toggle outfit variants on the fly.
 - **In-Game Quick Snapper (<kbd>Ctrl + F11</kbd>):** Press <kbd>Ctrl + F11</kbd> while playing to capture and crop custom 360x450 card preview thumbnails.
 
 ---
 
-## Next Steps & Deep Dives
+## Next steps & deep dives
 
 - [Installation & System Setup](/guides/installation-and-setup): Detailed directory trees, runtime dependencies, and engine initialization sequence.
 - [Installing & Managing Mods](/guides/mod-management): Batch operations, emergency disable, and automatic tag filters.

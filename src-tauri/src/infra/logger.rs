@@ -140,7 +140,10 @@ pub fn log_alteration(
     backup_path: Option<&str>,
     can_undo: bool,
 ) -> AlterationEntry {
-    let _guard = LOG_MUTEX.lock().unwrap();
+    // Recover from a poisoned lock instead of panicking: a panic in any other
+    // thread must not turn every later log call into a second panic, least of
+    // all in the subsystem whose job is to record failures.
+    let _guard = LOG_MUTEX.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     let logs_dir = get_logs_dir();
     let _ = fs::create_dir_all(&logs_dir);
 
@@ -190,7 +193,10 @@ pub fn log_alteration(
 
 /// Log an error to both `errors.log` and `errors.jsonl`.
 pub fn log_error(subsystem: &str, error_message: &str, context: Option<&str>) -> ErrorLogEntry {
-    let _guard = LOG_MUTEX.lock().unwrap();
+    // Recover from a poisoned lock instead of panicking: a panic in any other
+    // thread must not turn every later log call into a second panic, least of
+    // all in the subsystem whose job is to record failures.
+    let _guard = LOG_MUTEX.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     let logs_dir = get_logs_dir();
     let _ = fs::create_dir_all(&logs_dir);
 
@@ -259,7 +265,10 @@ fn resolve_mod_path_flexible(path_str: &str) -> Option<PathBuf> {
 
 /// Retrieve alteration entries from `alterations.jsonl`, newest first.
 pub fn get_alteration_entries(limit: usize) -> Vec<AlterationEntry> {
-    let _guard = LOG_MUTEX.lock().unwrap();
+    // Recover from a poisoned lock instead of panicking: a panic in any other
+    // thread must not turn every later log call into a second panic, least of
+    // all in the subsystem whose job is to record failures.
+    let _guard = LOG_MUTEX.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     let log_jsonl = get_logs_dir().join("alterations.jsonl");
     if !log_jsonl.exists() {
         return Vec::new();
@@ -311,7 +320,10 @@ pub fn get_alteration_entries(limit: usize) -> Vec<AlterationEntry> {
 
 /// Retrieve error log entries from `errors.jsonl`, newest first.
 pub fn get_error_entries(limit: usize) -> Vec<ErrorLogEntry> {
-    let _guard = LOG_MUTEX.lock().unwrap();
+    // Recover from a poisoned lock instead of panicking: a panic in any other
+    // thread must not turn every later log call into a second panic, least of
+    // all in the subsystem whose job is to record failures.
+    let _guard = LOG_MUTEX.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     let log_jsonl = get_logs_dir().join("errors.jsonl");
     if !log_jsonl.exists() {
         return Vec::new();
@@ -336,7 +348,10 @@ pub fn get_error_entries(limit: usize) -> Vec<ErrorLogEntry> {
 
 /// Clear specific log files or all.
 pub fn clear_log(log_type: &str) -> Result<(), AppError> {
-    let _guard = LOG_MUTEX.lock().unwrap();
+    // Recover from a poisoned lock instead of panicking: a panic in any other
+    // thread must not turn every later log call into a second panic, least of
+    // all in the subsystem whose job is to record failures.
+    let _guard = LOG_MUTEX.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     let logs_dir = get_logs_dir();
 
     match log_type {

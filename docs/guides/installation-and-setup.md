@@ -1,10 +1,10 @@
-# Installation & System Setup
+# Installation & system setup
 
 A detailed technical guide to system requirements, installation types, directory structures, and application initialization in ZZZ Mod Hub.
 
 ---
 
-## System Requirements & Compatibility
+## System requirements & compatibility
 
 ZZZ Mod Hub is a native 64-bit desktop application built for Windows using Tauri and Rust.
 
@@ -25,25 +25,25 @@ It helps to understand the difference between the two tools:
 
 ---
 
-## Installation Types
+## Installation types
 
 You can download the latest version from the official GitHub repository:
 
 - **[Download ZZZ Mod Hub on GitHub Releases](https://github.com/the-sea-man/ZZZ-Mod-Hub/releases)**
 
-### 1. Windows Installer (`.msi` or `setup.exe`) (Recommended)
+### 1. Windows installer (`.msi` or `setup.exe`) (recommended)
 
 - Installs to your local user application folder (`%LOCALAPPDATA%\Programs\zzzmodmanager`).
 - Automatically registers Start Menu shortcuts and desktop icons.
 - Includes automatic update checks when a new release is published.
 
-### 2. Portable Archive (`.zip`)
+### 2. Portable archive (`.zip`)
 
 - Extract the archive to any folder on your drive (for example `D:\Tools\ZZZModHub\`).
 - Runs directly without modifying system registry keys.
 - Ideal if you prefer keeping all tool files inside a portable folder on an external drive.
 
-### Windows SmartScreen Notice
+### Windows SmartScreen notice
 
 Because ZZZ Mod Hub is an open-source community utility signed without expensive enterprise code-signing certificates, Windows SmartScreen may show a security prompt on first launch:
 
@@ -61,11 +61,11 @@ All source code is open and verified on [GitHub](https://github.com/the-sea-man/
 
 ---
 
-## Directory Hierarchy & Loader Paths
+## Directory hierarchy & loader paths
 
 Before launching the manager, make sure your 3DMigoto or XXMI directory is set up.
 
-### Recommended Directory Structure
+### Recommended directory structure
 
 ```text
 C:\Program Files\HoYoPlay\Game/
@@ -81,7 +81,7 @@ C:\Users\*YOURUSER*\AppData\Roaming\XXMI Launcher\Resources\Bin
                                                                   └── Unassigned/
 ```
 
-### The Folder Selection Rule
+### The folder selection rule
 
 Always select the **`Mods`** directory itself.
 
@@ -92,11 +92,11 @@ Always select the **`Mods`** directory itself.
 
 ---
 
-## Configuring the Game Executable
+## Configuring the game executable
 
 Linking your game executable allows you to launch Zenless Zone Zero directly from the manager:
 
-1. Open **Settings > General > Game Paths**.
+1. Open **Settings > Game & Folders**.
 2. Click **Browse** under **Game Executable Path**.
 3. Select your `ZenlessZoneZero.exe` (usually located in your HoYoPlay game installation folder).
 4. This enables the 1-click **Launch Game** button in the header toolbar.
@@ -107,7 +107,7 @@ Linking your game path also allows the manager to detect when the game process i
 
 ---
 
-## What Happens During Initialization
+## What happens during initialization
 
 Every time ZZZ Mod Hub opens, it runs an initialization sequence designed for fast performance and data safety:
 

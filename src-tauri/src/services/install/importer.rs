@@ -281,7 +281,7 @@ fn inspect_candidate_dir(dir: &Path, root: &Path, depth: usize) -> (DiscoveredCa
 fn discover_smart_mods(root: &Path) -> Vec<DiscoveredCandidateMod> {
     let mut candidates = Vec::new();
     discover_smart_mods_recursive(root, root, 1, 4, &mut candidates);
-    candidates.sort_by(|a, b| a.folder_name.to_lowercase().cmp(&b.folder_name.to_lowercase()));
+    candidates.sort_by_key(|c| c.folder_name.to_lowercase());
     candidates
 }
 
@@ -425,13 +425,12 @@ pub fn scan_external_folder(
     // If no mods are found at all -> 0 (no "Best" badge)
     // If mixed/heterogeneous (smart discovered more valid mods than any single fixed depth) -> 0 (Smart)
     // If a clean uniform fixed depth captures all mods -> best_depth (e.g. 1 or 2)
-    let recommended_depth = if smart_candidate_count == 0 {
-        0
-    } else if smart_candidate_count > max_fixed_valid_mods || !has_any_valid_depth {
-        0
-    } else {
-        best_depth
-    };
+    // 0 means "no Best badge - use Smart": either nothing was found at all, or
+    // the layout is heterogeneous enough that no single fixed depth captures it.
+    let use_smart = smart_candidate_count == 0
+        || smart_candidate_count > max_fixed_valid_mods
+        || !has_any_valid_depth;
+    let recommended_depth = if use_smart { 0 } else { best_depth };
 
     let effective_depth = if let Some(cd) = chosen_depth {
         cd.clamp(0, 4)

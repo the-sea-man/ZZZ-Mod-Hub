@@ -153,7 +153,7 @@ fn parse_pair_payload(body: &str) -> Option<RemotePairPayload> {
 
     // Split on '/' or ','
     let tokens: Vec<&str> = body
-        .split(|c| c == '/' || c == ',')
+        .split(['/', ','])
         .map(|s| s.trim())
         .filter(|s| !s.is_empty() && !s.eq_ignore_ascii_case("pair"))
         .collect();
@@ -332,9 +332,14 @@ pub fn is_allowed_domain(url_str: &str) -> bool {
         return false;
     };
 
-    // Extract authority portion (before '/', '?', or '#')
+    // Extract authority portion (before '/', '?', '#', or '\').
+    //
+    // The backslash matters: the WHATWG URL Standard (which reqwest's `url`
+    // crate implements) normalises `\` to `/` for special schemes, so
+    // `https://evil.com\.gamebanana.com/x` is fetched from evil.com. Splitting
+    // only on '/' would see a trusted `.gamebanana.com` suffix and allow it.
     let authority = after_scheme
-        .split(['/', '?', '#'])
+        .split(['/', '?', '#', '\\'])
         .next()
         .unwrap_or("");
 
@@ -870,6 +875,24 @@ mod tests {
         assert!(is_allowed_domain("https://images.gbcdn.net/file.7z"));
         assert!(is_allowed_domain("https://cdn.gamemods.com/download.rar"));
         assert!(is_allowed_domain("https://gamebanana.com:443/mmdl/12345"));
+    }
+
+    #[test]
+    fn test_reject_backslash_authority_spoofing() {
+        // Browsers and the WHATWG URL spec normalise a backslash to a forward
+        // slash in special schemes, so the host below is really evil.com while
+        // a check that only splits on "/" sees a trusted suffix.
+        let spoofed = [
+            r"https://evil.com\.gamebanana.com/malware.zip",
+            r"https://evil.com\gamebanana.com/malware.zip",
+            r"https://evil.com\@gamebanana.com/malware.zip",
+        ];
+        for url in spoofed {
+            assert!(
+                !is_allowed_domain(url),
+                "Backslash authority spoofing must be rejected: {url}"
+            );
+        }
     }
 
     #[test]

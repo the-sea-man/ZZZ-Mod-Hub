@@ -1,28 +1,28 @@
-# 3D Mesh Viewer & Advanced Mode
+# 3D mesh viewer & advanced mode
 
 ZZZ Mod Hub includes a built-in Three.js WebGL 3D model viewer, allowing you to preview character skins, inspect submeshes, and check textures before ever booting up the game.
 
 ---
 
-## Launching the 3D Viewer
+## Launching the 3D viewer
 
 1. Navigate to any character mod in your library.
-2. Click the **3D Preview / Advanced** button on the mod card (cube icon).
+2. Click the **3D Preview** button on the mod card (cube icon).
 3. The viewport opens, parsing the 3DMigoto binary vertex buffers (`.buf`) and texture maps (`.dds` / `.png`).
 
 ::: tip Enabling Advanced Features
-If the 3D Preview button is not visible on your cards, ensure **Advanced Features** is toggled on under **Settings > Mod Management**.
+If the 3D Preview button is not visible on your cards, ensure **Advanced Features** is toggled on under **Settings > Advanced**.
 :::
 
 ---
 
-## Viewport Controls & Camera Presets
+## Viewport controls & camera presets
 
 - **Orbit Camera:** Left-click and drag to rotate around the model.
 - **Pan:** Right-click and drag to move the camera horizontally and vertically.
 - **Zoom:** Mouse wheel scroll.
 
-### Quick Camera Angles
+### Quick camera angles
 
 Use the floating camera toolbar at the top of the viewport to instantly jump to common viewpoints:
 
@@ -32,7 +32,7 @@ Use the floating camera toolbar at the top of the viewport to instantly jump to 
 
 ---
 
-## Shading & Material Inspection
+## Shading & material inspection
 
 ZZZ character models use multi-map physically based rendering (PBR). In the 3D viewer toolbar, you can inspect each channel:
 
@@ -42,7 +42,7 @@ ZZZ character models use multi-map physically based rendering (PBR). In the 3D v
 
 ---
 
-## Submesh Isolation
+## Submesh isolation
 
 Complex character mods are composed of multiple draw calls:
 
@@ -55,7 +55,7 @@ In the viewer sidebar, you can toggle individual submeshes on or off to inspect 
 
 ---
 
-## Potato Mode Optimization
+## Potato mode optimization
 
 Rendering dense high-poly meshes with 4K textures in a desktop app can consume memory on budget GPUs:
 

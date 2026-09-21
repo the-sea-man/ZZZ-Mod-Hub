@@ -10,6 +10,7 @@ import { ConfettiManager } from './components/ConfettiManager';
 import { AchievementToastManager } from './components/AchievementToastManager';
 import { useKonamiCode } from './hooks/useKonamiCode';
 import { useQuickSnapperHotkey } from './hooks/useQuickSnapperHotkey';
+import { useExternalLinkGuard } from './hooks/useExternalLinkGuard';
 import { useAppKeyboardShortcuts } from './hooks/useAppKeyboardShortcuts';
 import { useOneClickInstaller } from './hooks/useOneClickInstaller';
 import { useAppStore } from './store/useAppStore';
@@ -137,6 +138,9 @@ function App() {
 
   useKonamiCode();
   useQuickSnapperHotkey();
+  // Keeps a link in remote HTML (GameBanana changelogs, shared language packs)
+  // from navigating the application window away from the app.
+  useExternalLinkGuard();
   useOneClickInstaller();
   useAppKeyboardShortcuts({
     onToggleFeatureGuide: () => setShowFeatureGuide((prev) => !prev),

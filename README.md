@@ -11,11 +11,11 @@ Organize your mods, preview 3D models before launching the game, download direct
 
 ---
 
-## ⚡ Quick start video guide (under 4 minutes)
+## Quick start video guide (under 4 minutes)
 
 [![ZZZ Mod Hub Quick Start Video](https://img.youtube.com/vi/hKp_mztmHS0/hqdefault.jpg)](https://youtu.be/hKp_mztmHS0)
 
-> **New here?** It takes **less than 4 minutes** to download the app, set up your folders, and have all features, mod sorting, and in-game tools running seamlessly in Zenless Zone Zero.
+> **New here?** It takes **less than 4 minutes** to download the app, set up your folders, and have all features, mod sorting, and in-game tools running without extra setup in Zenless Zone Zero.
 >
 > ▶️ **[Watch the 4-minute setup walkthrough on YouTube](https://youtu.be/hKp_mztmHS0)**
 
@@ -61,7 +61,7 @@ Organize your mods, preview 3D models before launching the game, download direct
      - For standalone **3DMigoto**, this is your `3DMigoto/Mods` folder.
    - **Game executable** (optional): Select your `ZenlessZoneZero.exe` path if you want to launch the game directly from the app top bar.
    - **7-Zip / WinRAR executable** (optional): If you plan to install `.rar` or `.7z` archives using the install button, you can specify your extraction tool path here.
-4. If you already have mods installed on your drive, click the **Refresh** button in the sidebar (or press `Ctrl+R`) to scan your collection.
+4. If you already have mods installed on your drive, click **Scan Disk** in the library toolbar (or press `Ctrl+R`) to pick them up.
 
 ### Syncing with the cloud database
 
@@ -335,8 +335,8 @@ The Mod Splitter decomposes complex mod archives into isolated, fully playable s
 
 ### How to access the splitter
 
-1. Turn on **Experimental tools** in **Settings > Experimental**.
-2. On any mod card, click the **3D Preview / Advanced** button (the purple 3D box icon in the lower-left of the thumbnail).
+1. Turn on **Experimental tools** in **Settings > Advanced**.
+2. On any mod card, click the **3D Preview** button (the purple 3D box icon in the lower-left of the thumbnail).
 3. The Advanced window will open. In the top navigation bar, click the **Mod Splitter** tab (scissors icon).
 
 ### The 3 splitting modes
@@ -376,7 +376,7 @@ Give your mod cards clean, properly proportioned preview art without leaving the
 
 ### How to open the cropper
 
-- On any mod card, click the **3D Preview / Advanced** button and click the **Preview Image** tab (crop icon).
+- On any mod card, click the **3D Preview** button and click the **Preview Image** tab (crop icon).
 
 ### Loading images
 
@@ -406,7 +406,21 @@ The manager works alongside 3DMigoto while Zenless Zone Zero is running:
 | `F10`          | Reload mods           | Reloads all active mods in 3DMigoto without restarting the game.           |
 | `Alt+Shift+S`  | Quick preview snapper | Captures an in-game screenshot, crops it, and saves it as the mod preview. |
 
-> **Customizing hotkeys:** The overlay menu key (`h`) and screenshot hotkey (`Alt+Shift+S`) can be changed to any key combination in **Settings > In-Game Integration**.
+> **Customizing hotkeys:** The overlay menu key (`h`) and screenshot hotkey (`Alt+Shift+S`) can be changed to any key combination in **Settings > In-Game**.
+
+### Desktop shortcuts
+
+These work in the app window, not in-game:
+
+| Shortcut        | Action                                                     |
+| :-------------- | :--------------------------------------------------------- |
+| `Ctrl+R`        | Rescan your mods folder. Same as the **Scan Disk** button. |
+| `Ctrl+Shift+R`  | Randomize your enabled mods.                               |
+| `Ctrl+G`        | Launch the game.                                           |
+| `Ctrl+K` or `/` | Jump to the library and focus the search box.              |
+| `F5`            | Sync the character database from the cloud.                |
+
+> Randomize moved to `Ctrl+Shift+R` so that `Ctrl+R` does what it does everywhere else: refresh.
 
 ### In-game overlay menu (`h`)
 
@@ -455,7 +469,7 @@ When major game patches change character vertex layouts, older mods can produce 
 
 ### How the upgrade button works
 
-1. Make sure **Experimental tools** is turned on in **Settings > Experimental**.
+1. Make sure **Experimental tools** is turned on in **Settings > Advanced**.
 2. When the app detects an outdated mod whose vertex layouts no longer match the current game version, an **Upgrade** button (with a sparkles icon) automatically appears in the upper-right corner of the mod card.
 3. Click the **Upgrade** button.
 4. The Mod Fixer wizard opens and displays the recommended remappings:
@@ -546,11 +560,11 @@ Adjust how the app consumes background resources based on your computer hardware
 
 Open **Settings** and choose your **Performance mode**:
 
-| Profile             | File Watcher                       | Thumbnail Generation        | Warning Scanners                 | Recommended For                                                |
-| :------------------ | :--------------------------------- | :-------------------------- | :------------------------------- | :------------------------------------------------------------- |
-| **High (Default)**  | Real-time continuous file watcher  | Instant parallel generation | Continuous background scans      | Fast NVMe SSDs, small-to-medium libraries (<150 mods).         |
-| **Balanced**        | Debounced polling watcher          | On-demand generation        | Scans active category on view    | General systems, libraries up to 500 mods.                     |
-| **Low performance** | Disabled (Manual `Ctrl+R` refresh) | Deferred until scrolled     | Scans only when opening mod card | Mechanical hard drives (HDDs), laptops on battery, 1000+ mods. |
+| Profile             | File Watcher                      | Thumbnail Generation        | Warning Scanners                 | Recommended For                                                |
+| :------------------ | :-------------------------------- | :-------------------------- | :------------------------------- | :------------------------------------------------------------- |
+| **High (Default)**  | Real-time continuous file watcher | Instant parallel generation | Continuous background scans      | Fast NVMe SSDs, small-to-medium libraries (<150 mods).         |
+| **Balanced**        | Debounced polling watcher         | On-demand generation        | Scans active category on view    | General systems, libraries up to 500 mods.                     |
+| **Low performance** | Disabled (manual **Scan Disk**)   | Deferred until scrolled     | Scans only when opening mod card | Mechanical hard drives (HDDs), laptops on battery, 1000+ mods. |
 
 ### Manual operations in low-performance mode
 
@@ -558,7 +572,7 @@ In **Low performance** mode, automatic background heavy lifting is turned off to
 
 - **Checking updates**: Mod updates are not polled in the background. Click **Check for Updates** manually in the top bar.
 - **Conflict and script scans**: Scanners do not run across your entire library on startup. Badges are checked on-demand when you open or interact with a mod card.
-- **Folder changes**: The background file watcher is turned off. Press `Ctrl+R` or click **Refresh** in the sidebar to detect newly added or deleted folders.
+- **Folder changes**: The background file watcher is turned off. Press `Ctrl+R` or click **Scan Disk** in the library toolbar to pick up folders you added or deleted outside the app.
 
 ### Personalizing background tasks
 
@@ -572,7 +586,7 @@ Personalize the look, feel, audio, and language of your manager.
 
 ### Themes, glass mode, and wallpapers
 
-- Go to **Settings > Customization**.
+- Go to **Settings > Appearance**.
 - Choose between **Dark**, **Light**, and **Glass** themes.
 - Under **Glass theme**, panels become translucent frosted glass that floats over your desktop wallpaper.
 - Click **Select background** to pick any custom image from your computer, and adjust **Background dimming** and **Background blur** sliders to maintain text readability.
@@ -586,7 +600,7 @@ Personalize the look, feel, audio, and language of your manager.
 
 ### NSFW content controls
 
-- Go to **Settings > Discover**.
+- Go to **Settings > Downloads**.
 - Toggle **Show adult content** on or off.
 - Turn on **Blur mature thumbnails** so sensitive mod images are blurred until you hover your mouse over them.
 
@@ -594,7 +608,7 @@ Personalize the look, feel, audio, and language of your manager.
 
 The app includes procedural audio cues (synthesized using the Web Audio API) for toggling mods, batch actions, clicking buttons, and unlocking achievements.
 
-- Go to **Settings > Audio / Sound Effects**.
+- Go to **Settings > Appearance / Sound Effects**.
 - Adjust the master SFX volume slider to your preference.
 - Or toggle **Sound effects** completely off if you prefer silent operation.
 
@@ -611,13 +625,13 @@ The app includes complete translations for 8 languages:
 - 한국어
 - Русский
 
-Switch languages anytime under **Settings > General > Language**.
+Switch languages anytime under **Settings > Appearance > Language**.
 
 ### Creating your own custom language adaptation
 
 You can customize existing translations or create a translation pack for your own language or gaming dialect:
 
-1. Go to **Settings > General > Language** and open the **Language Manager**.
+1. Go to **Settings > Appearance > Language** and open the **Language Manager**.
 2. Click **Export base language pack** to save the English translation template (`en.json`).
 3. Edit the translation values in any text or JSON editor.
 4. Click **Load custom language pack** to import your translations directly into the app.

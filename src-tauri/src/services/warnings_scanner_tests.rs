@@ -852,6 +852,7 @@ post $active = 0
         assert!(post_warnings.is_empty(), "All unconditional key warnings should be resolved: {:?}", post_warnings);
 
         let _ = fs::remove_dir_all(&temp_dir);
+    }
     
 
     /// A ZZZ texcoord vertex is COLOR (unorm4, 4) + TEXCOORD (float2, 8) + TEXCOORD1 (float2, 8)
@@ -899,4 +900,3 @@ filename = JaneHairTexcoord.buf
             "an unbound resource is not checked"
         );
     }
-}

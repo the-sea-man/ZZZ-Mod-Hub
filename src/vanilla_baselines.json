@@ -1,0 +1,2615 @@
+{
+  "components": {
+    "Jane Doe|Arms": {
+      "agent": "Jane Doe",
+      "bone_palette_joints": 61,
+      "buffers": {
+        "blend_vb": {
+          "bound_as": "vb2",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 16,
+              "format": "R32G32B32A32_UINT",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "d06a9206",
+          "stride": 32,
+          "vertex_count": 5275
+        },
+        "bound_vb0": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "2b5dc947",
+          "stride": 40,
+          "vertex_count": 5275
+        },
+        "bound_vb1": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 20,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "6d482e21",
+          "stride": 24,
+          "vertex_count": 5275
+        },
+        "bound_vb3": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            }
+          ],
+          "hash": "2b5dc947",
+          "stride": 40,
+          "vertex_count": 5275
+        },
+        "draw_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "2b5dc947",
+          "stride": 40,
+          "vertex_count": 5275
+        },
+        "position_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "82e7c056",
+          "stride": 40,
+          "vertex_count": 5275
+        },
+        "texcoord_vb": {
+          "bound_as": "vb1",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 20,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "6d482e21",
+          "stride": 24,
+          "vertex_count": 5275
+        }
+      },
+      "component": "Arms",
+      "ib": "294a319a",
+      "index_format": "DXGI_FORMAT_R16_UINT",
+      "passes_per_frame": 5,
+      "skin": "Hidden Nightfade",
+      "subdraws": [
+        {
+          "first_index": 0,
+          "index_count": 16848,
+          "passes": 5
+        }
+      ],
+      "texture_roles": {
+        "Diffuse": "f7ef1a53",
+        "LightMap": "9ec4cd4f",
+        "MaterialMap": "5e34e275",
+        "NormalMap": "ebac056e"
+      },
+      "texture_slots": {
+        "ps-t0": "553d3b4a",
+        "ps-t1": "7dfb0292",
+        "ps-t2": "d9a12c0a",
+        "ps-t3": "f7ef1a53",
+        "ps-t4": "ebac056e",
+        "ps-t5": "9ec4cd4f",
+        "ps-t6": "5e34e275",
+        "ps-t7": "26fa59b6",
+        "ps-t8": "67ba4639"
+      },
+      "vertex_count": 5275
+    },
+    "Jane Doe|Body": {
+      "agent": "Jane Doe",
+      "bone_palette_joints": 119,
+      "buffers": {
+        "blend_vb": {
+          "bound_as": "vb2",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 16,
+              "format": "R32G32B32A32_UINT",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "e27f398e",
+          "stride": 32,
+          "vertex_count": 11002
+        },
+        "bound_vb0": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "0e1c6740",
+          "stride": 40,
+          "vertex_count": 11002
+        },
+        "bound_vb1": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 20,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "949549de",
+          "stride": 32,
+          "vertex_count": 11002
+        },
+        "bound_vb3": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            }
+          ],
+          "hash": "0e1c6740",
+          "stride": 40,
+          "vertex_count": 11002
+        },
+        "draw_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "0e1c6740",
+          "stride": 40,
+          "vertex_count": 11002
+        },
+        "position_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "10050266",
+          "stride": 40,
+          "vertex_count": 11002
+        },
+        "texcoord_vb": {
+          "bound_as": "vb1",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 20,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            },
+            {
+              "byte_offset": 24,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            },
+            {
+              "byte_offset": 28,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            }
+          ],
+          "hash": "949549de",
+          "stride": 32,
+          "vertex_count": 11002
+        }
+      },
+      "component": "Body",
+      "ib": "ba4255a5",
+      "index_format": "DXGI_FORMAT_R16_UINT",
+      "passes_per_frame": 5,
+      "skin": "Hidden Nightfade",
+      "subdraws": [
+        {
+          "first_index": 0,
+          "index_count": 40842,
+          "passes": 5
+        }
+      ],
+      "texture_roles": {
+        "Diffuse": "d1f56c7d",
+        "LightMap": "3087f82a",
+        "MaterialMap": "99eae42e",
+        "NormalMap": "ebac056e"
+      },
+      "texture_slots": {
+        "ps-t0": "553d3b4a",
+        "ps-t1": "7dfb0292",
+        "ps-t2": "d9a12c0a",
+        "ps-t3": "d1f56c7d",
+        "ps-t4": "ebac056e",
+        "ps-t5": "3087f82a",
+        "ps-t6": "99eae42e",
+        "ps-t7": "26fa59b6",
+        "ps-t8": "67ba4639"
+      },
+      "vertex_count": 11002
+    },
+    "Jane Doe|Face": {
+      "agent": "Jane Doe",
+      "bone_palette_joints": null,
+      "buffers": {
+        "bound_vb0": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "5661afc3",
+          "stride": 40,
+          "vertex_count": 1544
+        },
+        "bound_vb1": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 16,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 32,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 40,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "3c32a411",
+          "stride": 48,
+          "vertex_count": 1544
+        },
+        "bound_vb3": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            }
+          ],
+          "hash": "5661afc3",
+          "stride": 40,
+          "vertex_count": 1544
+        }
+      },
+      "component": "Face",
+      "ib": "ef86fc9f",
+      "index_format": "DXGI_FORMAT_R16_UINT",
+      "passes_per_frame": 8,
+      "skin": "Nocturne of Light",
+      "subdraws": [
+        {
+          "first_index": 0,
+          "index_count": 7152,
+          "passes": 4
+        },
+        {
+          "first_index": 7152,
+          "index_count": 1860,
+          "passes": 3
+        },
+        {
+          "first_index": 9012,
+          "index_count": 1062,
+          "passes": 1
+        }
+      ],
+      "texture_roles": {
+        "Diffuse": "3b75aa2c"
+      },
+      "texture_slots": {
+        "ps-t0": "553d3b4a",
+        "ps-t1": "7dfb0292",
+        "ps-t2": "d9a12c0a",
+        "ps-t3": "3b75aa2c",
+        "ps-t4": "959705b7",
+        "ps-t5": "9e00a8ad"
+      },
+      "vertex_count": 1544
+    },
+    "Jane Doe|Hair": {
+      "agent": "Jane Doe",
+      "bone_palette_joints": 69,
+      "buffers": {
+        "blend_vb": {
+          "bound_as": "vb2",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 16,
+              "format": "R32G32B32A32_UINT",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "e42171df",
+          "stride": 32,
+          "vertex_count": 5067
+        },
+        "bound_vb0": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "74bc0b7f",
+          "stride": 40,
+          "vertex_count": 4556
+        },
+        "bound_vb1": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 20,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "fa617c9a",
+          "stride": 24,
+          "vertex_count": 4556
+        },
+        "bound_vb3": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            }
+          ],
+          "hash": "74bc0b7f",
+          "stride": 40,
+          "vertex_count": 4556
+        },
+        "draw_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "74bc0b7f",
+          "stride": 40,
+          "vertex_count": 4556
+        },
+        "position_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "33a09cfe",
+          "stride": 40,
+          "vertex_count": 5067
+        },
+        "texcoord_vb": {
+          "bound_as": "vb1",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 20,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "fa617c9a",
+          "stride": 24,
+          "vertex_count": 5067
+        }
+      },
+      "component": "Hair",
+      "ib": "3275b812",
+      "index_format": "DXGI_FORMAT_R16_UINT",
+      "passes_per_frame": 16,
+      "skin": "Nocturne of Light",
+      "subdraws": [
+        {
+          "first_index": 0,
+          "index_count": 16986,
+          "passes": 5
+        },
+        {
+          "first_index": 16986,
+          "index_count": 1572,
+          "passes": 11
+        }
+      ],
+      "texture_roles": {
+        "Diffuse": "f7ef1a53",
+        "LightMap": "9ec4cd4f",
+        "MaterialMap": "5e34e275",
+        "NormalMap": "ebac056e"
+      },
+      "texture_slots": {
+        "ps-t0": "553d3b4a",
+        "ps-t1": "c6c138f1",
+        "ps-t2": "d9a12c0a",
+        "ps-t3": "f7ef1a53",
+        "ps-t4": "ebac056e",
+        "ps-t5": "9ec4cd4f",
+        "ps-t6": "5e34e275",
+        "ps-t7": "26fa59b6",
+        "ps-t8": "67ba4639"
+      },
+      "vertex_count": 5067
+    },
+    "Remielle Dan|Body": {
+      "agent": "Remielle Dan",
+      "bone_palette_joints": 117,
+      "buffers": {
+        "blend_vb": {
+          "bound_as": "vb2",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 16,
+              "format": "R32G32B32A32_UINT",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "da54a57a",
+          "stride": 32,
+          "vertex_count": 15951
+        },
+        "bound_vb0": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "97664f2f",
+          "stride": 40,
+          "vertex_count": 15733
+        },
+        "bound_vb1": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 20,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "b943ec9e",
+          "stride": 24,
+          "vertex_count": 15733
+        },
+        "bound_vb3": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            }
+          ],
+          "hash": "97664f2f",
+          "stride": 40,
+          "vertex_count": 15733
+        },
+        "draw_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "97664f2f",
+          "stride": 40,
+          "vertex_count": 15733
+        },
+        "position_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "d16f6790",
+          "stride": 40,
+          "vertex_count": 15951
+        },
+        "texcoord_vb": {
+          "bound_as": "vb1",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 20,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "b943ec9e",
+          "stride": 24,
+          "vertex_count": 15951
+        }
+      },
+      "component": "Body",
+      "ib": "28e05a59",
+      "index_format": "DXGI_FORMAT_R16_UINT",
+      "passes_per_frame": 9,
+      "skin": "Feathered Murmurs",
+      "subdraws": [
+        {
+          "first_index": 0,
+          "index_count": 59094,
+          "passes": 5
+        },
+        {
+          "first_index": 59094,
+          "index_count": 984,
+          "passes": 4
+        }
+      ],
+      "texture_roles": {
+        "Diffuse": "e51be5d1",
+        "LightMap": "380d7bcf",
+        "MaterialMap": "61c42d63",
+        "NormalMap": "ebac056e"
+      },
+      "texture_slots": {
+        "ps-t0": "553d3b4a",
+        "ps-t1": "7dfb0292",
+        "ps-t10": "8b21c20b",
+        "ps-t2": "d9a12c0a",
+        "ps-t3": "e51be5d1",
+        "ps-t4": "ebac056e",
+        "ps-t5": "380d7bcf",
+        "ps-t6": "61c42d63",
+        "ps-t7": "051d3af8",
+        "ps-t8": "67ba4639",
+        "ps-t9": "67ba4639"
+      },
+      "vertex_count": 15951
+    },
+    "Remielle Dan|Eyebrows": {
+      "agent": "Remielle Dan",
+      "bone_palette_joints": null,
+      "buffers": {
+        "blend_vb": {
+          "bound_as": "vb2",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32_UINT",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "6c7c8f8d",
+          "stride": 4,
+          "vertex_count": 84
+        },
+        "bound_vb0": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "e055c475",
+          "stride": 40,
+          "vertex_count": 84
+        },
+        "bound_vb1": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 16,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 32,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 40,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "798a2588",
+          "stride": 48,
+          "vertex_count": 84
+        },
+        "bound_vb3": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            }
+          ],
+          "hash": "e055c475",
+          "stride": 40,
+          "vertex_count": 84
+        }
+      },
+      "component": "Eyebrows",
+      "ib": "fcbae9a5",
+      "index_format": "DXGI_FORMAT_R16_UINT",
+      "passes_per_frame": 4,
+      "skin": "Seashade Pas Seul",
+      "subdraws": [
+        {
+          "first_index": 0,
+          "index_count": 120,
+          "passes": 4
+        }
+      ],
+      "texture_roles": {
+        "Diffuse": "baf9e1be"
+      },
+      "texture_slots": {
+        "ps-t0": "553d3b4a",
+        "ps-t1": "7dfb0292",
+        "ps-t2": "d9a12c0a",
+        "ps-t3": "baf9e1be",
+        "ps-t4": "bcbec9cd",
+        "ps-t5": "9e00a8ad"
+      },
+      "vertex_count": 84
+    },
+    "Remielle Dan|Face": {
+      "agent": "Remielle Dan",
+      "bone_palette_joints": null,
+      "buffers": {
+        "blend_vb": {
+          "bound_as": "vb2",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 16,
+              "format": "R32G32B32A32_UINT",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "3ba8ce1b",
+          "stride": 32,
+          "vertex_count": 2642
+        },
+        "bound_vb0": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "0faf109a",
+          "stride": 40,
+          "vertex_count": 1460
+        },
+        "bound_vb1": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 16,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 32,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 40,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "7e8be536",
+          "stride": 48,
+          "vertex_count": 1460
+        },
+        "bound_vb3": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            }
+          ],
+          "hash": "0faf109a",
+          "stride": 40,
+          "vertex_count": 1460
+        }
+      },
+      "component": "Face",
+      "ib": "7fbbcf0d",
+      "index_format": "DXGI_FORMAT_R16_UINT",
+      "passes_per_frame": 16,
+      "skin": "Seashade Pas Seul",
+      "subdraws": [
+        {
+          "first_index": 0,
+          "index_count": 7116,
+          "passes": 7
+        },
+        {
+          "first_index": 7116,
+          "index_count": 2286,
+          "passes": 7
+        },
+        {
+          "first_index": 9402,
+          "index_count": 1260,
+          "passes": 2
+        }
+      ],
+      "texture_roles": {
+        "Diffuse": "baf9e1be"
+      },
+      "texture_slots": {
+        "ps-t0": "553d3b4a",
+        "ps-t1": "7dfb0292",
+        "ps-t2": "d9a12c0a",
+        "ps-t3": "baf9e1be",
+        "ps-t4": "bcbec9cd",
+        "ps-t5": "67ba4639"
+      },
+      "vertex_count": 1460
+    },
+    "Remielle Dan|Hair": {
+      "agent": "Remielle Dan",
+      "bone_palette_joints": 91,
+      "buffers": {
+        "blend_vb": {
+          "bound_as": "vb2",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 16,
+              "format": "R32G32B32A32_UINT",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "46eee329",
+          "stride": 32,
+          "vertex_count": 7246
+        },
+        "bound_vb0": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "fbe70114",
+          "stride": 40,
+          "vertex_count": 4245
+        },
+        "bound_vb1": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "fa8ab367",
+          "stride": 20,
+          "vertex_count": 4245
+        },
+        "bound_vb3": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            }
+          ],
+          "hash": "fbe70114",
+          "stride": 40,
+          "vertex_count": 4245
+        },
+        "draw_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "fbe70114",
+          "stride": 40,
+          "vertex_count": 4245
+        },
+        "position_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "62b7da5e",
+          "stride": 40,
+          "vertex_count": 7246
+        },
+        "texcoord_vb": {
+          "bound_as": "vb1",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            }
+          ],
+          "hash": "fa8ab367",
+          "stride": 20,
+          "vertex_count": 7246
+        }
+      },
+      "component": "Hair",
+      "ib": "789ae812",
+      "index_format": "DXGI_FORMAT_R16_UINT",
+      "passes_per_frame": 16,
+      "skin": "Seashade Pas Seul",
+      "subdraws": [
+        {
+          "first_index": 0,
+          "index_count": 16590,
+          "passes": 5
+        },
+        {
+          "first_index": 16590,
+          "index_count": 11451,
+          "passes": 11
+        }
+      ],
+      "texture_roles": {
+        "Diffuse": "578239d7",
+        "LightMap": "6f826e7d",
+        "MaterialMap": "b5a12580",
+        "NormalMap": "ebac056e"
+      },
+      "texture_slots": {
+        "ps-t0": "553d3b4a",
+        "ps-t1": "b7ff7a6e",
+        "ps-t2": "d9a12c0a",
+        "ps-t3": "578239d7",
+        "ps-t4": "ebac056e",
+        "ps-t5": "6f826e7d",
+        "ps-t6": "b5a12580",
+        "ps-t7": "67ba4639"
+      },
+      "vertex_count": 7246
+    },
+    "Remielle Dan|Legs": {
+      "agent": "Remielle Dan",
+      "bone_palette_joints": 139,
+      "buffers": {
+        "blend_vb": {
+          "bound_as": "vb2",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 16,
+              "format": "R32G32B32A32_UINT",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "2702db6d",
+          "stride": 32,
+          "vertex_count": 14065
+        },
+        "bound_vb0": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "3bf3b3b0",
+          "stride": 40,
+          "vertex_count": 14065
+        },
+        "bound_vb1": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 20,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "ed8feacb",
+          "stride": 24,
+          "vertex_count": 14065
+        },
+        "bound_vb3": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            }
+          ],
+          "hash": "3bf3b3b0",
+          "stride": 40,
+          "vertex_count": 14065
+        },
+        "draw_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "3bf3b3b0",
+          "stride": 40,
+          "vertex_count": 14065
+        },
+        "position_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "1bc49355",
+          "stride": 40,
+          "vertex_count": 14065
+        },
+        "texcoord_vb": {
+          "bound_as": "vb1",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 20,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "ed8feacb",
+          "stride": 24,
+          "vertex_count": 14065
+        }
+      },
+      "component": "Legs",
+      "ib": "fe9fc31a",
+      "index_format": "DXGI_FORMAT_R16_UINT",
+      "passes_per_frame": 5,
+      "skin": "Feathered Murmurs",
+      "subdraws": [
+        {
+          "first_index": 0,
+          "index_count": 52692,
+          "passes": 5
+        }
+      ],
+      "texture_roles": {
+        "Diffuse": "6538d30d",
+        "LightMap": "4049331b",
+        "MaterialMap": "cdc2accb",
+        "NormalMap": "ebac056e"
+      },
+      "texture_slots": {
+        "ps-t0": "553d3b4a",
+        "ps-t1": "7dfb0292",
+        "ps-t2": "d9a12c0a",
+        "ps-t3": "6538d30d",
+        "ps-t4": "ebac056e",
+        "ps-t5": "4049331b",
+        "ps-t6": "cdc2accb",
+        "ps-t7": "051d3af8",
+        "ps-t8": "67ba4639"
+      },
+      "vertex_count": 14065
+    },
+    "Remielle Dan|Wings": {
+      "agent": "Remielle Dan",
+      "bone_palette_joints": 35,
+      "buffers": {
+        "blend_vb": {
+          "bound_as": "vb2",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 16,
+              "format": "R32G32B32A32_UINT",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "7b12084f",
+          "stride": 32,
+          "vertex_count": 5404
+        },
+        "bound_vb0": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "7bc98032",
+          "stride": 40,
+          "vertex_count": 5404
+        },
+        "bound_vb1": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            }
+          ],
+          "hash": "9d9b4d62",
+          "stride": 20,
+          "vertex_count": 5404
+        },
+        "bound_vb3": {
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            }
+          ],
+          "hash": "7bc98032",
+          "stride": 40,
+          "vertex_count": 5404
+        },
+        "draw_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDWEIGHTS",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "BLENDINDICES",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "7bc98032",
+          "stride": 40,
+          "vertex_count": 5404
+        },
+        "position_vb": {
+          "bound_as": "vb0",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "POSITION",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 3
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 4
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 5
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 6
+            },
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "TEXCOORD",
+              "semantic_index": 7
+            },
+            {
+              "byte_offset": 12,
+              "format": "R32G32B32_FLOAT",
+              "semantic": "NORMAL",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 24,
+              "format": "R32G32B32A32_FLOAT",
+              "semantic": "TANGENT",
+              "semantic_index": 0
+            }
+          ],
+          "hash": "f71d4482",
+          "stride": 40,
+          "vertex_count": 5404
+        },
+        "texcoord_vb": {
+          "bound_as": "vb1",
+          "elements": [
+            {
+              "byte_offset": 0,
+              "format": "R8G8B8A8_UNORM",
+              "semantic": "COLOR",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 4,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 0
+            },
+            {
+              "byte_offset": 8,
+              "format": "R32G32_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 1
+            },
+            {
+              "byte_offset": 16,
+              "format": "R16G16_FLOAT",
+              "semantic": "TEXCOORD",
+              "semantic_index": 2
+            }
+          ],
+          "hash": "9d9b4d62",
+          "stride": 20,
+          "vertex_count": 5404
+        }
+      },
+      "component": "Wings",
+      "ib": "9004a39a",
+      "index_format": "DXGI_FORMAT_R16_UINT",
+      "passes_per_frame": 5,
+      "skin": "Seashade Pas Seul",
+      "subdraws": [
+        {
+          "first_index": 0,
+          "index_count": 20472,
+          "passes": 5
+        }
+      ],
+      "texture_roles": {
+        "Diffuse": "80ad86c3",
+        "LightMap": "04497af6",
+        "MaterialMap": "0ec88318",
+        "NormalMap": "ebac056e"
+      },
+      "texture_slots": {
+        "ps-t0": "553d3b4a",
+        "ps-t1": "7dfb0292",
+        "ps-t2": "d9a12c0a",
+        "ps-t3": "80ad86c3",
+        "ps-t4": "ebac056e",
+        "ps-t5": "04497af6",
+        "ps-t6": "0ec88318",
+        "ps-t7": "67ba4639",
+        "ps-t8": "2bceeee5"
+      },
+      "vertex_count": 5404
+    }
+  },
+  "note": "Vanilla per-component facts measured from frame-analysis dumps of unmodded Agents. Generated by scripts/extract_vanilla_baseline.py - do not hand-edit."
+}

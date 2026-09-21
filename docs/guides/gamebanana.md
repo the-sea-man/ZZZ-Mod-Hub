@@ -1,10 +1,10 @@
-# GameBanana Discover & Downloader
+# GameBanana Discover & downloader
 
 ZZZ Mod Hub integrates directly with GameBanana's API, allowing you to discover, download, and update mods without opening a web browser.
 
 ---
 
-## Exploring the Discover Feed
+## Exploring the Discover feed
 
 Click the **Discover** tab in the main navigation sidebar to browse mods:
 
@@ -16,15 +16,15 @@ Click the **Discover** tab in the main navigation sidebar to browse mods:
 
 ---
 
-## High-Speed & Resilient Downloads
+## High-Speed & resilient downloads
 
 GameBanana file servers can occasionally suffer from rate limits, slow speeds, or dead mirror links. ZZZ Mod Hub includes built-in network protections:
 
-### 1. 4-Chunk Multi-Threaded Parallel Downloads
+### 1. 4-Chunk multi-threaded parallel downloads
 
 For any mod archive larger than 5MB, the manager splits the download stream into 4 concurrent byte-range requests. This maximizes your bandwidth and cuts download times significantly.
 
-### 2. Automatic Cloudflare CDN Failover
+### 2. Automatic Cloudflare CDN failover
 
 If the primary GameBanana download node times out, returns HTTP 500/503 errors, or fails integrity checks:
 
@@ -33,11 +33,11 @@ If the primary GameBanana download node times out, returns HTTP 500/503 errors, 
 
 ---
 
-## One-Click Mod Updates
+## One-Click mod updates
 
 Mod authors frequently release updates to fix bugs, add new color variants, or support new game patches.
 
-### How to Check for Updates:
+### How to check for updates:
 
 1. In your **Library**, click the **Check for Updates** button in the toolbar.
 2. The manager queries the GameBanana API in efficient batches of 50 to compare your installed mod version against the latest online submission.

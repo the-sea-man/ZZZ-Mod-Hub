@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { invoke } from '@tauri-apps/api/core';
 import { confirm } from '@tauri-apps/plugin-dialog';
-import DOMPurify from 'dompurify';
+import { sanitizeHtml } from '../../utils/safeHtml';
 import { useTranslation } from '../../hooks/useTranslation';
 import {
   X,
@@ -266,7 +266,7 @@ export const ModUpdaterModal: React.FC<ModUpdaterModalProps> = ({ update, onClos
                       <div
                         className="prose prose-invert prose-xs max-w-none prose-a:text-primary hover:prose-a:underline"
                         dangerouslySetInnerHTML={{
-                          __html: DOMPurify.sanitize(latestUpdate._sText),
+                          __html: sanitizeHtml(latestUpdate._sText),
                         }}
                       />
                     ) : (

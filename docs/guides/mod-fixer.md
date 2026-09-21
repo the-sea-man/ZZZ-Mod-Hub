@@ -1,4 +1,4 @@
-# Mod Fixer Engine
+# Mod Fixer engine
 
 When Zenless Zone Zero receives a game patch (e.g. from version 1.0 to 1.4, or 2.0 to 3.2), older character mods often break:
 
@@ -10,7 +10,7 @@ Instead of waiting weeks for mod creators to manually re-upload their work, the 
 
 ---
 
-## Why Mods Break Across Game Patches
+## Why mods break across game patches
 
 Game updates alter internal Direct3D 11 rendering structures:
 
@@ -20,9 +20,9 @@ Game updates alter internal Direct3D 11 rendering structures:
 
 ---
 
-## How to Fix a Mod
+## How to fix a mod
 
-### Method 1: Single Mod Fix
+### Method 1: single mod fix
 
 When a mod has an outdated structure, a **Blue File** badge appears on its card:
 
@@ -34,17 +34,17 @@ When a mod has an outdated structure, a **Blue File** badge appears on its card:
 4. The manager creates a timestamped backup in `.zmm-backup/`, remaps the binary vertex buffers, synchronizes `.ini` strides, and recalculates submesh indices.
 5. In-game, press **F10** to reload.
 
-### Method 2: Batch Category Fix
+### Method 2: batch category fix
 
 If multiple mods for a character are outdated after a major patch:
 
 1. Navigate to that character's category in the sidebar.
-2. Click the **Fix All Outdated Mods** button in the top toolbar.
+2. Click the **1-Click Auto-Fix** button in the top toolbar.
 3. The engine safely processes and backs up each mod in sequence.
 
 ---
 
-## Warning Badge Taxonomy
+## Warning badge taxonomy
 
 ZZZ Mod Hub uses a 3-tier color system on mod cards so you always know what action is needed:
 
@@ -56,6 +56,6 @@ ZZZ Mod Hub uses a 3-tier color system on mod cards so you always know what acti
 
 ---
 
-## Automatic Backups Guaranteed
+## Automatic backups guaranteed
 
 Every time the Mod Fixer runs, it saves the untouched original files into a hidden `.zmm-backup` folder inside the mod directory. If a fix does not work as expected, you can restore your original files with 1 click.

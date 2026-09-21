@@ -4,7 +4,7 @@ next:
   link: ./constants
 ---
 
-# 3dmigoto INI File Documentation
+# 3DMigoto INI file reference
 
 ## Preface
 

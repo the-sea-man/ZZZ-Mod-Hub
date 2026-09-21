@@ -1,14 +1,14 @@
-# Installing & Managing Mods
+# Installing & managing mods
 
 ZZZ Mod Hub organizes your mod library from installation to in-game toggling.
 
 ---
 
-## Installing Mods
+## Installing mods
 
 There are three ways to install mods into your library:
 
-### Method A: Drag-and-Drop (Recommended)
+### Method a: Drag-and-Drop (recommended)
 
 Drag any `.zip`, `.7z`, or `.rar` archive directly from your browser or file manager and drop it anywhere inside the ZZZ Mod Hub window.
 
@@ -16,22 +16,22 @@ Drag any `.zip`, `.7z`, or `.rar` archive directly from your browser or file man
 - It scans the `.ini` scripts for 3DMigoto buffer hashes (`ib`, `vb`).
 - It routes the mod directly into the matching character folder (e.g. `Mods/Ellen/`) or into `Unassigned` if the hashes are unrecognized.
 
-### Method B: Install Button in Toolbar
+### Method b: install button in toolbar
 
 Click the **Install Mod** button (`+`) on the top toolbar:
 
 - Select one or more mod archives from the file browser.
 - The manager extracts and categorizes each mod in sequence.
 
-### Method C: In-Manager Download from Discover
+### Method c: in-manager download from Discover
 
 Browse mods directly in the **Discover** tab and click **Install**. The manager downloads, verifies, and installs the mod automatically.
 
 ---
 
-## Enabling and Disabling Mods
+## Enabling and disabling mods
 
-### Single Mod Toggle
+### Single mod toggle
 
 Click the toggle switch on any mod card.
 
@@ -39,14 +39,14 @@ Click the toggle switch on any mod card.
 - **Disabled:** The manager renames the folder with a `DISABLED_` prefix (e.g. `DISABLED_Ellen Maid Dress`). 3DMigoto ignores folders with this prefix, disabling the mod in-game.
 - **In-Game Reload:** While playing the game, press <kbd>F10</kbd> on your keyboard to reload 3DMigoto and display your updated mods.
 
-### Batch Operations
+### Batch operations
 
 Hold `Ctrl` and click multiple mod cards, or use the **Select All** checkbox in the category header.
 
 - A floating action bar appears at the bottom of the screen.
 - You can **Enable All**, **Disable All**, **Move to Category**, or **Delete** selected mods in bulk.
 
-### Emergency "Disable All" Button
+### Emergency "Disable all" button
 
 If a broken mod crashes your game or causes visual glitches during combat:
 
@@ -60,7 +60,7 @@ The Undo action restores your previous configuration only if no new mods were ad
 
 ---
 
-## Automatic Mod Tagging
+## Automatic mod tagging
 
 When you install or scan mods, the manager automatically inspects their files and assigns tags based on their contents:
 
@@ -68,13 +68,13 @@ When you install or scan mods, the manager automatically inspects their files an
 - **`UI`**: Modifies user interface textures, icons, HUD elements, or custom banners.
 - **`Weapon`**: Replaces character weapons, combat props, or gear meshes.
 - **`IN GAME MENU`**: Mods equipped with interactive in-game menu support.
-- **`NSFW`**: Content tagged with adult or explicit themes (respects your safety blur settings in **Settings > Mod Management**).
+- **`NSFW`**: Content tagged with adult or explicit themes (respects your safety blur settings in **Settings > Downloads**).
 
 You can filter your library by these tags using the search filter chips at the top of your library.
 
 ---
 
-## Mod Card Features
+## Mod card features
 
 Every card in the library offers quick-action tools:
 

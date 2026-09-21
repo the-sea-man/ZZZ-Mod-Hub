@@ -1,17 +1,17 @@
-# In-Game HUD & Tools
+# In-Game HUD & tools
 
 ZZZ Mod Hub includes tools that work directly while Zenless Zone Zero is running, allowing you to toggle outfits, capture mod preview cards, and reload 3DMigoto without alt-tabbing.
 
 ---
 
-## Interactive In-Game HUD Menu (`H`)
+## Interactive in-game HUD menu (`h`)
 
 The **In-Game HUD** is a GPU-rendered Direct3D 11 overlay generated directly into 3DMigoto. It renders a clean mod menu inside the game process.
 
-### How to Use the In-Game HUD
+### How to use the in-game HUD
 
-1. Open **Settings > Advanced > In-Game Overlay**.
-2. Toggle on **Enable In-Game Overlay**.
+1. Open **Settings > In-Game > In-Game Overlay**.
+2. Toggle on **ZZMI In-Game Overlay**.
 3. Launch the game with your 3DMigoto or XXMI loader.
 4. Press <kbd>H</kbd> on your keyboard (default hotkey) while in-game.
 5. The overlay appears on screen, showing:
@@ -20,10 +20,10 @@ The **In-Game HUD** is a GPU-rendered Direct3D 11 overlay generated directly int
    - **Keybind Display:** Shows the assigned hotkeys for mod toggles.
 
 ::: tip Customizing the HUD Hotkey
-You can change the menu hotkey from <kbd>H</kbd> to any key of your choice in **Settings > In-Game Overlay**.
+You can change the menu hotkey from <kbd>H</kbd> to any key of your choice in **Settings > In-Game**.
 :::
 
-### How It Works Behind the Scenes
+### How it works behind the scenes
 
 The manager inspects your installed mods and generates a lightweight 3DMigoto configuration file (`zzzmanager_ui_<mod>.ini`, inside a `zzzzzz_ZZZModManagerUI` folder in your Mods directory) along with the shaders and texture atlases it draws with.
 
@@ -33,7 +33,7 @@ The manager inspects your installed mods and generates a lightweight 3DMigoto co
 
 ---
 
-## In-Game Hot Reload (<kbd>F10</kbd>)
+## In-Game hot reload (<kbd>F10</kbd>)
 
 Whenever you enable, disable, or install a mod in ZZZ Mod Hub, 3DMigoto needs to reload its internal cache to apply the changes:
 
@@ -43,7 +43,7 @@ Whenever you enable, disable, or install a mod in ZZZ Mod Hub, 3DMigoto needs to
 
 ---
 
-## Quick Snapper: In-Game Screenshot Cropper (<kbd>Ctrl + F11</kbd>)
+## Quick Snapper: in-game screenshot cropper (<kbd>Ctrl + f11</kbd>)
 
 Finding high-quality preview images for your mod cards can be tedious. The **Quick Snapper** lets you create custom card previews directly from your game:
 
@@ -55,12 +55,12 @@ Finding high-quality preview images for your mod cards can be tedious. The **Qui
 6. Click **Save Thumbnail**. The mod card updates immediately in your library.
 
 ::: tip Hotkey Customization
-Update the Quick Snapper hotkey anytime under **Settings > Mod Management > Quick Snapper**.
+Update the Quick Snapper hotkey anytime under **Settings > In-Game > Quick Snapper**.
 :::
 
 ---
 
-## Outfit Randomizer
+## Outfit randomizer
 
 If you have collected dozens of outfits, skins, and weapon mods, the **Outfit Randomizer** keeps your commissions fresh:
 
@@ -68,6 +68,6 @@ If you have collected dozens of outfits, skins, and weapon mods, the **Outfit Ra
 2. The **Outfit Randomizer Modal** opens:
    - Choose whether to randomize mods across **All Characters** or only for the **Current Category**.
    - Choose whether to include only **Favorited Mods** or your whole library.
-3. Click **Roll Loadout**.
+3. Click **Randomize**.
 4. The manager randomly selects and enables one mod per character while disabling conflicting alternatives.
 5. Return to the game window and press <kbd>F10</kbd> to load your new outfit combination.

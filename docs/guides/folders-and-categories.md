@@ -1,10 +1,10 @@
-# Categories & Custom Folders
+# Categories & custom folders
 
 ZZZ Mod Hub organizes mods into clean character categories while giving you full control over custom folder structures.
 
 ---
 
-## The Category Sidebar
+## The category sidebar
 
 The left sidebar displays all available character entities in Zenless Zone Zero:
 
@@ -14,18 +14,18 @@ The left sidebar displays all available character entities in Zenless Zone Zero:
 
 ---
 
-## Custom Folder Manager
+## Custom folder manager
 
 You are not locked into standard character names. If you prefer grouping by factions, NPCs, weapons, or custom folders (e.g. `UI Mods`, `Global Shaders`, `Music`):
 
-1. Click the **Folder Manager** gear icon in the sidebar header.
+1. Click the **Manage Folders** gear icon in the sidebar header.
 2. The **Custom Folder Management** dialog opens:
    - **Create Folder:** Type a new category name and click **Add**.
    - **Rename Folder:** Update folder names without breaking mod associations.
    - **Delete Folder:** Remove unused category directories.
    - **Map to Character Entity:** Link your custom folder to an official character entity so auto-sorting and 3D previewing work directly.
 
-### Protected System Folders
+### Protected system folders
 
 To protect your installation from accidental deletion or corruption, certain essential system folders are permanently protected:
 
@@ -39,7 +39,7 @@ The manager locks these folders against renaming or deletion, and ensures they a
 
 ---
 
-## Library Search & Filter System
+## Library search & filter system
 
 At the top of the mod library, the filter bar helps you quickly find what you need:
 
@@ -51,5 +51,5 @@ At the top of the mod library, the filter bar helps you quickly find what you ne
 - **Tag Chips:** Filter by automatic content tags (`Outfit`, `UI`, `Weapon`, `IN GAME MENU`, `NSFW`).
 
 ::: info Customizing Filter Chips
-If you find the filter chips too crowded, open **Settings > Mod Management** to hide or show specific filter chips based on your preference.
+If you find the filter chips too crowded, open **Settings > Library** to hide or show specific filter chips based on your preference.
 :::

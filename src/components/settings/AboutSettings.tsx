@@ -12,7 +12,6 @@ import {
 import { useTranslation } from '../../hooks/useTranslation';
 import { invoke } from '@tauri-apps/api/core';
 import { useAppStore } from '../../store/useAppStore';
-import { FeatureShowcase } from './FeatureShowcase';
 import { OperationHistoryModal } from '../Modals/OperationHistoryModal';
 
 export function AboutSettings() {
@@ -195,8 +194,6 @@ export function AboutSettings() {
           </p>
         </div>
       </div>
-
-      {import.meta.env.DEV && <FeatureShowcase />}
 
       {showHistoryModal && <OperationHistoryModal onClose={() => setShowHistoryModal(false)} />}
     </div>
