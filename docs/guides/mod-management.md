@@ -29,15 +29,7 @@ Browse mods directly in the **Discover** tab and click **Install**. The manager 
 
 ### Method d: importing existing folders
 
-If you have mod folders from another manager or an external backup drive, open **Settings > Game & Folders** and click **Import Mods**. You can choose to Copy or Move them with full hash verification.
-
-<div class="guide-video-wrapper">
-  <video controls playsinline class="guide-video" src="/videos/partial-import-after-setup.mp4"></video>
-  <div class="guide-video-caption">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-    <span><strong>Video walkthrough:</strong> Importing mods from another folder in Settings</span>
-  </div>
-</div>
+If you have mod folders from another manager or an external backup drive, open **Settings > Game & Folders** and click **Import Mods**. You can choose to Copy or Move them with full hash verification. (See [Importing after setup](./installation-and-setup.md#_2-importing-after-setup-settings-menu) for a full video walkthrough).
 
 ---
 
@@ -156,6 +148,6 @@ Every card in the library offers quick-action tools:
 
 - **Favorite (Star Icon):** Pin your favorite mods to the top of the category or filter by favorites using the filter chip.
 - **Mod Notes:** Click the notes icon on the card to write custom reminders (such as hotkey combinations like `[F8] Toggle Jacket`, author notes, or recommended settings).
-- **Custom Preview Image:** Right-click a card or open the card menu (`...`) and select **Change Preview Image** to assign your own screenshot.
+- **Custom Preview Image:** Right-click a card or open the card options menu (⚙️) and select **Change Preview Image** to assign your own screenshot.
 - **Open in Explorer:** Jump straight to the physical mod folder on disk.
 - **Rollback Badge:** If you modified or fixed a mod, a rollback badge appears allowing you to restore the pre-fix backup at any time.

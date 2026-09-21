@@ -39,24 +39,21 @@ If an imported archive has non-standard naming, ambiguous author folders, or was
 
 ---
 
-## Custom folder manager
+## Custom folder manager (status)
 
-You are not locked into standard character names. If you prefer grouping by factions, NPCs, weapons, or custom folders (e.g. `UI Mods`, `Global Shaders`, `Music`):
+::: info Feature Currently Disabled
+The **Custom Folder Manager** is currently disabled while the category engine undergoes improvements.
 
-1. Click the **Manage Folders** gear icon in the sidebar header.
-2. The **Custom Folder Management** dialog opens:
-   - **Create Folder:** Type a new category name and click **Add**.
-   - **Rename Folder:** Update folder names without breaking mod associations.
-   - **Delete Folder:** Remove unused category directories.
-   - **Map to Character Entity:** Link your custom folder to an official character entity so auto-sorting and 3D previewing work directly.
+Currently, your mod library is organized strictly into official **character folders** (e.g. `Ellen`, `Jane Doe`, `Miyabi`) generated directly from the canonical database, alongside essential system folders. Arbitrary custom folder creation will return in a future update.
+:::
 
 ### Protected system folders
 
 To protect your installation from accidental deletion or corruption, certain essential system folders are permanently protected:
 
-- `Unassigned`
-- `_Conflicts`
-- `.staging`
+- `Unassigned` (holds unorganized or ambiguous mods pending hash auto-sort)
+- `_Conflicts` (quarantines conflicting files)
+- `.staging` (isolated temporary extraction workspace)
 
 ::: tip Essential Folders Protection
 The manager locks these folders against renaming or deletion, and ensures they are recreated automatically if missing.

@@ -10,18 +10,18 @@ When inspecting cards or categories, you may see colored badges:
 
 ### 1. Blue file badge (outdated script / patch fix available)
 
-- **What it means:** The mod's `.ini` script has syntax bugs or outdated vertex strides from an older game patch. (Not critical)
+- **What it means:** Strictly an `.ini` script update. Can usually be ignored safely without visual issues, but in rare cases an unpatched `.ini` can break other mods' in-game menus or cause severe FPS drops even when the character is not on screen.
 - **What to do:** Click the **Upgrade** button on the card. The manager automatically rewrites the script, remaps buffers if needed, and backs up your original files into `.zmm-backup/`.
 
 ### 2. Yellow person badge (multi-entity / shared base hashes)
 
-- **What it means:** The character has multiple skins in the game (for instance, Belle or Caesar) and some 3DMigoto buffer hashes are shared between versions. (Not critical)
+- **What it means:** The character has multiple skins or shared base models in the game (for instance, Belle or Aria) where some 3DMigoto buffer hashes are shared between versions. (Not critical)
 - **What to do:** This is purely informational. No action is needed unless you have two active mods installed that replace the exact same skin variant at the same time.
 
 ### 3. Red shield badge (mesh collision conflict)
 
-- **What it means:** Two or more active mods are trying to replace the exact same 3D character body part at the same time. (Critical)
-- **What to do:** In 3DMigoto, only one mod can override a given mesh at once. Disable one of the conflicting mods, or use the conflict resolver to choose which mod takes precedence.
+- **What it means:** Two or more active mods are replacing overlapping 3D meshes or textures at the same time.
+- **What to do:** You don't strictly have to resolve it—the game will still run without crashing, though visual glitches may appear. In some rare instances, nothing will even be apparent if both mods edit different textures or distinct body parts. For the cleanest visual results, disable one of the conflicting mods or use the conflict resolver.
 
 ---
 

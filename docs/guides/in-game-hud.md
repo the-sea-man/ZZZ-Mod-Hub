@@ -28,8 +28,8 @@ The **In-Game HUD** is a GPU-rendered Direct3D 11 overlay generated directly int
   </div>
 </div>
 
-::: tip Checking if a mod has an in-game menu
-To check if a specific mod includes in-game toggleable variants or keys, open the mod card actions menu (`...`) in your library and select **Change Keybind**. This displays all active toggle keys and allows assigning custom hotkeys.
+::: tip Checking if a mod has an in-game menu & keybinds
+To check if a mod includes in-game toggleable variants or keys, check the mod card in your library: the **Change Keybind** button is located directly below the mod toggle switch (or under the card options ⚙️). Clicking it displays all detected toggle keys and allows assigning custom hotkeys.
 :::
 
 ::: tip Customizing the HUD Hotkey
@@ -71,7 +71,9 @@ Quick Snapper uses a smart filtering queue:
 ### Step-by-step Quick Snapper workflow
 
 1. **Be on the Character Category Page:** In ZZZ Mod Hub, navigate to the specific character whose mods you want to preview (e.g. `Ellen` or `Jane Doe`).
-2. **Set up your In-Game Pose:** Switch to Zenless Zone Zero and position your character in a clean, well-lit location (such as Random Play video store or training arena).
+2. **Set up your In-Game Pose:** Switch to Zenless Zone Zero and position your character:
+   - **Recommended:** Open the in-game **Agent Selection / Details screen**. It provides clean, uniform lighting, consistent character framing, and no background street clutter.
+   - Alternatively, position your character in a well-lit location such as the Random Play video store or the training arena.
 3. **Trigger Quick Snapper:** Press the Quick Picture command shortcut (or start the batch session from the toolbar).
 4. **Reload In-Game (<kbd>F10</kbd>):** Switch to the game window and press <kbd>F10</kbd> to render the newly enabled mod.
 5. **Fixing Bind-Pose or Broken Meshes:** _If the character model appears distorted, floating, or in a T-pose when reloading, quickly swap characters back and forth in-game (switch to another teammate and switch back)._ This forces the game engine to rebind vertex buffers and bone matrices properly.
@@ -84,6 +86,15 @@ Quick Snapper uses a smart filtering queue:
     <span><strong>Video walkthrough:</strong> Rapidly capturing previews for multiple mods using Quick Snapper</span>
   </div>
 </div>
+
+::: tip Calibrating the Capture Region (Crop Coordinates)
+Because every monitor and resolution is different, you should adjust the exact position of the capture box in **Settings > In-Game > Quick Snapper**:
+
+- **Default Baseline:** The manager defaults to **X Offset: `860`**, **Y Offset: `100`**, **Width: `800`**, **Height: `1000`** (calibrated for a **3440 × 1440** ultrawide display).
+- **Suggestions for 2560 × 1440 (16:9):** Try **X Offset: `880`**, **Y Offset: `100`**, **Width: `800`**, **Height: `1000`** to center on the agent.
+- **Suggestions for 1920 × 1080 (16:9):** Scale down proportionally (~0.75×): Try **X Offset: `600–640`**, **Y Offset: `75`**, **Width: `600`**, **Height: `750`**.
+- Fine-tune coordinates so the crop box frames the character cleanly without clipping limbs or capturing UI text.
+  :::
 
 ::: tip Hotkey Customization
 Update the Quick Snapper hotkey anytime under **Settings > In-Game > Quick Snapper**.

@@ -111,6 +111,14 @@ You do not need to figure out which character folder a mod belongs to. The manag
 - If a mod belongs to Ellen, it goes straight into `Mods/Ellen/`.
 - If hashes are unrecognized or ambiguous, it is safely placed in `Unassigned` for you to review without guessing.
 
+<div class="guide-video-wrapper">
+  <video controls playsinline class="guide-video" src="/videos/install-mod-gamebanana.mp4"></video>
+  <div class="guide-video-caption">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span><strong>Video walkthrough:</strong> Browsing Discover and installing mods directly from GameBanana</span>
+  </div>
+</div>
+
 ---
 
 ## Step 5: enable mods & play
