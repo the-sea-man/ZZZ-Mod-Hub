@@ -19,6 +19,9 @@
     "check:modals": "node scripts/check-modals.cjs",
     "release": "python scripts/release.py",
     "cli": "cargo run --manifest-path src-tauri/Cargo.toml --bin zmm-cli --",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "prepare": "husky"
   },
   "dependencies": {
@@ -70,6 +73,7 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.62.1",
     "vite": "^7.0.4",
+    "vitepress": "^1.6.3",
     "vitest": "^5.0.0"
   }
 }
