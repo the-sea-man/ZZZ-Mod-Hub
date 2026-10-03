@@ -1,11 +1,11 @@
 {
-  "version": "1.3.3",
-  "notes": "ZZZ Mod Hub v1.3.3: Automatic mod preview downloads, GameBanana 1-Click Install, documentation hub, and mod fix validation.",
-  "pub_date": "2026-09-30T09:57:40Z",
+  "version": "1.3.4",
+  "notes": "ZZZ Mod Hub v1.3.4: Character frame capture wizard, Fairy's Fixer sub-draw scoping, shared normal map protection, and 3D viewer improvements.",
+  "pub_date": "2026-10-03T15:02:04Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQlRLWXNBL1pHZVBMTjdQbEJ2TWdWdnc4R3dhTVB1VWNJa2R5bkRBM2RUU0RKOGNvOVQzK2poa1NTZTB6eDRpUEsveEM2Q2c0M2Z4NWpLcGN1YmovZGdJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNzYyMjU2CWZpbGU6WlpaIE1vZCBIdWJfMS4zLjNfeDY0LXNldHVwLmV4ZQpWbTFMY0MxVkRaNnAzQ3NIRFZRMkNJMGltWS91SThIdU9peGQrVFp6Vk1mUFVZaGVqa2FFRGFBMSs1MHMwZG9rV1dGQWhsUUduL0tkcko3UGNWRkFEdz09Cg==",
-      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v1.3.3/ZZZ.Mod.Hub_1.3.3_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQlVYUDJQYWN3RWtIYWhWdVFTOW9GUjJaTGRreFg3Q1Z3V2kzOUp3clNEb21waE1EL0VwVGw5STVmUFQ1VDhhS01rdkJFaW5JSWI3dUl4dWJBQVBxNGdNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDM5NzE5CWZpbGU6WlpaIE1vZCBIdWJfMS4zLjRfeDY0LXNldHVwLmV4ZQphZGZSWURQQ3lqanVMWWtnbnlXemRPRmllU3BHelFvSlU2SXNwVWZNSHkxSzhDbDdzSCtwKzhCL1l6dW9MT0FEYURGcmZsdDdHeEsrNXZXVE5QNm9EUT09Cg==",
+      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v1.3.4/ZZZ.Mod.Hub_1.3.4_x64-setup.exe"
     }
   }
 }
