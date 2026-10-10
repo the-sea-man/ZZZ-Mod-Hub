@@ -1,11 +1,11 @@
 {
-  "version": "1.3.4",
-  "notes": "ZZZ Mod Hub v1.3.4: Character frame capture wizard, Fairy's Fixer sub-draw scoping, shared normal map protection, and 3D viewer improvements.",
-  "pub_date": "2026-10-03T15:02:04Z",
+  "version": "2.0.0",
+  "notes": "Fairy's Secret Folder 2.0.0: Proxy Desk and Fairy OS styles, 69 achievements with ranks, fairy tips, an in-game mod menu, undo for every fix, GameBanana 1-Click and a faster start.",
+  "pub_date": "2026-10-10T04:05:28Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQlVYUDJQYWN3RWtIYWhWdVFTOW9GUjJaTGRreFg3Q1Z3V2kzOUp3clNEb21waE1EL0VwVGw5STVmUFQ1VDhhS01rdkJFaW5JSWI3dUl4dWJBQVBxNGdNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDM5NzE5CWZpbGU6WlpaIE1vZCBIdWJfMS4zLjRfeDY0LXNldHVwLmV4ZQphZGZSWURQQ3lqanVMWWtnbnlXemRPRmllU3BHelFvSlU2SXNwVWZNSHkxSzhDbDdzSCtwKzhCL1l6dW9MT0FEYURGcmZsdDdHeEsrNXZXVE5QNm9EUT09Cg==",
-      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v1.3.4/ZZZ.Mod.Hub_1.3.4_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQlZVRDQ1WEx0azZVaDZ2MWwyWEQrL1d4M25EdE1hdE9vY1J5QUpPTm9OV3ZMRXRTZ3JMNkpnYjgrV3BVMGZJM2xER1A1bm9oT3hSVDI5Um9IYlBsTWd3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxNjA1MTIzCWZpbGU6WlpaIE1vZCBIdWJfMi4wLjBfeDY0LXNldHVwLmV4ZQpuWDd1aVIyTmhaNlJVMGk0MGFwVURCQkdCNUFlbnNiQ0kzUGdwWk1nZlhGLzVKTmwrTFhuaVBQYkttZk5VQ3MzUVE2aHF6VUIvWlV4UzFsc1Q5OTVEZz09Cg==",
+      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.0.0/ZZZ.Mod.Hub_2.0.0_x64-setup.exe"
     }
   }
 }
