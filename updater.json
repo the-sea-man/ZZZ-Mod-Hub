@@ -1,11 +1,11 @@
 {
-  "version": "2.1.0",
-  "notes": "Fairy's Secret Folder 2.1.0: use your own mod folders as they are, Guides (F1), seven new achievements, and toggles that stay with a mod when it moves.",
-  "pub_date": "2026-10-14T00:22:10Z",
+  "version": "2.1.1",
+  "notes": "Fairy's Secret Folder 2.1.1: your own Mods folders sit next to the library again, failed downloads stay in sight with a retry button, and fixes for Discover and Quick Snapper.",
+  "pub_date": "2026-10-14T06:24:39Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQmZlV2E5TFhSUFpKejB4ZUw5QlVGYTlzY3VMYjhNSVVZUFF2VnExRy8yWkQxQ3NiRjNXMkZFZGpHY0ErMUFtdGw5VHlFcVN4K1hQdzVUT0FRRkR2UUFnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxOTM3MzI1CWZpbGU6WlpaIE1vZCBIdWJfMi4xLjBfeDY0LXNldHVwLmV4ZQpXNHFQOHREMVFXTHZ3TDA5WUFXWit4WnNJSWhJTW9GZ2E5dmUwUmNRV3N6Y2cvQVNKTXQrUEY5ZzJ1Mm8ySGM4dWVBVEt2a3NlWURZbi8xWGhPYzdEZz09Cg==",
-      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.1.0/ZZZ.Mod.Hub_2.1.0_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQlZQeFVERTFkOHU1dmgxRVFxeG1DaGNTaGVSL1pLRVhOTlNNUG43ZVBjRi9pbGRUR2twUEdUd0JiM0NLaHFwNm1WM0pkVnNzV0cybHE1Wm1SNTFKN0F3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxOTU5MDc0CWZpbGU6WlpaIE1vZCBIdWJfMi4xLjFfeDY0LXNldHVwLmV4ZQpQRWhVOGVJTnVWYmJHUzhnN1NxTVRuOTlXdU5IUmY2bVpVUmtEOXFPVFk3aUtZYnNmd0N0eTFWTjNMZUZxRXVZZjNZbjJtR01DQU5ieTFYRmgvTVlDdz09Cg==",
+      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.1.1/ZZZ.Mod.Hub_2.1.1_x64-setup.exe"
     }
   }
 }
