@@ -1,11 +1,11 @@
 {
-  "version": "2.1.1",
-  "notes": "Fairy's Secret Folder 2.1.1: your own Mods folders sit next to the library again, failed downloads stay in sight with a retry button, and fixes for Discover and Quick Snapper.",
-  "pub_date": "2026-10-14T06:24:39Z",
+  "version": "2.1.2",
+  "notes": "Fairy's Secret Folder 2.1.2: Bangboos library with mod fixes, split multi-mod archives, Discover installed badges, launch command warning, and summer outfits fix.",
+  "pub_date": "2026-10-16T01:34:44Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQlZQeFVERTFkOHU1dmgxRVFxeG1DaGNTaGVSL1pLRVhOTlNNUG43ZVBjRi9pbGRUR2twUEdUd0JiM0NLaHFwNm1WM0pkVnNzV0cybHE1Wm1SNTFKN0F3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxOTU5MDc0CWZpbGU6WlpaIE1vZCBIdWJfMi4xLjFfeDY0LXNldHVwLmV4ZQpQRWhVOGVJTnVWYmJHUzhnN1NxTVRuOTlXdU5IUmY2bVpVUmtEOXFPVFk3aUtZYnNmd0N0eTFWTjNMZUZxRXVZZjNZbjJtR01DQU5ieTFYRmgvTVlDdz09Cg==",
-      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.1.1/ZZZ.Mod.Hub_2.1.1_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQmY1ajNGYVpVSDJ5VkliQVM2aDdaK3A4Sk9naGJCSjJ0SzJ0SzF3UWFlZHlvVnNxaFl2dFZFaGZuSjdhb1JmS0JoSDlNK0FsQitQSlZPcTVLdzRadWdNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyMTE0NDc5CWZpbGU6WlpaIE1vZCBIdWJfMi4xLjJfeDY0LXNldHVwLmV4ZQp4OTRFUVNVTDczTzUrRWVVK0xtR3N4L0hMbEFtbHFKb2NweGxJNU1LZGw5RzZCdGZyeUFMc1JSdWZ0SFpJcVZzaVpndThMQmFSZGs0ckJxU2NieWFEUT09Cg==",
+      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.1.2/ZZZ.Mod.Hub_2.1.2_x64-setup.exe"
     }
   }
 }
