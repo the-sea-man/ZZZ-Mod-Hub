@@ -1,11 +1,11 @@
 {
-  "version": "2.1.2",
-  "notes": "Fairy's Secret Folder 2.1.2: Bangboos library with mod fixes, split multi-mod archives, Discover installed badges, launch command warning, and summer outfits fix.",
-  "pub_date": "2026-10-16T01:34:44Z",
+  "version": "2.1.3",
+  "notes": "Fairy's Secret Folder 2.1.3: every mod update in one list with Update All, your own look for enabled and disabled mods, translated mod names and pages, your own folder names in the Library, an option to install mods switched off, a Supporters panel, and fixes.",
+  "pub_date": "2026-10-24T22:03:11Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQmY1ajNGYVpVSDJ5VkliQVM2aDdaK3A4Sk9naGJCSjJ0SzJ0SzF3UWFlZHlvVnNxaFl2dFZFaGZuSjdhb1JmS0JoSDlNK0FsQitQSlZPcTVLdzRadWdNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyMTE0NDc5CWZpbGU6WlpaIE1vZCBIdWJfMi4xLjJfeDY0LXNldHVwLmV4ZQp4OTRFUVNVTDczTzUrRWVVK0xtR3N4L0hMbEFtbHFKb2NweGxJNU1LZGw5RzZCdGZyeUFMc1JSdWZ0SFpJcVZzaVpndThMQmFSZGs0ckJxU2NieWFEUT09Cg==",
-      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.1.2/ZZZ.Mod.Hub_2.1.2_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQmQ0NmJ5Smt0M3BhQnIyQkFGL2FIeW5sTHNmTlN4cUlJdWhtTDNJMjkxbXpxMjVSVE1zeFhTeVlTekh0Sjk0dWQ4ZkFRZkthZ3FRVlZ1dmIzRHVzSkFBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyODc5Mzg2CWZpbGU6WlpaIE1vZCBIdWJfMi4xLjNfeDY0LXNldHVwLmV4ZQp5eFpINENBYW5TREkvUVF2ZXh5OUJocmx3b3hTWHpac29iTFBPMCtRT1c0VU5meDE5bnBHWE5raE5CcnRQWnluTWt2WVRkaTZJQUlWOVA5SHN6NnJEQT09Cg==",
+      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.1.3/ZZZ.Mod.Hub_2.1.3_x64-setup.exe"
     }
   }
 }
