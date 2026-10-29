@@ -1,12 +1,12 @@
 {
-  "version": "2.1.4",
-  "notes": "Fairy's Secret Folder 2.1.4: find the mod that breaks your game, a warning after game updates with the fixer one click away, new redemption codes from the Fairy, update notes in the updates list, one-click mod page translation, build guide links, and app updates from GameBanana when GitHub fails.",
-  "pub_date": "2026-10-29T19:58:45Z",
+  "version": "2.1.5",
+  "notes": "Fairy's Secret Folder 2.1.5: find the mod that breaks your game, a warning after game updates with the fixer one click away, new redemption codes from the Fairy, update notes in the updates list, one-click mod page translation, build guide links, and app updates from GameBanana when GitHub fails.",
+  "pub_date": "2026-10-29T21:42:10Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQmRNRnZFSlFvVHN4aDA1ZTdPeWovWGNZUDlZd2w0cmdXb1hMYnpPb2RsSjY2clphWmRyTGE5SEFmRGZINEFrVi81KytoMEZCbzBwd0gxSlRuZktJVXdBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzMzAzOTIxCWZpbGU6WlpaIE1vZCBIdWJfMi4xLjRfeDY0LXNldHVwLmV4ZQpHWERIeXk0cmFLZzl4aWI0cFEyQXVvVHBaMEttYWNZeDJRNzUwMkRUMlBHYjJOWGViM3lFNFhVTVgybW5kbE5PUHVYUDR5ZUlFei9CYnhDbXhwMHdCQT09Cg==",
-      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.1.4/ZZZ.Mod.Hub_2.1.4_x64-setup.exe",
-      "md5": "5dfdaa41cdf3c8ef62a1deb49ab7ce2d"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQlJkazd4Nm1RRzIyT1hwbWpjRlpJVUl2bk9CY25hM2NKUm9YOE9rZW5saFM2US9USHc3KzVPVW1seGkwVm5Ob2sva0xMTElaN296dVkzZXp1cVgrWmdJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzMzEwMTI2CWZpbGU6WlpaIE1vZCBIdWJfMi4xLjVfeDY0LXNldHVwLmV4ZQpwOWcxK0E4QUh1b3JZR250WWcweDhrQm9ZVVdleW4wcThET2Fudjh4SU1XVVcrQkRid2cveVpSMDlUSUhLeldnR3d1a2ovbFNXRmRDYXBsWmhPZUdBdz09Cg==",
+      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.1.5/ZZZ.Mod.Hub_2.1.5_x64-setup.exe",
+      "md5": "20cbd9737ee0e8812d1b87cac80678b0"
     }
   }
 }
