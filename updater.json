@@ -1,0 +1,12 @@
+{
+  "version": "2.1.6",
+  "notes": "Fairy's Secret Folder 2.1.6: follow mod creators, hide installed mods in Discover, link hand-installed mods to GameBanana, import toggles from another mod manager, paid versions marked in Discover, pick a mod's cover as you install, clearer next steps on mod cards, a working sync and update where GitHub is blocked, a stricter Auto-Sort, and fixes.",
+  "pub_date": "2026-11-05T15:25:30Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQllObDIzaGp2S2dDb1J1RVdhc1RZamVuVkxHcGtjRGx0cy92czc3bFZabFpQTTY1R2VwNFhSUU5TVVBZTGpvbXhJaHpteTZlM3FpemJIUUhJdXNudWdRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzODkyMzI1CWZpbGU6WlpaIE1vZCBIdWJfMi4xLjZfeDY0LXNldHVwLmV4ZQpMVUxoS0tXK0hNd2EwMWRFSnRYREdMT0lOMHZPWWMzR2JYcThLb1JUbFBHWTVQc1FnRU4wRmFoUTd3VGVQUXljK3cyTDc4bjg1S013Qkh5bUxqN05CUT09Cg==",
+      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.1.6/ZZZ.Mod.Hub_2.1.6_x64-setup.exe",
+      "md5": "f04b4597a6bc3ee1d1b39771e1dcd803"
+    }
+  }
+}
