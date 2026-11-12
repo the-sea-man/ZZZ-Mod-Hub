@@ -1,12 +1,12 @@
 {
-  "version": "2.1.6",
-  "notes": "Fairy's Secret Folder 2.1.6: follow mod creators, hide installed mods in Discover, link hand-installed mods to GameBanana, import toggles from another mod manager, paid versions marked in Discover, pick a mod's cover as you install, clearer next steps on mod cards, a working sync and update where GitHub is blocked, a stricter Auto-Sort, and fixes.",
-  "pub_date": "2026-11-05T15:25:30Z",
+  "version": "2.2.0",
+  "notes": "Fairy's Secret Folder 2.2.0: lock mods so bulk actions leave them alone, Randomize one mod per outfit without clashes, a better Discover gallery, page jumps and mods per page, the in-game menu for mods with their own panel, a choice of what F8 saves, a Modding basics guide, an optional message in the feedback survey, and fixes.",
+  "pub_date": "2026-11-12T23:11:01Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQllObDIzaGp2S2dDb1J1RVdhc1RZamVuVkxHcGtjRGx0cy92czc3bFZabFpQTTY1R2VwNFhSUU5TVVBZTGpvbXhJaHpteTZlM3FpemJIUUhJdXNudWdRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzODkyMzI1CWZpbGU6WlpaIE1vZCBIdWJfMi4xLjZfeDY0LXNldHVwLmV4ZQpMVUxoS0tXK0hNd2EwMWRFSnRYREdMT0lOMHZPWWMzR2JYcThLb1JUbFBHWTVQc1FnRU4wRmFoUTd3VGVQUXljK3cyTDc4bjg1S013Qkh5bUxqN05CUT09Cg==",
-      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.1.6/ZZZ.Mod.Hub_2.1.6_x64-setup.exe",
-      "md5": "f04b4597a6bc3ee1d1b39771e1dcd803"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQlFUcnhmSDJ3U0YzUFRrUiswZ1hXVkh6ZmZ2aVk3WGl1K1MyT0NFR2NMU05kWlhNMkhnQll6d1BwK3BhY0U3bTN1U3Z4aTc1S1FUdjNnMTNmK0I4Q2dBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NTI1MDU3CWZpbGU6WlpaIE1vZCBIdWJfMi4yLjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuMi4wCjJNcVRXWGFkYk1aMU5sc05ta2craTJaeXF0aGI0SjF0ZnZoK0p1VW9vME9BRHZ4dVNPaG41Z3Bqb0hGZXc2R2txYitCMG9WeU9WZDR6eTJSeXhlU0R3PT0K",
+      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.2.0/ZZZ.Mod.Hub_2.2.0_x64-setup.exe",
+      "md5": "c7cc8f8592b84e9cb5b2ab47748dedc4"
     }
   }
 }
