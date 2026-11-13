@@ -1,12 +1,12 @@
 {
-  "version": "2.2.0",
-  "notes": "Fairy's Secret Folder 2.2.0: lock mods so bulk actions leave them alone, Randomize one mod per outfit without clashes, a better Discover gallery, page jumps and mods per page, the in-game menu for mods with their own panel, a choice of what F8 saves, a Modding basics guide, an optional message in the feedback survey, and fixes.",
-  "pub_date": "2026-11-12T23:11:01Z",
+  "version": "2.2.1",
+  "notes": "Fairy's Secret Folder 2.2.1: small fixes.",
+  "pub_date": "2026-11-13T15:33:09Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQlFUcnhmSDJ3U0YzUFRrUiswZ1hXVkh6ZmZ2aVk3WGl1K1MyT0NFR2NMU05kWlhNMkhnQll6d1BwK3BhY0U3bTN1U3Z4aTc1S1FUdjNnMTNmK0I4Q2dBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NTI1MDU3CWZpbGU6WlpaIE1vZCBIdWJfMi4yLjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuMi4wCjJNcVRXWGFkYk1aMU5sc05ta2craTJaeXF0aGI0SjF0ZnZoK0p1VW9vME9BRHZ4dVNPaG41Z3Bqb0hGZXc2R2txYitCMG9WeU9WZDR6eTJSeXhlU0R3PT0K",
-      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.2.0/ZZZ.Mod.Hub_2.2.0_x64-setup.exe",
-      "md5": "c7cc8f8592b84e9cb5b2ab47748dedc4"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVkR0d2JKR0EzQmI4ZlllQWNVZ2k1dHpFNUNDMFBKUytMWmpYd3g4dWhsamJkU09kdzlpZG1yUEFOOEJ0Uy8raTFsODdVL2dBS3dGa1hmTmpEYkNoOGcrQlNYT2JQTUFJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NTgzOTg1CWZpbGU6WlpaIE1vZCBIdWJfMi4yLjFfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuMi4xCmFTUUs4ODlyajBmYmhrWVFUa0djUXlRUUdyYUlvM2lCNnpXY1lNUXBWQjRraFBZV3VkYUhOWU1OQVUwTXJ3UFVBL0ZHNUU0ZStZbFJzVkFOVno0REFBPT0K",
+      "url": "https://github.com/the-sea-man/ZZZ-Mod-Hub/releases/download/v2.2.1/ZZZ.Mod.Hub_2.2.1_x64-setup.exe",
+      "md5": "5de318cebd6eb866c4eff66146ed2684"
     }
   }
 }
